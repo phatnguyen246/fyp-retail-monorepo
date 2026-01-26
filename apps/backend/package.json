@@ -1,8 +1,9 @@
 {
   "name": "@apps/backend",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon index.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
