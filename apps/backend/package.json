@@ -1,0 +1,10 @@
+{
+  "name": "@apps/backend",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
