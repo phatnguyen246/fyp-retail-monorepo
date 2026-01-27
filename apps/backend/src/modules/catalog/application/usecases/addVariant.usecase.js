@@ -1,4 +1,5 @@
 import { buildVariantSignature } from "../helpers/variantSignature.js";
+import { CatalogErrors } from "../errors/index.js";
 
 /**
  * Business rules (Aggregate invariants):
@@ -13,24 +14,24 @@ import { buildVariantSignature } from "../helpers/variantSignature.js";
 export function makeAddVariantUseCase({ productRepository }) {
     return async function addVariant(input = {}) {
         const productId = String(input.productId ?? "").trim();
-        if (!productId) throw new Error("PRODUCT_ID_REQUIRED");
+        if (!productId) throw CatalogErrors.PRODUCT_ID_REQUIRED();
 
         const product = await productRepository.findById(productId);
-        if (!product) throw new Error("PRODUCT_NOT_FOUND");
+        if (!product) throw CatalogErrors.PRODUCT_NOT_FOUND();
 
         // 1) Validate basic fields
         const sku = String(input.sku ?? "").trim();
-        if (!sku) throw new Error("VARIANT_SKU_REQUIRED");
+        if (!sku) throw CatalogErrors.VARIANT_SKU_REQUIRED();
 
         const price_amount = Number(input.price_amount);
         if (!Number.isFinite(price_amount) || price_amount < 0) {
-            throw new Error("VARIANT_PRICE_INVALID");
+            throw CatalogErrors.VARIANT_PRICE_INVALID();
         }
 
         const currency = String(input.currency ?? "VND").trim() || "VND";
         const stock_on_hand = Number(input.stock_on_hand ?? 0);
         if (!Number.isFinite(stock_on_hand) || stock_on_hand < 0) {
-            throw new Error("VARIANT_STOCK_INVALID");
+            throw CatalogErrors.VARIANT_STOCK_INVALID();
         }
 
         // 2) Resolve selections from aggregate (codes -> ids)
@@ -49,12 +50,12 @@ export function makeAddVariantUseCase({ productRepository }) {
         const existsCombo = (product.variants || []).some(
             (v) => v.variant_signature === signature
         );
-        if (existsCombo) throw new Error("VARIANT_COMBINATION_EXISTS");
+        if (existsCombo) throw CatalogErrors.VARIANT_COMBINATION_EXISTS();
 
         // Optional: friendly check for sku duplicate within loaded product snapshot
         // (Mongo unique index vẫn là source of truth)
         const existsSku = (product.variants || []).some((v) => v.sku === sku);
-        if (existsSku) throw new Error("VARIANT_SKU_EXISTS");
+        if (existsSku) throw CatalogErrors.VARIANT_SKU_EXISTS();
 
         // 5) Enforce single default
         let variants = product.variants || [];
@@ -98,7 +99,7 @@ export function makeAddVariantUseCase({ productRepository }) {
  */
 function resolveSelectionsFromProduct({ product, selections }) {
     const options = Array.isArray(product.options) ? product.options : [];
-    if (options.length === 0) throw new Error("PRODUCT_OPTIONS_EMPTY");
+    if (options.length === 0) throw CatalogErrors.PRODUCT_OPTIONS_EMPTY();
 
     // normalize input selections
     const normalized = selections.map((s) => ({
@@ -108,19 +109,19 @@ function resolveSelectionsFromProduct({ product, selections }) {
 
     // validate empty codes
     if (normalized.some((s) => !s.option_code || !s.value_code)) {
-        throw new Error("VARIANT_SELECTION_INVALID");
+        throw CatalogErrors.VARIANT_SELECTION_INVALID();
     }
 
     // validate duplicates by option_code
     const seen = new Set();
     for (const s of normalized) {
-        if (seen.has(s.option_code)) throw new Error("VARIANT_SELECTION_DUPLICATE_OPTION");
+        if (seen.has(s.option_code)) throw CatalogErrors.VARIANT_SELECTION_DUPLICATE_OPTION();
         seen.add(s.option_code);
     }
 
     // enforce coverage: selections must match exactly all options
     if (normalized.length !== options.length) {
-        throw new Error("VARIANT_SELECTION_INCOMPLETE");
+        throw CatalogErrors.VARIANT_SELECTION_INCOMPLETE();
     }
 
     // index product options by code
@@ -129,11 +130,11 @@ function resolveSelectionsFromProduct({ product, selections }) {
     // resolve each selection
     const resolved = normalized.map((s) => {
         const option = optionByCode.get(s.option_code);
-        if (!option) throw new Error("VARIANT_OPTION_NOT_FOUND");
+        if (!option) throw CatalogErrors.VARIANT_OPTION_NOT_FOUND(s.option_code);
 
         const values = Array.isArray(option.values) ? option.values : [];
         const value = values.find((v) => String(v.value_code ?? "").trim() === s.value_code);
-        if (!value) throw new Error("VARIANT_OPTION_VALUE_NOT_FOUND");
+        if (!value) throw CatalogErrors.VARIANT_OPTION_VALUE_NOT_FOUND(s.option_code, s.value_code);
 
         return {
             option_code: s.option_code,
@@ -147,7 +148,7 @@ function resolveSelectionsFromProduct({ product, selections }) {
     // (vì normalized.length == options.length, chỉ cần check set code trùng khớp)
     for (const opt of options) {
         const code = String(opt.code ?? "").trim();
-        if (!seen.has(code)) throw new Error("VARIANT_SELECTION_INCOMPLETE");
+        if (!seen.has(code)) throw CatalogErrors.VARIANT_SELECTION_INCOMPLETE();
     }
 
     return resolved;
