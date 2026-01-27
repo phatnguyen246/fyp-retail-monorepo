@@ -9,8 +9,7 @@ import { makeListProductsUseCase } from "./application/usecases/listProducts.use
 
 import { makeUpdateProductStatusUseCase } from "./application/usecases/updateProductStatus.usecase.js";
 
-export function buildCatalogModule() {
-    const productRepository = makeProductRepositoryMongo();
+export function makeCatalogModule({ productRepository }) {
 
     return {
         usecases: {
@@ -23,8 +22,6 @@ export function buildCatalogModule() {
 
             updateProductStatus: makeUpdateProductStatusUseCase({ productRepository }),
         },
-        repositories: {
-            productRepository,
-        },
+        repositories: { productRepository },
     };
 }
