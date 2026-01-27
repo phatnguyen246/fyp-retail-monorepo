@@ -1,6 +1,11 @@
 import { makeProductRepositoryMongo } from "./infrastructure/persistence/product.repository.mongo.js";
+
 import { makeCreateProductUseCase } from "./application/usecases/createProduct.usecase.js";
 import { makeAddVariantUseCase } from "./application/usecases/addVariant.usecase.js";
+
+import { makeGetProductBySlugUseCase } from "./application/usecases/getProductBySlug.usecase.js";
+import { makeGetProductByIdUseCase } from "./application/usecases/getProductById.usecase.js";
+import { makeListProductsUseCase } from "./application/usecases/listProducts.usecase.js";
 
 export function buildCatalogModule() {
     const productRepository = makeProductRepositoryMongo();
@@ -9,6 +14,10 @@ export function buildCatalogModule() {
         usecases: {
             createProduct: makeCreateProductUseCase({ productRepository }),
             addVariant: makeAddVariantUseCase({ productRepository }),
+
+            getProductBySlug: makeGetProductBySlugUseCase({ productRepository }),
+            getProductById: makeGetProductByIdUseCase({ productRepository }),
+            listProducts: makeListProductsUseCase({ productRepository }),
         },
         repositories: {
             productRepository,

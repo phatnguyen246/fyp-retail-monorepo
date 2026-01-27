@@ -11,5 +11,15 @@ export async function createApp() {
 
     registerModules(app);
 
+    // Error handler (global)
+    // AppError: { code, statusCode }
+    app.use((err, _req, res, _next) => {
+        const status = err?.statusCode || 500;
+        const code = err?.code || "INTERNAL_ERROR";
+        const message = err?.message || "Internal Server Error";
+
+        res.status(status).json({ code, message });
+    });
+
     return app;
 }

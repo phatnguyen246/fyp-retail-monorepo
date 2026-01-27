@@ -9,4 +9,8 @@ export function registerCatalogModule(app) {
 
     app.post("/catalog/products", controller.createProduct);
     app.post("/catalog/products/:id/variants", controller.addVariant);
+    // Query routes
+    app.get("/catalog/products", controller.listProducts);
+    app.get("/catalog/products/:slug", controller.getBySlug);
+    app.get("/catalog/admin/products/:id", controller.getById);
 }

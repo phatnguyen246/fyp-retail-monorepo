@@ -7,6 +7,18 @@ export const CatalogErrors = {
     PRODUCT_ID_REQUIRED: () =>
         new AppError("PRODUCT_ID_REQUIRED",400,"Product id is required"),
 
+    PRODUCT_SLUG_REQUIRED: () =>
+        new AppError("PRODUCT_SLUG_REQUIRED", 400, "Product slug is required"),
+
+    PRODUCT_NAME_REQUIRED: () =>
+        new AppError("PRODUCT_NAME_REQUIRED", 400, "Product name is required"),
+
+    PRODUCT_STATUS_INVALID: () =>
+        new AppError("PRODUCT_STATUS_INVALID", 400, "Product status is invalid"),
+
+    PRODUCT_TYPE_INVALID: () =>
+        new AppError("PRODUCT_TYPE_INVALID", 400, "Product type is invalid"),
+
     PRODUCT_NOT_FOUND: () =>
         new AppError("PRODUCT_NOT_FOUND", 404, "Product not found"),
 

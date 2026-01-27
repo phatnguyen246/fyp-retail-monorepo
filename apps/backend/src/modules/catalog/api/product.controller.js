@@ -3,6 +3,8 @@ import { mapCreateProductRequest, mapAddVariantRequest } from "./product.mapper.
 import { AppError } from "../application/errors/index.js";
 
 export function makeProductController({ usecases }) {
+    if (!usecases) throw new Error("MISSING_USECASES");
+
     return {
         async createProduct(req, res, next) {
             const checked = validateCreateProductBody(req.body);
@@ -35,6 +37,36 @@ export function makeProductController({ usecases }) {
                 return res.status(200).json(updated);
             } catch (err) {
                 return handleError(err, res, next);
+            }
+        },
+
+        // GET /catalog/products?status=&product_type=&q=&page=&page_size=&sort_field=&sort_dir=
+        async listProducts(req, res, next) {
+            try {
+                const result = await usecases.listProducts(req.query);
+                res.json(result);
+            } catch (err) {
+                next(err);
+            }
+        },
+
+        // GET /catalog/products/:slug
+        async getBySlug(req, res, next) {
+            try {
+                const product = await usecases.getProductBySlug({ slug: req.params.slug });
+                res.json(product);
+            } catch (err) {
+                next(err);
+            }
+        },
+
+        // GET /catalog/admin/products/:id
+        async getById(req, res, next) {
+            try {
+                const product = await usecases.getProductById({ productId: req.params.id });
+                res.json(product);
+            } catch (err) {
+                next(err);
             }
         },
     };
