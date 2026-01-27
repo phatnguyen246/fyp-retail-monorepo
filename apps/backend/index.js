@@ -1,4 +1,5 @@
 // apps/backend/index.js
+import "dotenv/config";
 import { createApp } from "./src/bootstrap/app.js";
 
 const app = await createApp();
