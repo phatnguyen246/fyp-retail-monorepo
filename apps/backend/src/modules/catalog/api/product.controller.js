@@ -1,6 +1,5 @@
 import { validateCreateProductBody, validateAddVariantBody } from "./product.validator.js";
 import { mapCreateProductRequest, mapAddVariantRequest } from "./product.mapper.js";
-import { AppError } from "../application/errors/index.js";
 
 export function makeProductController({ usecases }) {
     if (!usecases) throw new Error("MISSING_USECASES");
@@ -69,23 +68,17 @@ export function makeProductController({ usecases }) {
                 next(err);
             }
         },
+
+        async updateStatus(req, res, next) {
+            try {
+                const productId = String(req.params.id ?? "").trim();
+                const status = req.body?.status;
+
+                const result = await usecases.updateProductStatus({ productId, status });
+                res.json({ ok: true, data: result });
+            } catch (err) {
+                next(err);
+            }
+        },
     };
-}
-
-/**
- * API layer chỉ map Application error → HTTP
- * Không đoán status
- * Không parse message
- * Không biết business
- */
-function handleError(err, res, next) {
-    if (err instanceof AppError) {
-        return res.status(err.httpStatus).json({
-            code: err.code,
-            message: err.message,
-        });
-    }
-
-    // Unexpected / system error → để global error middleware xử lý
-    return next(err);
 }

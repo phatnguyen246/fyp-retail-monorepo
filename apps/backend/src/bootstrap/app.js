@@ -2,6 +2,7 @@
 import express from "express";
 import { registerModules } from "./modules.js";
 import { connectMongo } from "./mongo.js";
+import { AppError } from "../modules/catalog/application/errors/AppError.js";
 
 export async function createApp() {
     await connectMongo();
@@ -12,13 +13,25 @@ export async function createApp() {
     registerModules(app);
 
     // Error handler (global)
-    // AppError: { code, statusCode }
     app.use((err, _req, res, _next) => {
-        const status = err?.statusCode || 500;
-        const code = err?.code || "INTERNAL_ERROR";
-        const message = err?.message || "Internal Server Error";
+        // Business/Application error
+        if (err instanceof AppError) {
+            return res.status(err.httpStatus).json({
+                code: err.code,
+                message: err.message,
+                meta: err.meta ?? undefined,
+            });
+        }
 
-        res.status(status).json({ code, message });
+        // Unknown/System error
+        const status = 500;
+        const code = err?.code || "INTERNAL_ERROR";
+        const message = "Internal Server Error";
+
+        // log để debug
+        console.error(err);
+
+        return res.status(status).json({ code, message });
     });
 
     return app;

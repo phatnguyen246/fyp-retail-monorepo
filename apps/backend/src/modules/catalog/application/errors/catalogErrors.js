@@ -13,8 +13,23 @@ export const CatalogErrors = {
     PRODUCT_NAME_REQUIRED: () =>
         new AppError("PRODUCT_NAME_REQUIRED", 400, "Product name is required"),
 
+    PRODUCT_STATUS_REQUIRED: () =>
+        new AppError("PRODUCT_STATUS_REQUIRED", 400, "Product status is required"),
+
     PRODUCT_STATUS_INVALID: () =>
         new AppError("PRODUCT_STATUS_INVALID", 400, "Product status is invalid"),
+
+    PRODUCT_STATUS_TRANSITION_INVALID: ({ from, to, allowed }) =>
+        new AppError(
+            "PRODUCT_STATUS_TRANSITION_INVALID",
+            409,
+            `Invalid product status transition: ${from} → ${to}`,
+            {
+                from,
+                to,
+                allowed: Array.isArray(allowed) ? allowed : [],
+            }
+        ),
 
     PRODUCT_TYPE_INVALID: () =>
         new AppError("PRODUCT_TYPE_INVALID", 400, "Product type is invalid"),

@@ -13,4 +13,6 @@ export function registerCatalogModule(app) {
     app.get("/catalog/products", controller.listProducts);
     app.get("/catalog/products/:slug", controller.getBySlug);
     app.get("/catalog/admin/products/:id", controller.getById);
+
+    app.patch("/catalog/products/:id/status", controller.updateStatus);
 }

@@ -7,6 +7,8 @@ import { makeGetProductBySlugUseCase } from "./application/usecases/getProductBy
 import { makeGetProductByIdUseCase } from "./application/usecases/getProductById.usecase.js";
 import { makeListProductsUseCase } from "./application/usecases/listProducts.usecase.js";
 
+import { makeUpdateProductStatusUseCase } from "./application/usecases/updateProductStatus.usecase.js";
+
 export function buildCatalogModule() {
     const productRepository = makeProductRepositoryMongo();
 
@@ -18,6 +20,8 @@ export function buildCatalogModule() {
             getProductBySlug: makeGetProductBySlugUseCase({ productRepository }),
             getProductById: makeGetProductByIdUseCase({ productRepository }),
             listProducts: makeListProductsUseCase({ productRepository }),
+
+            updateProductStatus: makeUpdateProductStatusUseCase({ productRepository }),
         },
         repositories: {
             productRepository,

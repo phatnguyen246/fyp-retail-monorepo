@@ -68,6 +68,16 @@ export function makeProductRepositoryMongo() {
                 total,
             };
         },
+
+        // add into makeProductRepositoryMongo()
+        async updateStatus(productId, status) {
+            const doc = await ProductCollection.findOneAndUpdate(
+                { id: productId },
+                { $set: { status } },
+                { new: true }
+            );
+            return doc ? doc.toJSON() : null;
+        },
     };
 }
 
