@@ -1,4 +1,4 @@
-import { AppError } from "./AppError.js";
+import { AppError } from "./appError.js";
 
 /**
  * Factory functions để tránh typo + thống nhất semantics

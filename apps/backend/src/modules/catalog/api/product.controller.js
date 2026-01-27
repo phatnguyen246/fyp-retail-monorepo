@@ -16,7 +16,7 @@ export function makeProductController({ usecases }) {
                 const created = await usecases.createProduct(input);
                 return res.status(201).json(created);
             } catch (err) {
-                return handleError(err, res, next);
+                next(err);
             }
         },
 
@@ -35,7 +35,7 @@ export function makeProductController({ usecases }) {
                 const updated = await usecases.addVariant(input);
                 return res.status(200).json(updated);
             } catch (err) {
-                return handleError(err, res, next);
+                next(err);
             }
         },
 
