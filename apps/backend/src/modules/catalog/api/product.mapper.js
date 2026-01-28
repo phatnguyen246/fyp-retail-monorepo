@@ -1,9 +1,11 @@
 /**
- * Mapper: HTTP -> Usecase input
- * (Application DTO sẽ normalize tiếp, mapper chỉ map & trim cơ bản)
+ * Mapper: API Request DTO -> Application Command
+ * - No validation here
+ * - Only transform / rename / normalize
  */
 
-export function mapCreateProductRequest(body) {
+export function mapCreateProductRequest(dto) {
+    const body = dto.body ?? {};
     return {
         name: body.name,
         slug: body.slug,
@@ -15,9 +17,10 @@ export function mapCreateProductRequest(body) {
     };
 }
 
-export function mapAddVariantRequest({ params, body }) {
+export function mapAddVariantRequest(dto) {
+    const body = dto.body ?? {};
     return {
-        productId: params.id,
+        productId: dto.params?.id,
         sku: body.sku,
         price_amount: body.price_amount,
         currency: body.currency,
@@ -25,5 +28,24 @@ export function mapAddVariantRequest({ params, body }) {
         is_default: body.is_default,
         variant_name: body.variant_name,
         selections: body.selections,
+    };
+}
+
+export function mapListProductsRequest(dto) {
+    return dto.query ?? {};
+}
+
+export function mapGetProductBySlugRequest(dto) {
+    return { slug: dto.params?.slug };
+}
+
+export function mapGetProductByIdRequest(dto) {
+    return { productId: dto.params?.id };
+}
+
+export function mapUpdateProductStatusRequest(dto) {
+    return {
+        productId: dto.params?.id,
+        status: dto.body?.status,
     };
 }
