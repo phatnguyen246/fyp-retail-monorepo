@@ -1,19 +1,24 @@
-import { createProductDTO } from "../dtos/createProduct.dto.js";
+// apps/backend/src/modules/catalog/application/usecases/createProduct.usecase.js
+import { createProductCommand } from "../commands/createProduct.command.js";
+import { productResult } from "../results/product.result.js";
 import { CatalogErrors } from "../errors/index.js";
+
+const VALID_STATUS = ["draft", "active", "archived"];
 
 export function makeCreateProductUseCase({ productRepository }) {
     return async function createProduct(rawInput) {
-        const product = createProductDTO(rawInput);
+        const cmd = createProductCommand(rawInput);
 
-        // Business validation (đúng chỗ)
-        if (!product.name) throw CatalogErrors.PRODUCT_NAME_REQUIRED();
-        if (!product.slug) throw CatalogErrors.PRODUCT_SLUG_REQUIRED();
+        // Business validation
+        if (!cmd.name) throw CatalogErrors.PRODUCT_NAME_REQUIRED();
+        if (!cmd.slug) throw CatalogErrors.PRODUCT_SLUG_REQUIRED();
 
-        // Business rule
-        if (!["draft", "active", "archived"].includes(product.status)) {
+        if (!VALID_STATUS.includes(cmd.status)) {
             throw CatalogErrors.PRODUCT_STATUS_INVALID();
         }
 
-        return productRepository.create(product);
+        // TODO (nếu có): unique slug, policy...
+        const created = await productRepository.create(cmd);
+        return productResult(created);
     };
 }

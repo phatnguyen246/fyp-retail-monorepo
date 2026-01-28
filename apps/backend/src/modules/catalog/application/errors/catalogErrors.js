@@ -31,6 +31,9 @@ export const CatalogErrors = {
             }
         ),
 
+    BAD_REQUEST: (message = "Bad request", details = {}) =>
+        new AppError("BAD_REQUEST", 400, message, details),
+
     PRODUCT_TYPE_INVALID: () =>
         new AppError("PRODUCT_TYPE_INVALID", 400, "Product type is invalid"),
 
@@ -94,5 +97,16 @@ export const CatalogErrors = {
             "VARIANT_SKU_EXISTS",
             409,
             "Variant SKU already exists"
+        ),
+
+    SORT_DIRECTION_INVALID: (direction, allowed = ["asc", "desc"]) =>
+        new AppError(
+            "SORT_DIRECTION_INVALID",
+            400,
+            "Sort direction is invalid",
+            {
+                direction,
+                allowed: Array.isArray(allowed) ? allowed : ["asc", "desc"],
+            }
         ),
 };

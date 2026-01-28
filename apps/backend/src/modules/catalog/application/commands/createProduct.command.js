@@ -1,18 +1,14 @@
-/**
- * CreateProductDTO (Application DTO)
- * - Chuẩn hoá shape input cho use case createProduct
- * - Không làm business validation nặng (unique slug, policy...) => để use case
- * - Defensive: ép kiểu cơ bản, trim, default, chuẩn hoá nested options/values
- */
-export function createProductDTO(input = {}) {
+// apps/backend/src/modules/catalog/application/commands/createProduct.command.js
+
+export function createProductCommand(input = {}) {
     const name = String(input.name ?? "").trim();
     const slug = String(input.slug ?? "").trim();
 
     const product_type = String(input.product_type ?? "smartphone").trim();
     const status = String(input.status ?? "draft").trim();
 
-    const main_specs = input.main_specs ?? {};
-    const images = Array.isArray(input.images) ? input.images.map(String) : [];
+    const main_specs = isPlainObject(input.main_specs) ? input.main_specs : {};
+    const images = normalizeImages(input.images);
 
     const options = normalizeOptions(input.options);
 
@@ -25,9 +21,17 @@ export function createProductDTO(input = {}) {
         images,
         options,
 
-        // IMPORTANT: rule tại thời điểm tạo product
+        // Nếu policy của bạn là "tạo product không tạo variant"
+        // thì KHÔNG cần variants ở đây.
         variants: [],
     };
+}
+
+function normalizeImages(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .map((x) => String(x ?? "").trim())
+        .filter(Boolean);
 }
 
 function normalizeOptions(raw) {
@@ -37,7 +41,6 @@ function normalizeOptions(raw) {
         const code = String(opt?.code ?? "").trim();
         const name = String(opt?.name ?? "").trim();
         const sort_order = toInt(opt?.sort_order, 0);
-
         const values = normalizeOptionValues(opt?.values);
 
         return { code, name, sort_order, values };
