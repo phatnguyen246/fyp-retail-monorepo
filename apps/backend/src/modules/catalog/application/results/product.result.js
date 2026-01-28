@@ -3,8 +3,14 @@
 export function productResult(product) {
     if (!product) return null;
 
-    // hỗ trợ Mongoose document
-    const p = typeof product.toObject === "function" ? product.toObject() : product;
+    const p =
+        typeof product.toPrimitives === "function"
+            ? product.toPrimitives()
+            : typeof product.toJSON === "function"
+                ? product.toJSON()
+                : typeof product.toObject === "function"
+                    ? product.toObject()
+                    : product;
 
     return {
         id: String(p.id ?? p._id ?? ""),
@@ -15,6 +21,7 @@ export function productResult(product) {
         main_specs: p.main_specs ?? {},
         images: Array.isArray(p.images) ? p.images : [],
         options: Array.isArray(p.options) ? p.options : [],
+        variants: Array.isArray(p.variants) ? p.variants : [],
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
     };

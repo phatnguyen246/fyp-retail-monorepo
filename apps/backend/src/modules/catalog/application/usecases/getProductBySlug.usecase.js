@@ -1,4 +1,5 @@
 import { CatalogErrors } from "../errors/index.js";
+import { productResult } from "../results/product.result.js";
 
 export function makeGetProductBySlugUseCase({ productRepository }) {
     return async function getProductBySlug({ slug }) {
@@ -9,6 +10,6 @@ export function makeGetProductBySlugUseCase({ productRepository }) {
         if (!product) throw CatalogErrors.PRODUCT_NOT_FOUND();
 
         // frontend cần đủ options/variants để render page => trả full product
-        return product;
+        return productResult(product);
     };
 }

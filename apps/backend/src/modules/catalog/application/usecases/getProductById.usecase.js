@@ -1,4 +1,5 @@
 import { CatalogErrors } from "../errors/index.js";
+import { productResult } from "../results/product.result.js";
 
 export function makeGetProductByIdUseCase({ productRepository }) {
     return async function getProductById({ productId }) {
@@ -8,6 +9,6 @@ export function makeGetProductByIdUseCase({ productRepository }) {
         const product = await productRepository.findById(id);
         if (!product) throw CatalogErrors.PRODUCT_NOT_FOUND();
 
-        return product;
+        return productResult(product);
     };
 }

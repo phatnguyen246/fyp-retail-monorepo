@@ -1,28 +1,37 @@
 import { ProductCollection } from "./product.collection.js";
+import { Product } from "../../domain/product.aggregate.js";
 
 export function makeProductRepositoryMongo() {
     return {
         async findById(productId) {
-            return ProductCollection.findOne({ id: productId }).lean();
+            const doc = await ProductCollection.findOne({ id: productId }).lean();
+            return Product.fromPersistence(doc);
         },
 
         async findBySlug(slug) {
-            return ProductCollection.findOne({ slug }).lean();
+            const doc = await ProductCollection.findOne({ slug }).lean();
+            return Product.fromPersistence(doc);
         },
 
-        async create(product) {
-            // product: { name, slug, product_type, status, main_specs, images, options, variants }
-            const doc = await ProductCollection.create(product);
-            return doc.toJSON();
-        },
+        async save(product) {
+            const aggregate =
+                product instanceof Product ? product : Product.fromPersistence(product);
+            if (!aggregate) return null;
 
-        async replaceVariants(productId, variants) {
+            const payload = aggregate.toPersistence();
+            const { id, createdAt, updatedAt, ...data } = payload;
+
+            if (!id) {
+                const doc = await ProductCollection.create(payload);
+                return Product.fromPersistence(doc.toJSON());
+            }
+
             const doc = await ProductCollection.findOneAndUpdate(
-                { id: productId },
-                { $set: { variants } },
+                { id },
+                { $set: data },
                 { new: true }
             );
-            return doc ? doc.toJSON() : null;
+            return doc ? Product.fromPersistence(doc.toJSON()) : null;
         },
 
         /**
@@ -57,26 +66,21 @@ export function makeProductRepositoryMongo() {
             };
 
             const [items, total] = await Promise.all([
-                ProductCollection.find(query).select(projection).sort(sortSpec).skip(skip).limit(limit).lean(),
+                ProductCollection.find(query)
+                    .select(projection)
+                    .sort(sortSpec)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
                 ProductCollection.countDocuments(query),
             ]);
 
             return {
-                items,
+                items: items.map(Product.fromPersistence),
                 page,
                 page_size: limit,
                 total,
             };
-        },
-
-        // add into makeProductRepositoryMongo()
-        async updateStatus(productId, status) {
-            const doc = await ProductCollection.findOneAndUpdate(
-                { id: productId },
-                { $set: { status } },
-                { new: true }
-            );
-            return doc ? doc.toJSON() : null;
         },
     };
 }

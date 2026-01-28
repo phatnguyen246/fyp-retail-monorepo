@@ -14,6 +14,11 @@ import {
     mapGetProductByIdRequest,
     mapUpdateProductStatusRequest,
 } from "./product.mapper.js";
+import {
+    mapListProductsResponse,
+    mapProductResponse,
+    mapUpdateStatusResponse,
+} from "./product.response.js";
 
 export function makeProductController({ usecases }) {
     if (!usecases) throw new Error("MISSING_USECASES");
@@ -28,7 +33,7 @@ export function makeProductController({ usecases }) {
             try {
                 const command = mapCreateProductRequest(checked.value);
                 const created = await usecases.createProduct(command);
-                return res.status(201).json(created);
+                return res.status(201).json(mapProductResponse(created));
             } catch (err) {
                 next(err);
             }
@@ -43,7 +48,7 @@ export function makeProductController({ usecases }) {
             try {
                 const command = mapAddVariantRequest(checked.value);
                 const updated = await usecases.addVariant(command);
-                return res.status(200).json(updated);
+                return res.status(200).json(mapProductResponse(updated));
             } catch (err) {
                 next(err);
             }
@@ -59,7 +64,7 @@ export function makeProductController({ usecases }) {
             try {
                 const command = mapListProductsRequest(checked.value);
                 const result = await usecases.listProducts(command);
-                res.json(result);
+                res.json(mapListProductsResponse(result));
             } catch (err) {
                 next(err);
             }
@@ -75,7 +80,7 @@ export function makeProductController({ usecases }) {
             try {
                 const command = mapGetProductBySlugRequest(checked.value);
                 const product = await usecases.getProductBySlug(command);
-                res.json(product);
+                res.json(mapProductResponse(product));
             } catch (err) {
                 next(err);
             }
@@ -91,7 +96,7 @@ export function makeProductController({ usecases }) {
             try {
                 const command = mapGetProductByIdRequest(checked.value);
                 const product = await usecases.getProductById(command);
-                res.json(product);
+                res.json(mapProductResponse(product));
             } catch (err) {
                 next(err);
             }
@@ -109,7 +114,7 @@ export function makeProductController({ usecases }) {
             try {
                 const command = mapUpdateProductStatusRequest(checked.value);
                 const result = await usecases.updateProductStatus(command);
-                res.json({ ok: true, data: result });
+                res.json(mapUpdateStatusResponse(result));
             } catch (err) {
                 next(err);
             }

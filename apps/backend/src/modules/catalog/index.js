@@ -6,20 +6,22 @@ import { makeGetProductByIdUseCase } from "./application/usecases/getProductById
 import { makeListProductsUseCase } from "./application/usecases/listProducts.usecase.js";
 
 import { makeUpdateProductStatusUseCase } from "./application/usecases/updateProductStatus.usecase.js";
+import { assertProductRepositoryPort } from "./application/ports/productRepository.port.js";
 
 export function makeCatalogModule({ productRepository }) {
+    const repo = assertProductRepositoryPort(productRepository);
 
     return {
         usecases: {
-            createProduct: makeCreateProductUseCase({ productRepository }),
-            addVariant: makeAddVariantUseCase({ productRepository }),
+            createProduct: makeCreateProductUseCase({ productRepository: repo }),
+            addVariant: makeAddVariantUseCase({ productRepository: repo }),
 
-            getProductBySlug: makeGetProductBySlugUseCase({ productRepository }),
-            getProductById: makeGetProductByIdUseCase({ productRepository }),
-            listProducts: makeListProductsUseCase({ productRepository }),
+            getProductBySlug: makeGetProductBySlugUseCase({ productRepository: repo }),
+            getProductById: makeGetProductByIdUseCase({ productRepository: repo }),
+            listProducts: makeListProductsUseCase({ productRepository: repo }),
 
-            updateProductStatus: makeUpdateProductStatusUseCase({ productRepository }),
+            updateProductStatus: makeUpdateProductStatusUseCase({ productRepository: repo }),
         },
-        repositories: { productRepository },
+        repositories: { productRepository: repo },
     };
 }
