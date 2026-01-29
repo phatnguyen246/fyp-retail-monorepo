@@ -2,7 +2,8 @@
 import express from "express";
 import { registerModules } from "./modules.js";
 import { connectMongo } from "./mongo.js";
-import { AppError } from "../modules/catalog/application/errors/AppError.js";
+import { AppError } from "../modules/catalog/application/errors/appError.js";
+import { DomainError } from "../modules/catalog/domain/errors/index.js";
 
 export async function createApp() {
     await connectMongo();
@@ -17,6 +18,15 @@ export async function createApp() {
         // Business/Application error
         if (err instanceof AppError) {
             return res.status(err.httpStatus).json({
+                code: err.code,
+                message: err.message,
+                meta: err.meta ?? undefined,
+            });
+        }
+
+        // Domain error
+        if (err instanceof DomainError) {
+            return res.status(400).json({
                 code: err.code,
                 message: err.message,
                 meta: err.meta ?? undefined,

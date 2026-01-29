@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { CatalogErrors } from "../application/errors/index.js";
+import { CatalogDomainErrors } from "./errors/index.js";
 import { createMoney } from "./valueObjects/money.vo.js";
 import { createSku } from "./valueObjects/sku.vo.js";
 import { buildVariantSignature } from "./services/variantSignature.js";
@@ -41,14 +41,14 @@ export class Product {
 
     static create(input = {}) {
         const name = String(input.name ?? "").trim();
-        if (!name) throw CatalogErrors.PRODUCT_NAME_REQUIRED();
+        if (!name) throw CatalogDomainErrors.PRODUCT_NAME_REQUIRED();
 
         const slug = String(input.slug ?? "").trim();
-        if (!slug) throw CatalogErrors.PRODUCT_SLUG_REQUIRED();
+        if (!slug) throw CatalogDomainErrors.PRODUCT_SLUG_REQUIRED();
 
         const status = String(input.status ?? "draft").trim();
         if (!Product.isValidStatus(status)) {
-            throw CatalogErrors.PRODUCT_STATUS_INVALID();
+            throw CatalogDomainErrors.PRODUCT_STATUS_INVALID();
         }
 
         const product_type = String(input.product_type ?? "smartphone").trim() || "smartphone";
@@ -160,10 +160,10 @@ export class Product {
 
         const variants = Array.isArray(this.variants) ? this.variants : [];
         if (variants.some((v) => v.variant_signature === signature)) {
-            throw CatalogErrors.VARIANT_COMBINATION_EXISTS();
+            throw CatalogDomainErrors.VARIANT_COMBINATION_EXISTS();
         }
         if (variants.some((v) => v.sku === sku)) {
-            throw CatalogErrors.VARIANT_SKU_EXISTS();
+            throw CatalogDomainErrors.VARIANT_SKU_EXISTS();
         }
 
         let nextVariants = variants;
@@ -192,14 +192,14 @@ export class Product {
 
     updateStatus(nextStatus) {
         const normalized = String(nextStatus ?? "").trim();
-        if (!normalized) throw CatalogErrors.PRODUCT_STATUS_REQUIRED();
+        if (!normalized) throw CatalogDomainErrors.PRODUCT_STATUS_REQUIRED();
         if (!Product.isValidStatus(normalized)) {
-            throw CatalogErrors.PRODUCT_STATUS_INVALID();
+            throw CatalogDomainErrors.PRODUCT_STATUS_INVALID();
         }
 
         const currentStatus = String(this.status ?? "").trim();
         if (!Product.isValidStatus(currentStatus)) {
-            throw CatalogErrors.PRODUCT_STATUS_INVALID();
+            throw CatalogDomainErrors.PRODUCT_STATUS_INVALID();
         }
 
         if (currentStatus === normalized) {
@@ -207,7 +207,7 @@ export class Product {
         }
 
         if (!Product.canTransition(currentStatus, normalized)) {
-            throw CatalogErrors.PRODUCT_STATUS_TRANSITION_INVALID({
+            throw CatalogDomainErrors.PRODUCT_STATUS_TRANSITION_INVALID({
                 from: currentStatus,
                 to: normalized,
                 allowed: Product.allowedTransitions(currentStatus),
@@ -264,20 +264,20 @@ function normalizeSelections(raw) {
 
 function resolveSelectionsFromProduct({ options, selections }) {
     const opts = Array.isArray(options) ? options : [];
-    if (opts.length === 0) throw CatalogErrors.PRODUCT_OPTIONS_EMPTY();
+    if (opts.length === 0) throw CatalogDomainErrors.PRODUCT_OPTIONS_EMPTY();
 
     if (selections.some((s) => !s.option_code || !s.value_code)) {
-        throw CatalogErrors.VARIANT_SELECTION_INVALID();
+        throw CatalogDomainErrors.VARIANT_SELECTION_INVALID();
     }
 
     const seen = new Set();
     for (const s of selections) {
-        if (seen.has(s.option_code)) throw CatalogErrors.VARIANT_SELECTION_DUPLICATE_OPTION();
+        if (seen.has(s.option_code)) throw CatalogDomainErrors.VARIANT_SELECTION_DUPLICATE_OPTION();
         seen.add(s.option_code);
     }
 
     if (selections.length !== opts.length) {
-        throw CatalogErrors.VARIANT_SELECTION_INCOMPLETE();
+        throw CatalogDomainErrors.VARIANT_SELECTION_INCOMPLETE();
     }
 
     const optionByCode = new Map(
@@ -286,14 +286,14 @@ function resolveSelectionsFromProduct({ options, selections }) {
 
     const resolved = selections.map((s) => {
         const option = optionByCode.get(s.option_code);
-        if (!option) throw CatalogErrors.VARIANT_OPTION_NOT_FOUND(s.option_code);
+        if (!option) throw CatalogDomainErrors.VARIANT_OPTION_NOT_FOUND(s.option_code);
 
         const values = Array.isArray(option.values) ? option.values : [];
         const value = values.find(
             (v) => String(v.value_code ?? "").trim() === s.value_code
         );
         if (!value) {
-            throw CatalogErrors.VARIANT_OPTION_VALUE_NOT_FOUND(
+            throw CatalogDomainErrors.VARIANT_OPTION_VALUE_NOT_FOUND(
                 s.option_code,
                 s.value_code
             );
@@ -310,7 +310,7 @@ function resolveSelectionsFromProduct({ options, selections }) {
     for (const opt of opts) {
         const code = String(opt.code ?? "").trim();
         if (!seen.has(code)) {
-            throw CatalogErrors.VARIANT_SELECTION_INCOMPLETE();
+            throw CatalogDomainErrors.VARIANT_SELECTION_INCOMPLETE();
         }
     }
 
@@ -320,7 +320,7 @@ function resolveSelectionsFromProduct({ options, selections }) {
 function normalizeStock(raw) {
     const stock = Number(raw ?? 0);
     if (!Number.isFinite(stock) || stock < 0) {
-        throw CatalogErrors.VARIANT_STOCK_INVALID();
+        throw CatalogDomainErrors.VARIANT_STOCK_INVALID();
     }
     return stock;
 }

@@ -1,2 +1,2 @@
-export { AppError } from "./AppError.js";
+export { AppError } from "./appError.js";
 export { CatalogErrors } from "./catalogErrors.js";

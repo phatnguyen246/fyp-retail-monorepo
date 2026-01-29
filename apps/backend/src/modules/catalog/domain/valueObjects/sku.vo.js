@@ -1,9 +1,9 @@
-import { CatalogErrors } from "../../application/errors/index.js";
+import { CatalogDomainErrors } from "../errors/index.js";
 
 export function createSku(raw) {
     const sku = String(raw ?? "").trim();
     if (!sku) {
-        throw CatalogErrors.VARIANT_SKU_REQUIRED();
+        throw CatalogDomainErrors.VARIANT_SKU_REQUIRED();
     }
     return sku;
 }
