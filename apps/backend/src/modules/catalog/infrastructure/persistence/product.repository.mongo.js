@@ -256,11 +256,15 @@ function buildSpecsKvClause(filter) {
     if (type === "string") {
         if (op === "in") {
             if (!Array.isArray(value) || value.length === 0) return null;
-            return { specs_kv: { $elemMatch: { k: key, s: { $in: value } } } };
+            const patterns = value
+                .map((item) => buildStringContainsRegex(item))
+                .filter(Boolean);
+            if (!patterns.length) return null;
+            return { specs_kv: { $elemMatch: { k: key, s: { $in: patterns } } } };
         }
         if (op === "eq") {
             if (typeof value !== "string" || !value) return null;
-            return { specs_kv: { $elemMatch: { k: key, s: value } } };
+            return { specs_kv: { $elemMatch: { k: key, s: buildStringContainsRegex(value) } } };
         }
         return null;
     }
@@ -551,6 +555,13 @@ function buildSortSpec(sort) {
 
 function escapeRegex(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildStringContainsRegex(value) {
+    if (typeof value !== "string") return null;
+    const normalized = value.trim();
+    if (!normalized) return null;
+    return new RegExp(escapeRegex(normalized), "i");
 }
 
 function buildCursorQuery({ sort, cursor }) {

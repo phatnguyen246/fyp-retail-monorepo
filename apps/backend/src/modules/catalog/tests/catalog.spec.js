@@ -149,6 +149,27 @@ describe("specs_kv filtering", () => {
         expect(matchesQuery(productA, query)).toBe(false);
         expect(matchesQuery(productB, query)).toBe(true);
     });
+
+    it("supports partial match for string eq filters", () => {
+        const filters = parseFiltersQuery({
+            product_type: "smartphone",
+            filters: [{ key: "os", op: "eq", value: "ios" }],
+        }).filters;
+
+        const query = buildListQuery({ product_type: "smartphone" }, filters);
+
+        const productA = {
+            product_type: "smartphone",
+            specs_kv: [{ k: "spec.os", s: "ios 17" }],
+        };
+        const productB = {
+            product_type: "smartphone",
+            specs_kv: [{ k: "spec.os", s: "android 14" }],
+        };
+
+        expect(matchesQuery(productA, query)).toBe(true);
+        expect(matchesQuery(productB, query)).toBe(false);
+    });
 });
 
 function matchesQuery(doc, query) {
@@ -182,6 +203,10 @@ function matchesQuery(doc, query) {
 
 function matchesElemMatch(item, match) {
     for (const [field, cond] of Object.entries(match)) {
+        if (cond instanceof RegExp) {
+            if (!cond.test(String(item[field] ?? ""))) return false;
+            continue;
+        }
         if (cond && typeof cond === "object" && !Array.isArray(cond)) {
             if (!matchesCondition(item[field], cond)) return false;
         } else {
@@ -194,7 +219,12 @@ function matchesElemMatch(item, match) {
 function matchesCondition(actual, cond) {
     for (const [op, value] of Object.entries(cond)) {
         if (op === "$in") {
-            if (!Array.isArray(value) || !value.includes(actual)) return false;
+            if (!Array.isArray(value)) return false;
+            const ok = value.some((entry) => {
+                if (entry instanceof RegExp) return entry.test(String(actual ?? ""));
+                return entry === actual;
+            });
+            if (!ok) return false;
             continue;
         }
         if (op === "$gte" && !(actual >= value)) return false;
