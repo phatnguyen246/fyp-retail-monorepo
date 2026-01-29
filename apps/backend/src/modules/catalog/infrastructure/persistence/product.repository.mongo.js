@@ -41,6 +41,7 @@ export function makeProductRepositoryMongo() {
          * List products for catalog/admin listing
          * params: {
          *   filter: { status?, product_type?, q? },
+         *   filters: [{ key, type, op, value }],
          *   limit,
          *   cursor,
          *   sort: { field, direction }
@@ -48,11 +49,12 @@ export function makeProductRepositoryMongo() {
          */
         async findPage({
             filter = {},
+            filters = [],
             limit = 20,
             cursor = null,
             sort = { field: "createdAt", direction: "desc" },
         } = {}) {
-            const baseQuery = buildListQuery(filter);
+            const baseQuery = buildListQuery(filter, filters);
             const pageSize = clamp(toInt(limit, 20), 1, 100);
 
             const { sortSpec, cursorQuery } = buildCursorQuery({ sort, cursor });
@@ -95,13 +97,30 @@ export function makeProductRepositoryMongo() {
 
             return { items, nextCursor };
         },
+
+        async getFacets({ filter = {}, filters = [], filterDef } = {}) {
+            const baseQuery = buildListQuery(filter, filters);
+            const facetPipelines = buildFacetPipelines(filterDef);
+
+            if (!Object.keys(facetPipelines).length) {
+                return {
+                    product_type: filterDef?.product_type,
+                    groups: [],
+                };
+            }
+
+            const pipeline = [{ $match: baseQuery }, { $facet: facetPipelines }];
+            const [raw] = await ProductCollection.aggregate(pipeline);
+
+            return mapFacetResults({ filterDef, raw: raw ?? {} });
+        },
     };
 }
 
-function buildListQuery(filter) {
+function buildListQuery(filter, filters = []) {
     const q = {};
     if (filter.status) q.status = String(filter.status).trim();
-    if (filter.product_type) q.product_type = String(filter.product_type).trim();
+    if (filter.product_type) q.product_type = String(filter.product_type).trim().toLowerCase();
 
     // Simple search by name/slug (basic)
     if (filter.q) {
@@ -114,7 +133,221 @@ function buildListQuery(filter) {
             ];
         }
     }
-    return q;
+
+    const specClauses = buildSpecsKvClauses(filters);
+    return mergeWithFilters(q, specClauses);
+}
+
+function buildSpecsKvClauses(filters) {
+    if (!Array.isArray(filters) || filters.length === 0) return [];
+    const clauses = [];
+
+    for (const filter of filters) {
+        const clause = buildSpecsKvClause(filter);
+        if (clause) clauses.push(clause);
+    }
+
+    return clauses;
+}
+
+function buildSpecsKvClause(filter) {
+    const key = String(filter?.key ?? "").trim();
+    if (!key) return null;
+
+    const type = filter?.type;
+    const op = String(filter?.op ?? "").trim().toLowerCase();
+    const value = filter?.value;
+
+    if (type === "number") {
+        if (!Number.isFinite(value) && op !== "between") return null;
+        if (op === "between" && value && Number.isFinite(value.min) && Number.isFinite(value.max)) {
+            return {
+                specs_kv: {
+                    $elemMatch: {
+                        k: key,
+                        n: { $gte: value.min, $lte: value.max },
+                    },
+                },
+            };
+        }
+        const numberFilter = buildNumericOperator(op, value);
+        if (!numberFilter) return null;
+        return { specs_kv: { $elemMatch: { k: key, n: numberFilter } } };
+    }
+
+    if (type === "string") {
+        if (op === "in") {
+            if (!Array.isArray(value) || value.length === 0) return null;
+            return { specs_kv: { $elemMatch: { k: key, s: { $in: value } } } };
+        }
+        if (op === "eq") {
+            if (typeof value !== "string" || !value) return null;
+            return { specs_kv: { $elemMatch: { k: key, s: value } } };
+        }
+        return null;
+    }
+
+    if (type === "boolean") {
+        if (typeof value !== "boolean") return null;
+        return { specs_kv: { $elemMatch: { k: key, b: value } } };
+    }
+
+    return null;
+}
+
+function buildNumericOperator(op, value) {
+    switch (op) {
+        case "eq":
+            return value;
+        case "gte":
+            return { $gte: value };
+        case "lte":
+            return { $lte: value };
+        case "gt":
+            return { $gt: value };
+        case "lt":
+            return { $lt: value };
+        default:
+            return null;
+    }
+}
+
+function mergeWithFilters(baseQuery, clauses) {
+    if (!clauses || clauses.length === 0) return baseQuery;
+    if (!baseQuery || Object.keys(baseQuery).length === 0) {
+        return clauses.length === 1 ? clauses[0] : { $and: clauses };
+    }
+    return { $and: [baseQuery, ...clauses] };
+}
+
+function buildFacetPipelines(filterDef) {
+    const groups = Array.isArray(filterDef?.groups) ? filterDef.groups : [];
+    const pipelines = {};
+
+    for (const group of groups) {
+        const filters = Array.isArray(group?.filters) ? group.filters : [];
+        for (const filter of filters) {
+            const key = filter?.key;
+            const field = facetFieldByType(filter?.type);
+            if (!key || !field) continue;
+
+            pipelines[key] = [
+                { $unwind: "$specs_kv" },
+                { $match: { "specs_kv.k": key, [`specs_kv.${field}`]: { $exists: true } } },
+                { $group: { _id: `$specs_kv.${field}`, count: { $sum: 1 } } },
+            ];
+        }
+    }
+
+    return pipelines;
+}
+
+export function mapFacetResults({ filterDef, raw }) {
+    const groups = Array.isArray(filterDef?.groups) ? filterDef.groups : [];
+    const normalizedRaw = raw && typeof raw === "object" ? raw : {};
+
+    const resultGroups = groups.map((group) => {
+        const filters = Array.isArray(group?.filters) ? group.filters : [];
+        const mappedFilters = filters.map((filter) => {
+            const items = Array.isArray(normalizedRaw?.[filter.key]) ? normalizedRaw[filter.key] : [];
+            return mapFilterCounts(filter, items);
+        });
+
+        return {
+            id: group.id,
+            label: group.label,
+            filters: mappedFilters,
+        };
+    });
+
+    return {
+        product_type: filterDef?.product_type,
+        groups: resultGroups,
+    };
+}
+
+function mapFilterCounts(filter, rawItems) {
+    const base = {
+        key: filter.key,
+        label: filter.label,
+        type: filter.type,
+        control: filter.control,
+        unit: filter.unit,
+        operators: filter.operators,
+    };
+
+    const counts = buildCountMap(rawItems, filter.type);
+
+    if (filter.type === "number" && Array.isArray(filter.buckets)) {
+        const buckets = filter.buckets.map((bucket) => ({
+            ...bucket,
+            count: countInRange(counts, bucket.min, bucket.max),
+        }));
+        return { ...base, buckets };
+    }
+
+    if ((filter.type === "string" || filter.type === "boolean") && Array.isArray(filter.options)) {
+        const options = filter.options.map((option) => ({
+            ...option,
+            count: counts.get(option.value) ?? 0,
+        }));
+        return { ...base, options };
+    }
+
+    const values = rawItems.map((item) => ({
+        value: item._id,
+        count: item.count,
+    }));
+
+    return { ...base, values };
+}
+
+function buildCountMap(rawItems, type) {
+    const map = new Map();
+    for (const item of rawItems) {
+        let key = item?._id;
+        if (type === "number") {
+            key = Number(key);
+            if (!Number.isFinite(key)) continue;
+        } else if (type === "boolean") {
+            if (typeof key === "boolean") {
+                // keep as-is
+            } else if (typeof key === "number") {
+                if (key === 1) key = true;
+                else if (key === 0) key = false;
+                else continue;
+            } else if (typeof key === "string") {
+                const normalized = key.trim().toLowerCase();
+                if (normalized === "true") key = true;
+                else if (normalized === "false") key = false;
+                else continue;
+            } else {
+                continue;
+            }
+        } else {
+            key = key == null ? "" : String(key);
+        }
+        const prev = map.get(key) ?? 0;
+        map.set(key, prev + (item?.count ?? 0));
+    }
+    return map;
+}
+
+function countInRange(counts, min, max) {
+    let total = 0;
+    for (const [value, count] of counts.entries()) {
+        if (min != null && value < min) continue;
+        if (max != null && value > max) continue;
+        total += count;
+    }
+    return total;
+}
+
+function facetFieldByType(type) {
+    if (type === "number") return "n";
+    if (type === "boolean") return "b";
+    if (type === "string") return "s";
+    return null;
 }
 
 function buildSortSpec(sort) {

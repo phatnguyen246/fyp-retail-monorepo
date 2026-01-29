@@ -5,7 +5,7 @@ import {
     validateGetProductBySlugRequest,
     validateGetProductByIdRequest,
     validateUpdateProductStatusRequest,
-} from "./product.validator.js";
+} from "../validators/product.validator.js";
 import {
     mapCreateProductRequest,
     mapAddVariantRequest,
@@ -13,12 +13,13 @@ import {
     mapGetProductBySlugRequest,
     mapGetProductByIdRequest,
     mapUpdateProductStatusRequest,
-} from "./product.mapper.js";
+} from "../product.mapper.js";
 import {
     mapListProductsResponse,
     mapProductResponse,
     mapUpdateStatusResponse,
-} from "./product.response.js";
+} from "../product.response.js";
+import { parseFiltersQuery } from "../validators/filters.validator.js";
 
 export function makeProductController({ usecases }) {
     if (!usecases) throw new Error("MISSING_USECASES");
@@ -63,7 +64,14 @@ export function makeProductController({ usecases }) {
 
             try {
                 const command = mapListProductsRequest(checked.value);
-                const result = await usecases.listProducts(command);
+                const parsedFilters = parseFiltersQuery({
+                    product_type: command.product_type,
+                    filters: req.query?.filters,
+                });
+                const result = await usecases.listProducts({
+                    ...command,
+                    filters: parsedFilters.filters,
+                });
                 res.json(mapListProductsResponse(result));
             } catch (err) {
                 next(err);

@@ -1,4 +1,6 @@
-import { makeProductController } from "./product.controller.js";
+import { makeProductController } from "./controllers/product.controller.js";
+import { makeFilterDefsController } from "./controllers/filterDefs.controller.js";
+import { makeFacetsController } from "./controllers/facets.controller.js";
 
 /**
  * API Adapter for Catalog module
@@ -11,6 +13,8 @@ export function registerCatalogModule(app, { usecases }) {
     app.get("/catalog/health", (req, res) => res.json({ ok: true }));
 
     const controller = makeProductController({ usecases });
+    const filterDefsController = makeFilterDefsController({ usecases });
+    const facetsController = makeFacetsController({ usecases });
 
     // Command routes
     app.post("/catalog/products", controller.createProduct);
@@ -22,4 +26,8 @@ export function registerCatalogModule(app, { usecases }) {
     app.get("/catalog/products", controller.listProducts);
     app.get("/catalog/products/:slug", controller.getBySlug);
     app.get("/catalog/admin/products/:id", controller.getById);
+
+    // Filter defs + facets
+    app.get("/catalog/filter-defs", filterDefsController.getFilterDefs);
+    app.get("/catalog/products/facets", facetsController.getProductFacets);
 }

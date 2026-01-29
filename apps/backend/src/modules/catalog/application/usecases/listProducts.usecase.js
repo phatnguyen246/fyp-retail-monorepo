@@ -1,5 +1,5 @@
 // apps/backend/src/modules/catalog/application/usecases/listProducts.usecase.js
-import { listProductsQuery } from "./listProducts.query.js";
+import { listProductsQuery } from "./queries/listProducts.query.js";
 import { listProductsResult } from "../results/listProducts.result.js";
 import { CatalogErrors } from "../errors/index.js";
 import { Product } from "../../domain/product.aggregate.js";

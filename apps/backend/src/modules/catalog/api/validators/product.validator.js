@@ -13,7 +13,7 @@ import {
     getProductBySlugRequestDTO,
     getProductByIdRequestDTO,
     updateProductStatusRequestDTO,
-} from "./product.request.js";
+} from "../product.request.js";
 
 function isPlainObject(x) {
     return x !== null && typeof x === "object" && !Array.isArray(x);

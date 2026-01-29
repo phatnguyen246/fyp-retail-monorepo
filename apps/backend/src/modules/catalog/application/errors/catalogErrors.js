@@ -16,6 +16,9 @@ export const CatalogErrors = {
     PRODUCT_STATUS_REQUIRED: () =>
         new AppError("PRODUCT_STATUS_REQUIRED", 400, "Product status is required"),
 
+    PRODUCT_TYPE_REQUIRED: () =>
+        new AppError("PRODUCT_TYPE_REQUIRED", 400, "Product type is required"),
+
     PRODUCT_STATUS_INVALID: () =>
         new AppError("PRODUCT_STATUS_INVALID", 400, "Product status is invalid"),
 
@@ -36,6 +39,33 @@ export const CatalogErrors = {
 
     PRODUCT_TYPE_INVALID: () =>
         new AppError("PRODUCT_TYPE_INVALID", 400, "Product type is invalid"),
+
+    FILTERS_INVALID: (message = "Filters are invalid", details = {}) =>
+        new AppError("FILTERS_INVALID", 400, message, details),
+
+    FILTER_KEY_INVALID: (key, allowed = []) =>
+        new AppError(
+            "FILTER_KEY_INVALID",
+            400,
+            `Filter key '${key}' is not allowed`,
+            { key, allowed: Array.isArray(allowed) ? allowed : [] }
+        ),
+
+    FILTER_OPERATOR_INVALID: (operator, allowed = []) =>
+        new AppError(
+            "FILTER_OPERATOR_INVALID",
+            400,
+            `Filter operator '${operator}' is not allowed`,
+            { operator, allowed: Array.isArray(allowed) ? allowed : [] }
+        ),
+
+    FILTER_VALUE_INVALID: (key, operator) =>
+        new AppError(
+            "FILTER_VALUE_INVALID",
+            400,
+            "Filter value is invalid",
+            { key, operator }
+        ),
 
     PRODUCT_NOT_FOUND: () =>
         new AppError("PRODUCT_NOT_FOUND", 404, "Product not found"),

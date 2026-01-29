@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { listProductsQuery } from "../application/usecases/listProducts.query.js";
+import { listProductsQuery } from "../application/usecases/queries/listProducts.query.js";
 import { encodeCursor, decodeCursor } from "../infrastructure/persistence/cursor.codec.js";
+import { parseFiltersQuery } from "../api/validators/filters.validator.js";
 
 describe("catalog listProducts query", () => {
     it("applies default limit and sort", () => {
@@ -41,5 +42,33 @@ describe("cursor codec", () => {
 
     it("throws on invalid token", () => {
         expect(() => decodeCursor("not-a-valid-token")).toThrow();
+    });
+});
+
+describe("filters validator", () => {
+    it("parses numeric filter with gte operator", () => {
+        const result = parseFiltersQuery({
+            product_type: "computer",
+            filters: [{ key: "ram_gb", op: "gte", value: "16" }],
+        });
+
+        expect(result.filters[0]).toEqual({
+            key: "ram_gb",
+            type: "number",
+            op: "gte",
+            value: 16,
+        });
+    });
+
+    it("rejects unknown filter key", () => {
+        try {
+            parseFiltersQuery({
+                product_type: "computer",
+                filters: [{ key: "not_allowed", op: "eq", value: "x" }],
+            });
+            throw new Error("expected to throw");
+        } catch (err) {
+            expect(err?.code).toBe("FILTER_KEY_INVALID");
+        }
     });
 });

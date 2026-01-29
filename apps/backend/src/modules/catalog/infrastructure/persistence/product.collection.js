@@ -67,6 +67,17 @@ const ProductVariantSchema = new Schema(
     { _id: false }
 );
 
+// Specs KV (Derived index for filters)
+const ProductSpecKvSchema = new Schema(
+    {
+        k: { type: String, required: true, trim: true },
+        n: { type: Number },
+        s: { type: String, trim: true },
+        b: { type: Boolean },
+    },
+    { _id: false }
+);
+
 /**
  * Root schema: Product
  */
@@ -88,6 +99,7 @@ const ProductSchema = new Schema(
         },
 
         main_specs: { type: Schema.Types.Mixed, default: {} }, // JSON specs
+        specs_kv: { type: [ProductSpecKvSchema], default: [] },
         images: { type: [String], default: [] }, // product-level images
 
         options: { type: [ProductOptionSchema], default: [] },
@@ -116,6 +128,11 @@ ProductSchema.index({ "variants.sku": 1 }, { unique: true });
 
 // query helpers
 ProductSchema.index({ product_type: 1, status: 1 });
+
+// specs_kv indexes for faceted filters
+ProductSchema.index({ product_type: 1, "specs_kv.k": 1, "specs_kv.n": 1 });
+ProductSchema.index({ product_type: 1, "specs_kv.k": 1, "specs_kv.s": 1 });
+ProductSchema.index({ product_type: 1, "specs_kv.k": 1, "specs_kv.b": 1 });
 
 // NOTE:
 // - Không thể enforce unique "variant_signature per product" bằng unique index trong array theo đúng scope.

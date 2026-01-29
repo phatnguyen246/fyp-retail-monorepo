@@ -20,6 +20,7 @@ export class Product {
         product_type,
         status,
         main_specs,
+        specs_kv,
         images,
         options,
         variants,
@@ -32,6 +33,7 @@ export class Product {
         this.product_type = product_type;
         this.status = status;
         this.main_specs = isPlainObject(main_specs) ? main_specs : {};
+        this.specs_kv = Array.isArray(specs_kv) ? specs_kv : [];
         this.images = Array.isArray(images) ? images : [];
         this.options = Array.isArray(options) ? options : [];
         this.variants = Array.isArray(variants) ? variants : [];
@@ -51,8 +53,10 @@ export class Product {
             throw CatalogDomainErrors.PRODUCT_STATUS_INVALID();
         }
 
-        const product_type = String(input.product_type ?? "smartphone").trim() || "smartphone";
+        const product_type =
+            String(input.product_type ?? "smartphone").trim().toLowerCase() || "smartphone";
         const main_specs = isPlainObject(input.main_specs) ? input.main_specs : {};
+        const specs_kv = Array.isArray(input.specs_kv) ? input.specs_kv : [];
         const images = normalizeImages(input.images);
         const options = normalizeOptions(input.options);
 
@@ -62,6 +66,7 @@ export class Product {
             product_type,
             status,
             main_specs,
+            specs_kv,
             images,
             options,
             variants: [],
@@ -80,6 +85,7 @@ export class Product {
             product_type: p.product_type,
             status: p.status,
             main_specs: p.main_specs ?? {},
+            specs_kv: Array.isArray(p.specs_kv) ? p.specs_kv : [],
             images: Array.isArray(p.images) ? p.images : [],
             options: Array.isArray(p.options) ? p.options : [],
             variants: Array.isArray(p.variants) ? p.variants : [],
@@ -109,6 +115,7 @@ export class Product {
             product_type: this.product_type,
             status: this.status,
             main_specs: this.main_specs ?? {},
+            specs_kv: Array.isArray(this.specs_kv) ? this.specs_kv : [],
             images: Array.isArray(this.images) ? this.images : [],
             options: Array.isArray(this.options) ? this.options : [],
             variants: Array.isArray(this.variants) ? this.variants : [],
@@ -125,6 +132,7 @@ export class Product {
             product_type: this.product_type,
             status: this.status,
             main_specs: this.main_specs ?? {},
+            specs_kv: Array.isArray(this.specs_kv) ? this.specs_kv : [],
             images: Array.isArray(this.images) ? this.images : [],
             options: Array.isArray(this.options) ? this.options : [],
             variants: Array.isArray(this.variants) ? this.variants : [],

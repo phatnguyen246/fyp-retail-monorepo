@@ -1,5 +1,5 @@
 // apps/backend/src/modules/catalog/application/usecases/listProducts.query.js
-import { CatalogErrors } from "../errors/index.js";
+import { CatalogErrors } from "../../errors/index.js";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -17,9 +17,10 @@ export function listProductsQuery(input = {}) {
     const limit = clamp(toInt(input.limit, DEFAULT_LIMIT), 1, MAX_LIMIT);
     const cursor = normalizeCursor(input.cursor);
 
+    const rawProductType = normalizeOptionalString(input.product_type);
     const filter = {
         status: normalizeOptionalString(input.status),
-        product_type: normalizeOptionalString(input.product_type),
+        product_type: rawProductType ? rawProductType.toLowerCase() : undefined,
         q: normalizeOptionalString(input.q),
     };
 
@@ -40,6 +41,7 @@ export function listProductsQuery(input = {}) {
         cursor,
         filter,
         sort: { field, direction },
+        filters: Array.isArray(input.filters) ? input.filters : [],
     };
 }
 

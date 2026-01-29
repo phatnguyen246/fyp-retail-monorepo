@@ -5,8 +5,11 @@ import { makeGetProductBySlugUseCase } from "./application/usecases/getProductBy
 import { makeGetProductByIdUseCase } from "./application/usecases/getProductById.usecase.js";
 import { makeListProductsUseCase } from "./application/usecases/listProducts.usecase.js";
 
+import { makeUpdateProductUseCase } from "./application/usecases/updateProduct.usecase.js";
 import { makeUpdateProductStatusUseCase } from "./application/usecases/updateProductStatus.usecase.js";
 import { assertProductRepositoryPort } from "./application/ports/productRepository.port.js";
+import { makeGetFilterDefUseCase } from "./application/usecases/getFilterDef.usecase.js";
+import { makeGetProductFacetsUseCase } from "./application/usecases/getProductFacets.usecase.js";
 
 export function makeCatalogModule({ productRepository }) {
     const repo = assertProductRepositoryPort(productRepository);
@@ -20,7 +23,10 @@ export function makeCatalogModule({ productRepository }) {
             getProductById: makeGetProductByIdUseCase({ productRepository: repo }),
             listProducts: makeListProductsUseCase({ productRepository: repo }),
 
+            updateProduct: makeUpdateProductUseCase({ productRepository: repo }),
             updateProductStatus: makeUpdateProductStatusUseCase({ productRepository: repo }),
+            getFilterDef: makeGetFilterDefUseCase(),
+            getProductFacets: makeGetProductFacetsUseCase({ productRepository: repo }),
         },
         repositories: { productRepository: repo },
     };
