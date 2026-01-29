@@ -18,6 +18,7 @@ export function registerCatalogModule(app, { usecases }) {
     app.patch("/catalog/products/:id/status", controller.updateStatus);
 
     // Query routes
+    // GET /catalog/products?status=&product_type=&q=&limit=&cursor=&sort_field=&sort_dir=
     app.get("/catalog/products", controller.listProducts);
     app.get("/catalog/products/:slug", controller.getBySlug);
     app.get("/catalog/admin/products/:id", controller.getById);

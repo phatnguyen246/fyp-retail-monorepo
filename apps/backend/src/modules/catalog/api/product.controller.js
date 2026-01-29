@@ -54,7 +54,7 @@ export function makeProductController({ usecases }) {
             }
         },
 
-        // GET /catalog/products?status=&product_type=&q=&page=&page_size=&sort_field=&sort_dir=
+        // GET /catalog/products?status=&product_type=&q=&limit=&cursor=&sort_field=&sort_dir=
         async listProducts(req, res, next) {
             const checked = validateListProductsRequest({ query: req.query });
             if (!checked.ok) {

@@ -37,12 +37,10 @@ export function mapProductSummaryResponse(result) {
 
 export function mapListProductsResponse(result = {}) {
     return {
-        page: result.page,
-        page_size: result.page_size,
-        total: result.total,
         items: Array.isArray(result.items)
             ? result.items.map(mapProductSummaryResponse)
             : [],
+        nextCursor: result.nextCursor ?? null,
     };
 }
 

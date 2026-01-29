@@ -1,5 +1,8 @@
+import mongoose from "mongoose";
 import { ProductCollection } from "./product.collection.js";
 import { Product } from "../../domain/product.aggregate.js";
+import { CatalogErrors } from "../../application/errors/index.js";
+import { decodeCursor, encodeCursor } from "./cursor.codec.js";
 
 export function makeProductRepositoryMongo() {
     return {
@@ -38,21 +41,29 @@ export function makeProductRepositoryMongo() {
          * List products for catalog/admin listing
          * params: {
          *   filter: { status?, product_type?, q? },
-         *   page, page_size,
+         *   limit,
+         *   cursor,
          *   sort: { field, direction }
          * }
          */
-        async list({ filter = {}, page = 1, page_size = 20, sort = { field: "createdAt", direction: "desc" } } = {}) {
-            const query = buildListQuery(filter);
+        async findPage({
+            filter = {},
+            limit = 20,
+            cursor = null,
+            sort = { field: "createdAt", direction: "desc" },
+        } = {}) {
+            const baseQuery = buildListQuery(filter);
+            const pageSize = clamp(toInt(limit, 20), 1, 100);
 
-            const skip = Math.max(0, (page - 1) * page_size);
-            const limit = Math.max(1, page_size);
-
-            const sortSpec = buildSortSpec(sort);
+            const { sortSpec, cursorQuery } = buildCursorQuery({ sort, cursor });
+            const query =
+                cursorQuery
+                    ? mergeWithCursor(baseQuery, cursorQuery)
+                    : baseQuery;
 
             // projection: trả về dữ liệu nhẹ cho listing (không cần options/variants đầy đủ)
             const projection = {
-                _id: 0,
+                _id: 1,
                 id: 1,
                 name: 1,
                 slug: 1,
@@ -65,22 +76,24 @@ export function makeProductRepositoryMongo() {
                 // không include options/variants để listing nhẹ
             };
 
-            const [items, total] = await Promise.all([
-                ProductCollection.find(query)
-                    .select(projection)
-                    .sort(sortSpec)
-                    .skip(skip)
-                    .limit(limit)
-                    .lean(),
-                ProductCollection.countDocuments(query),
-            ]);
+            const docs = await ProductCollection.find(query)
+                .select(projection)
+                .sort(sortSpec)
+                .limit(pageSize + 1)
+                .lean();
 
-            return {
-                items: items.map(Product.fromPersistence),
-                page,
-                page_size: limit,
-                total,
-            };
+            const hasNext = docs.length > pageSize;
+            const pageDocs = hasNext ? docs.slice(0, pageSize) : docs;
+            const items = pageDocs.map(Product.fromPersistence);
+
+            let nextCursor = null;
+            if (hasNext && pageDocs.length > 0) {
+                const last = pageDocs[pageDocs.length - 1];
+                const payload = buildCursorPayload(sort, last);
+                nextCursor = encodeCursor(payload);
+            }
+
+            return { items, nextCursor };
         },
     };
 }
@@ -117,4 +130,110 @@ function buildSortSpec(sort) {
 
 function escapeRegex(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildCursorQuery({ sort, cursor }) {
+    const sortSpec = buildSortSpec(sort);
+    const field = String(sort?.field ?? "createdAt").trim();
+    const direction = String(sort?.direction ?? "desc").trim().toLowerCase() === "asc" ? "asc" : "desc";
+
+    const effectiveSort = {
+        field,
+        direction,
+        spec: { [field]: sortSpec[field], _id: sortSpec[field] },
+    };
+
+    if (!cursor) {
+        return { sortSpec: effectiveSort.spec, cursorQuery: null };
+    }
+
+    let decoded;
+    try {
+        decoded = decodeCursor(cursor);
+    } catch {
+        throw CatalogErrors.INVALID_CURSOR();
+    }
+
+    if (decoded.f !== field || decoded.d !== direction) {
+        throw CatalogErrors.CURSOR_MISMATCH({
+            expected: { f: field, d: direction },
+            actual: { f: decoded.f, d: decoded.d },
+        });
+    }
+
+    const cursorValue = coerceCursorValue(field, decoded.v);
+    const cursorId = coerceObjectId(decoded.id);
+
+    const compare = direction === "asc" ? "$gt" : "$lt";
+    const cursorQuery = {
+        $or: [
+            { [field]: { [compare]: cursorValue } },
+            { [field]: cursorValue, _id: { [compare]: cursorId } },
+        ],
+    };
+
+    return { sortSpec: effectiveSort.spec, cursorQuery };
+}
+
+function buildCursorPayload(sort, lastDoc) {
+    const field = String(sort?.field ?? "createdAt").trim();
+    const direction = String(sort?.direction ?? "desc").trim().toLowerCase() === "asc" ? "asc" : "desc";
+    const value = lastDoc?.[field];
+    const serializedValue = serializeCursorValue(field, value);
+    if (!serializedValue) {
+        throw CatalogErrors.INVALID_CURSOR();
+    }
+    return {
+        f: field,
+        d: direction,
+        v: serializedValue,
+        id: String(lastDoc?._id ?? ""),
+    };
+}
+
+function mergeWithCursor(baseQuery, cursorQuery) {
+    if (!baseQuery || Object.keys(baseQuery).length === 0) return cursorQuery;
+    return { $and: [baseQuery, cursorQuery] };
+}
+
+function coerceCursorValue(field, value) {
+    if (isDateField(field)) {
+        const date = value instanceof Date ? value : new Date(value);
+        if (!Number.isFinite(date.getTime())) {
+            throw CatalogErrors.INVALID_CURSOR();
+        }
+        return date;
+    }
+    return String(value);
+}
+
+function serializeCursorValue(field, value) {
+    if (isDateField(field)) {
+        const date = value instanceof Date ? value : new Date(value);
+        if (!Number.isFinite(date.getTime())) return null;
+        return date.toISOString();
+    }
+    const s = value == null ? "" : String(value);
+    return s.length ? s : null;
+}
+
+function isDateField(field) {
+    return field === "createdAt" || field === "updatedAt";
+}
+
+function coerceObjectId(id) {
+    const str = String(id ?? "");
+    if (!mongoose.Types.ObjectId.isValid(str)) {
+        throw CatalogErrors.INVALID_CURSOR();
+    }
+    return new mongoose.Types.ObjectId(str);
+}
+
+function toInt(value, fallback) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+
+function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
 }

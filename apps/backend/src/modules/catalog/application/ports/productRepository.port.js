@@ -5,11 +5,11 @@
  * - findById(productId): Promise<Product|null>
  * - findBySlug(slug): Promise<Product|null>
  * - save(product): Promise<Product>
- * - list({ filter, page, page_size, sort }): Promise<{ items, total, page, page_size }>
+ * - findPage({ filter, limit, cursor, sort }): Promise<{ items, nextCursor }>
  */
 
 export function assertProductRepositoryPort(repo, name = "productRepository") {
-    const required = ["findById", "findBySlug", "save", "list"];
+    const required = ["findById", "findBySlug", "save", "findPage"];
     const missing = required.filter((key) => typeof repo?.[key] !== "function");
     if (missing.length) {
         throw new Error(

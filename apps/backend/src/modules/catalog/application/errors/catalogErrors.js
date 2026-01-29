@@ -109,4 +109,29 @@ export const CatalogErrors = {
                 allowed: Array.isArray(allowed) ? allowed : ["asc", "desc"],
             }
         ),
+
+    SORT_FIELD_INVALID: (field, allowed = []) =>
+        new AppError(
+            "SORT_FIELD_INVALID",
+            400,
+            "Sort field is invalid",
+            {
+                field,
+                allowed: Array.isArray(allowed) ? allowed : [],
+            }
+        ),
+
+    INVALID_CURSOR: () =>
+        new AppError("INVALID_CURSOR", 400, "Cursor is invalid"),
+
+    CURSOR_MISMATCH: ({ expected, actual } = {}) =>
+        new AppError(
+            "CURSOR_MISMATCH",
+            400,
+            "Cursor does not match the current sort",
+            {
+                expected: expected ?? null,
+                actual: actual ?? null,
+            }
+        ),
 };
