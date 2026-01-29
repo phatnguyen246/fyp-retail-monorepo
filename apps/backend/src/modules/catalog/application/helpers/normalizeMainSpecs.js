@@ -9,17 +9,32 @@ export function normalizeMainSpecs(rawSpecs = {}, specDef) {
         const def = map.get(key);
         if (!def) continue;
 
-        const nextValue = normalizeValue(def.type, value);
-        if (nextValue !== undefined) {
-            normalized[key] = nextValue;
+        if (def.strategy === "set") {
+            const items = Array.isArray(value) ? value : [value];
+            const normalizedItems = items
+                .map((item) => normalizeValue(def, item))
+                .filter((item) => item !== undefined);
+
+            const deduped = dedupeAndSort(normalizedItems, def.type);
+            if (deduped.length) {
+                normalized[key] = deduped;
+            }
+            continue;
         }
+
+        const nextValue = normalizeValue(def, value);
+        if (nextValue !== undefined) normalized[key] = nextValue;
     }
 
     return normalized;
 }
 
-function normalizeValue(type, value) {
-    switch (type) {
+function normalizeValue(def, value) {
+    if (typeof def?.normalize === "function") {
+        return def.normalize(value);
+    }
+
+    switch (def?.type) {
         case "number":
             return normalizeNumber(value);
         case "boolean":
@@ -67,6 +82,25 @@ function normalizeString(value) {
         return asString.length ? asString : undefined;
     }
     return undefined;
+}
+
+function dedupeAndSort(values, type) {
+    const seen = new Set();
+    const deduped = [];
+    for (const value of values) {
+        const key = type === "string" ? String(value).toLowerCase() : String(value);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(value);
+    }
+
+    if (type === "number") {
+        return deduped.sort((a, b) => a - b);
+    }
+    if (type === "boolean") {
+        return deduped.sort((a, b) => Number(a) - Number(b));
+    }
+    return deduped.sort((a, b) => String(a).localeCompare(String(b)));
 }
 
 function isPlainObject(x) {

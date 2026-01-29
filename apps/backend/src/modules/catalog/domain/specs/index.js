@@ -5,8 +5,8 @@ import { smartphoneFilters } from "./smartphone.filters.js";
 import { computerFilters } from "./computer.filters.js";
 
 const SPEC_REGISTRY = new Map([
-    ["smartphone", smartphoneSpecs],
-    ["computer", computerSpecs],
+    ["smartphone", buildSpecRegistry(smartphoneSpecs)],
+    ["computer", buildSpecRegistry(computerSpecs)],
 ]);
 
 const FILTER_REGISTRY = new Map([
@@ -23,13 +23,13 @@ export function getSpecDef(product_type) {
     const type = normalizeProductType(product_type);
     if (!type) return null;
 
-    const specs = SPEC_REGISTRY.get(type);
-    if (!specs) return null;
+    const registry = SPEC_REGISTRY.get(type);
+    if (!registry) return null;
 
     return {
         product_type: type,
-        specs,
-        map: new Map(specs.map((spec) => [spec.key, spec])),
+        specs: registry.specs,
+        map: registry.map,
     };
 }
 
@@ -42,4 +42,51 @@ export function getFilterDef(product_type) {
 
 export function listProductTypes() {
     return Array.from(SPEC_REGISTRY.keys());
+}
+
+function buildSpecRegistry(specs = []) {
+    const normalizedSpecs = specs.map((spec) => withSpecDefaults(spec));
+    const map = new Map(normalizedSpecs.map((spec) => [spec.key, spec]));
+    return { specs: normalizedSpecs, map };
+}
+
+function withSpecDefaults(spec = {}) {
+    const normalized = {
+        ...spec,
+        strategy: spec.strategy ?? "single",
+        source: spec.source ?? "main_specs",
+    };
+
+    if (typeof normalized.extract !== "function") {
+        normalized.extract = makeDefaultExtractor(normalized);
+    }
+
+    return normalized;
+}
+
+function makeDefaultExtractor(spec) {
+    return function extract({ mainSpecs, optionSpecs } = {}) {
+        const key = spec.key;
+        const fromMain = isPlainObject(mainSpecs) ? mainSpecs[key] : undefined;
+        const fromOptions = isPlainObject(optionSpecs) ? optionSpecs[key] : undefined;
+
+        if (spec.source === "options") {
+            return fromOptions;
+        }
+        if (spec.source === "either") {
+            if (!isEmptyValue(fromOptions)) return fromOptions;
+            return fromMain;
+        }
+        return fromMain;
+    };
+}
+
+function isEmptyValue(value) {
+    if (value == null) return true;
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+}
+
+function isPlainObject(x) {
+    return x !== null && typeof x === "object" && !Array.isArray(x);
 }

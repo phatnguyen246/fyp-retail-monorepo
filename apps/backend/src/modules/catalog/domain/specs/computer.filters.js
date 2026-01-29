@@ -139,5 +139,24 @@ export const computerFilters = {
                 },
             ],
         },
+        {
+            id: "pricing",
+            label: "Pricing",
+            filters: [
+                {
+                    key: "price",
+                    label: "Price",
+                    type: "number",
+                    unit: "VND",
+                    control: "range",
+                    operators: ["gte", "lte", "between", "eq"],
+                    buckets: [
+                        { label: "< 10m", max: 10000000 },
+                        { label: "10m - 20m", min: 10000000, max: 20000000 },
+                        { label: "> 20m", min: 20000000 },
+                    ],
+                },
+            ],
+        },
     ],
 };

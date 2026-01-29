@@ -129,7 +129,7 @@ ProductSchema.index({ "variants.sku": 1 }, { unique: true });
 // query helpers
 ProductSchema.index({ product_type: 1, status: 1 });
 
-// specs_kv indexes for faceted filters
+// specs_kv indexes for faceted filters (spec.* + agg.*)
 ProductSchema.index({ product_type: 1, "specs_kv.k": 1, "specs_kv.n": 1 });
 ProductSchema.index({ product_type: 1, "specs_kv.k": 1, "specs_kv.s": 1 });
 ProductSchema.index({ product_type: 1, "specs_kv.k": 1, "specs_kv.b": 1 });

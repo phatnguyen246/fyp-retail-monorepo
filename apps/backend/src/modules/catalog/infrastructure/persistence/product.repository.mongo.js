@@ -4,6 +4,11 @@ import { Product } from "../../domain/product.aggregate.js";
 import { CatalogErrors } from "../../application/errors/index.js";
 import { decodeCursor, encodeCursor } from "./cursor.codec.js";
 
+const SPEC_PREFIX = "spec.";
+const PRICE_FILTER_KEY = "price";
+const AGG_PRICE_MIN = "agg.price_min";
+const AGG_PRICE_MAX = "agg.price_max";
+
 export function makeProductRepositoryMongo() {
     return {
         async findById(productId) {
@@ -117,7 +122,7 @@ export function makeProductRepositoryMongo() {
     };
 }
 
-function buildListQuery(filter, filters = []) {
+export function buildListQuery(filter, filters = []) {
     const q = {};
     if (filter.status) q.status = String(filter.status).trim();
     if (filter.product_type) q.product_type = String(filter.product_type).trim().toLowerCase();
@@ -140,14 +145,87 @@ function buildListQuery(filter, filters = []) {
 
 function buildSpecsKvClauses(filters) {
     if (!Array.isArray(filters) || filters.length === 0) return [];
-    const clauses = [];
+    const groups = new Map();
 
     for (const filter of filters) {
-        const clause = buildSpecsKvClause(filter);
+        const key = String(filter?.key ?? "").trim();
+        if (!key) continue;
+        const list = groups.get(key) ?? [];
+        list.push(filter);
+        groups.set(key, list);
+    }
+
+    const clauses = [];
+    for (const [key, group] of groups.entries()) {
+        const clause = key === PRICE_FILTER_KEY
+            ? buildPriceClauseGroup(group)
+            : buildSpecClauseGroup(key, group);
         if (clause) clauses.push(clause);
     }
 
     return clauses;
+}
+
+function buildSpecClauseGroup(key, filters) {
+    const specKey = toSpecKey(key);
+    if (!specKey) return null;
+
+    const clauses = filters
+        .map((filter) => buildSpecsKvClause({ ...filter, key: specKey }))
+        .filter(Boolean);
+
+    if (!clauses.length) return null;
+    if (clauses.length === 1) return clauses[0];
+    return { $or: clauses };
+}
+
+function buildPriceClauseGroup(filters) {
+    const clauses = filters
+        .map((filter) => buildPriceClause(filter))
+        .filter(Boolean);
+
+    if (!clauses.length) return null;
+    if (clauses.length === 1) return clauses[0];
+    return { $or: clauses };
+}
+
+function buildPriceClause(filter) {
+    const op = String(filter?.op ?? "").trim().toLowerCase();
+    const value = filter?.value;
+
+    if (op === "between") {
+        const min = value?.min;
+        const max = value?.max;
+        if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
+        return {
+            $and: [
+                { specs_kv: { $elemMatch: { k: AGG_PRICE_MIN, n: { $lte: max } } } },
+                { specs_kv: { $elemMatch: { k: AGG_PRICE_MAX, n: { $gte: min } } } },
+            ],
+        };
+    }
+
+    if (!Number.isFinite(value)) return null;
+
+    switch (op) {
+        case "eq":
+            return {
+                $and: [
+                    { specs_kv: { $elemMatch: { k: AGG_PRICE_MIN, n: { $lte: value } } } },
+                    { specs_kv: { $elemMatch: { k: AGG_PRICE_MAX, n: { $gte: value } } } },
+                ],
+            };
+        case "gte":
+            return { specs_kv: { $elemMatch: { k: AGG_PRICE_MAX, n: { $gte: value } } } };
+        case "gt":
+            return { specs_kv: { $elemMatch: { k: AGG_PRICE_MAX, n: { $gt: value } } } };
+        case "lte":
+            return { specs_kv: { $elemMatch: { k: AGG_PRICE_MIN, n: { $lte: value } } } };
+        case "lt":
+            return { specs_kv: { $elemMatch: { k: AGG_PRICE_MIN, n: { $lt: value } } } };
+        default:
+            return null;
+    }
 }
 
 function buildSpecsKvClause(filter) {
@@ -228,13 +306,23 @@ function buildFacetPipelines(filterDef) {
         const filters = Array.isArray(group?.filters) ? group.filters : [];
         for (const filter of filters) {
             const key = filter?.key;
-            const field = facetFieldByType(filter?.type);
-            if (!key || !field) continue;
+            if (!key) continue;
 
+            if (key === PRICE_FILTER_KEY) {
+                const pipeline = buildPriceFacetPipeline(filter);
+                if (pipeline) pipelines[key] = pipeline;
+                continue;
+            }
+
+            const field = facetFieldByType(filter?.type);
+            if (!field) continue;
+
+            const specKey = toSpecKey(key);
             pipelines[key] = [
                 { $unwind: "$specs_kv" },
-                { $match: { "specs_kv.k": key, [`specs_kv.${field}`]: { $exists: true } } },
-                { $group: { _id: `$specs_kv.${field}`, count: { $sum: 1 } } },
+                { $match: { "specs_kv.k": specKey, [`specs_kv.${field}`]: { $exists: true } } },
+                { $group: { _id: { value: `$specs_kv.${field}`, product: "$_id" } } },
+                { $group: { _id: "$_id.value", count: { $sum: 1 } } },
             ];
         }
     }
@@ -249,8 +337,8 @@ export function mapFacetResults({ filterDef, raw }) {
     const resultGroups = groups.map((group) => {
         const filters = Array.isArray(group?.filters) ? group.filters : [];
         const mappedFilters = filters.map((filter) => {
-            const items = Array.isArray(normalizedRaw?.[filter.key]) ? normalizedRaw[filter.key] : [];
-            return mapFilterCounts(filter, items);
+            const rawItems = normalizedRaw?.[filter.key];
+            return mapFilterCounts(filter, rawItems);
         });
 
         return {
@@ -276,7 +364,13 @@ function mapFilterCounts(filter, rawItems) {
         operators: filter.operators,
     };
 
-    const counts = buildCountMap(rawItems, filter.type);
+    if (filter.key === PRICE_FILTER_KEY && Array.isArray(filter.buckets)) {
+        const buckets = mapPriceBucketCounts(filter.buckets, rawItems);
+        return { ...base, buckets };
+    }
+
+    const items = Array.isArray(rawItems) ? rawItems : [];
+    const counts = buildCountMap(items, filter.type);
 
     if (filter.type === "number" && Array.isArray(filter.buckets)) {
         const buckets = filter.buckets.map((bucket) => ({
@@ -294,7 +388,7 @@ function mapFilterCounts(filter, rawItems) {
         return { ...base, options };
     }
 
-    const values = rawItems.map((item) => ({
+    const values = items.map((item) => ({
         value: item._id,
         count: item.count,
     }));
@@ -348,6 +442,100 @@ function facetFieldByType(type) {
     if (type === "boolean") return "b";
     if (type === "string") return "s";
     return null;
+}
+
+function buildPriceFacetPipeline(filter) {
+    const buckets = Array.isArray(filter?.buckets) ? filter.buckets : [];
+    if (buckets.length === 0) return null;
+
+    const groupStage = { _id: null };
+    buckets.forEach((bucket, index) => {
+        const key = `b${index}`;
+        groupStage[key] = {
+            $sum: {
+                $cond: [buildPriceBucketCondition(bucket), 1, 0],
+            },
+        };
+    });
+
+    return [
+        {
+            $addFields: {
+                agg_price_min: extractAggValueExpr(AGG_PRICE_MIN),
+                agg_price_max: extractAggValueExpr(AGG_PRICE_MAX),
+            },
+        },
+        { $group: groupStage },
+    ];
+}
+
+function buildPriceBucketCondition(bucket = {}) {
+    const min = bucket?.min;
+    const max = bucket?.max;
+
+    const hasMin = Number.isFinite(min);
+    const hasMax = Number.isFinite(max);
+
+    if (hasMin && hasMax) {
+        return {
+            $and: [
+                { $ne: ["$agg_price_min", null] },
+                { $ne: ["$agg_price_max", null] },
+                { $lte: ["$agg_price_min", max] },
+                { $gte: ["$agg_price_max", min] },
+            ],
+        };
+    }
+    if (hasMin) {
+        return {
+            $and: [
+                { $ne: ["$agg_price_max", null] },
+                { $gte: ["$agg_price_max", min] },
+            ],
+        };
+    }
+    if (hasMax) {
+        return {
+            $and: [
+                { $ne: ["$agg_price_min", null] },
+                { $lte: ["$agg_price_min", max] },
+            ],
+        };
+    }
+    return false;
+}
+
+function extractAggValueExpr(key) {
+    return {
+        $let: {
+            vars: {
+                item: {
+                    $first: {
+                        $filter: {
+                            input: "$specs_kv",
+                            as: "kv",
+                            cond: { $eq: ["$$kv.k", key] },
+                        },
+                    },
+                },
+            },
+            in: "$$item.n",
+        },
+    };
+}
+
+function mapPriceBucketCounts(buckets, rawItems) {
+    const source = Array.isArray(rawItems) && rawItems.length > 0 ? rawItems[0] : {};
+    return buckets.map((bucket, index) => ({
+        ...bucket,
+        count: Number(source?.[`b${index}`] ?? 0),
+    }));
+}
+
+function toSpecKey(key) {
+    const normalized = String(key ?? "").trim();
+    if (!normalized) return null;
+    return `${SPEC_PREFIX}${normalized}`;
 }
 
 function buildSortSpec(sort) {

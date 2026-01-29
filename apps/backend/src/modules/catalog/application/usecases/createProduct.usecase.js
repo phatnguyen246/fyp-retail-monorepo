@@ -16,7 +16,14 @@ export function makeCreateProductUseCase({ productRepository }) {
 
         const product_type = specDef.product_type;
         const main_specs = normalizeMainSpecs(cmd.main_specs, specDef);
-        const specs_kv = buildSpecsKv(main_specs, specDef);
+        const specs_kv = buildSpecsKv(
+            {
+                main_specs,
+                options: cmd.options,
+                variants: cmd.variants,
+            },
+            specDef
+        );
 
         const product = Product.create({
             ...cmd,

@@ -18,6 +18,9 @@ describe("facets mapping", () => {
             is_touchscreen: [
                 { _id: true, count: 2 },
             ],
+            price: [
+                { _id: null, b0: 1, b1: 3, b2: 2 },
+            ],
         };
 
         const result = mapFacetResults({ filterDef, raw });
@@ -34,8 +37,15 @@ describe("facets mapping", () => {
             .flatMap((group) => group.filters)
             .find((filter) => filter.key === "is_touchscreen");
 
+        const priceFilter = result.groups
+            .flatMap((group) => group.filters)
+            .find((filter) => filter.key === "price");
+
         expect(ramFilter.buckets.find((b) => b.min === 16).count).toBe(3);
         expect(cpuFilter.options.find((o) => o.value === "intel").count).toBe(4);
         expect(touchFilter.options.find((o) => o.value === true).count).toBe(2);
+        expect(priceFilter.buckets[0].count).toBe(1);
+        expect(priceFilter.buckets[1].count).toBe(3);
+        expect(priceFilter.buckets[2].count).toBe(2);
     });
 });

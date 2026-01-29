@@ -1,5 +1,7 @@
 import { CatalogErrors } from "../errors/index.js";
 import { productResult } from "../results/product.result.js";
+import { getSpecDef } from "../../domain/specs/index.js";
+import { buildSpecsKv } from "../helpers/buildSpecsKv.js";
 
 export function makeAddVariantUseCase({ productRepository }) {
     return async function addVariant(input = {}) {
@@ -18,6 +20,11 @@ export function makeAddVariantUseCase({ productRepository }) {
             variant_name: input.variant_name,
             selections: input.selections,
         });
+
+        const specDef = getSpecDef(product.product_type);
+        if (specDef) {
+            product.specs_kv = buildSpecsKv(product, specDef);
+        }
 
         const saved = await productRepository.save(product);
         return productResult(saved);

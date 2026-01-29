@@ -24,7 +24,14 @@ export function makeUpdateProductUseCase({ productRepository }) {
         const nextProductType = specDef.product_type;
         const rawSpecs = input.main_specs ?? product.main_specs ?? {};
         const main_specs = normalizeMainSpecs(rawSpecs, specDef);
-        const specs_kv = buildSpecsKv(main_specs, specDef);
+        const specs_kv = buildSpecsKv(
+            {
+                main_specs,
+                options: product.options ?? [],
+                variants: product.variants ?? [],
+            },
+            specDef
+        );
 
         product.product_type = nextProductType;
         product.main_specs = main_specs;
