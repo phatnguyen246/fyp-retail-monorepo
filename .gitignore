@@ -1,1 +1,48 @@
-node_modules
+# Dependencies
+node_modules/
+.pnpm-store/
+pnpm-store/
+
+# Build output
+dist/
+build/
+coverage/
+.turbo/
+.cache/
+.vite/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Testing
+.nyc_output/
+vitest-report/
+
+# Editor / IDE
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!apps/frontend/.vscode/
+!apps/frontend/.vscode/extensions.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime temp files
+tmp/
+temp/

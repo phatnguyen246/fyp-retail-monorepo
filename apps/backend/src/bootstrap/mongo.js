@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 export async function connectMongo({
     mongooseClient = mongoose,
-    mongoUri = process.env.MONGO_URI,
+    mongoUri = process.env.MONGODB_URI,
     logger = console,
 } = {}) {
     if (!mongoUri) {

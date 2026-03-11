@@ -1,0 +1,37 @@
+# Ignore everything by default and opt back into build inputs.
+*
+
+# Workspace manifests required by pnpm install.
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+
+# App sources used by the backend/frontend Dockerfiles.
+!apps/
+!apps/backend/
+!apps/backend/**
+!apps/frontend/
+!apps/frontend/**
+
+# Shared workspace packages, if present.
+!packages/
+!packages/**
+
+# Exclude local-only/generated files inside allowed paths.
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
+**/.cache/
+**/.vite/
+**/.turbo/
+**/.DS_Store
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+**/.idea/
+**/.vscode/
+!apps/frontend/.vscode/extensions.json
+**/.git/
