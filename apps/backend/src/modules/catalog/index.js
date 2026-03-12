@@ -4,8 +4,8 @@ import { createCatalogRouter } from "./http/catalog.routes.js";
 import { CATALOG_BASE_PATH } from "./constants/index.js";
 import { createCatalogAdapters } from "./adapters/index.js";
 
-export function registerCatalogModule({ app, db }) {
-    const adapters = createCatalogAdapters({ db });
+export function registerCatalogModule({ app, db, storage }) {
+    const adapters = createCatalogAdapters({ db, storage });
     const services = createCatalogServices({ adapters });
     const controller = createCatalogController({ services });
     const router = createCatalogRouter({ controller });

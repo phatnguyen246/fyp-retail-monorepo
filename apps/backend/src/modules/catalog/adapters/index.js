@@ -1,7 +1,18 @@
 import { createCatalogPersistence } from "./persistence/index.js";
+import { createVariantMediaStorage } from "./storage/variant-media.storage.js";
 
-export function createCatalogAdapters({ db } = {}) {
-    return {
+export { createVariantMediaStorage } from "./storage/variant-media.storage.js";
+
+export function createCatalogAdapters({ db, storage } = {}) {
+    const adapters = {
         persistence: createCatalogPersistence({ db }),
     };
+
+    if (storage?.bucket) {
+        adapters.storage = createVariantMediaStorage({
+            bucket: storage.bucket,
+        });
+    }
+
+    return adapters;
 }
