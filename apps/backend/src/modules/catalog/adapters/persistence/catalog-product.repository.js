@@ -7,6 +7,14 @@ export function createCatalogProductRepository({
     baseRepository = createCatalogBaseRepository({ db }),
 } = {}) {
     return {
+        findProductById({ productId, projection } = {}) {
+            return baseRepository.findOneById({
+                collectionName: CATALOG_COLLECTIONS.products,
+                id: productId,
+                projection,
+            });
+        },
+
         findProductByProductGroupCode({ productGroupCode, projection } = {}) {
             return baseRepository.findOneByField({
                 collectionName: CATALOG_COLLECTIONS.products,

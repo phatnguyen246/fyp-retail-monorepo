@@ -9,5 +9,6 @@ describe("catalog module", () => {
             ok: true,
             module: "catalog",
         });
+        expect(typeof services.rebuildProductDerivedFields).toBe("function");
     });
 });

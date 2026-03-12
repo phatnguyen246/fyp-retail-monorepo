@@ -16,6 +16,15 @@ export function createCatalogVariantRepository({
             });
         },
 
+        findVariantsByProductId({ productId, projection } = {}) {
+            return baseRepository.findManyByField({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                fieldName: "productId",
+                value: toObjectId(productId, "productId"),
+                projection,
+            });
+        },
+
         upsertVariantBySku({ sku, document } = {}) {
             const updatedAt = document?.updatedAt ?? new Date();
             const createdAt = document?.createdAt ?? updatedAt;

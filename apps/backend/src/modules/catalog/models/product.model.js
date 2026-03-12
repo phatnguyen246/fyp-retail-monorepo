@@ -1,10 +1,9 @@
-import removeAccents from "remove-accents";
-import slugify from "slugify";
 import {
     normalizeProductGroupCode,
     normalizeSearchTitle as normalizeSearchTitleValue,
     normalizeTitle,
 } from "../utils/catalog-field-normalizers.js";
+import { generateProductSlug } from "../utils/generate-product-slug.js";
 import {
     createDocumentId,
     createSoftDeleteState,
@@ -535,11 +534,7 @@ function normalizeProductSlug(value, title) {
         return normalizeRequiredString(value, "slug");
     }
 
-    return slugify(removeAccents(title), {
-        lower: true,
-        strict: true,
-        trim: true,
-    });
+    return generateProductSlug(title);
 }
 
 function normalizeSearchTitle(value, title) {

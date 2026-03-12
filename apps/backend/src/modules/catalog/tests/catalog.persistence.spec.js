@@ -146,6 +146,30 @@ describe("catalog persistence", () => {
         );
     });
 
+    it("looks up products by _id and variants by productId using ObjectId filters", async () => {
+        const collectionMock = createCollectionMock();
+        const db = createDbMock(collectionMock);
+        const productRepository = createCatalogProductRepository({ db });
+        const variantRepository = createCatalogVariantRepository({ db });
+        const product = createProductFixture();
+
+        await productRepository.findProductById({
+            productId: product._id.toHexString(),
+        });
+        await variantRepository.findVariantsByProductId({
+            productId: product._id.toHexString(),
+        });
+
+        expect(collectionMock.findOne).toHaveBeenCalledWith(
+            { _id: new ObjectId(product._id.toHexString()) },
+            undefined
+        );
+        expect(collectionMock.find).toHaveBeenCalledWith(
+            { productId: new ObjectId(product._id.toHexString()) },
+            undefined
+        );
+    });
+
     it("wires specialized repositories through createCatalogPersistence", () => {
         const collectionMock = createCollectionMock();
         const db = createDbMock(collectionMock);

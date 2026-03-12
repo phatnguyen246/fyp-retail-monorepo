@@ -48,6 +48,22 @@ export function createCatalogBaseRepository({ db } = {}) {
             );
         },
 
+        findOneById({ collectionName, id, projection }) {
+            return getCollection(collectionName).findOne(
+                { _id: toObjectId(id, "_id") },
+                projection ? { projection } : undefined
+            );
+        },
+
+        findManyByField({ collectionName, fieldName, value, projection }) {
+            return getCollection(collectionName)
+                .find(
+                    { [fieldName]: value },
+                    projection ? { projection } : undefined
+                )
+                .toArray();
+        },
+
         findManyByFieldValues({
             collectionName,
             fieldName,

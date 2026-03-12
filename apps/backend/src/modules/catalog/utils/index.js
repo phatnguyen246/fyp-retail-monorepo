@@ -16,6 +16,12 @@ export {
     normalizeTagCode,
     normalizeTitle,
 } from "./catalog-field-normalizers.js";
+export { buildListingVariantSnapshot } from "./build-listing-variant-snapshot.js";
+export { calculateProductMinPrices } from "./calculate-product-min-prices.js";
+export { computeProductDerivedFields } from "./compute-product-derived-fields.js";
+export { filterActiveCatalogVariants } from "./filter-active-catalog-variants.js";
+export { generateProductSlug } from "./generate-product-slug.js";
+export { resolveDefaultSelectedVariant } from "./resolve-default-selected-variant.js";
 export {
     assertVariantPricingInvariant,
     assertVariantPricingPatchInvariant,
