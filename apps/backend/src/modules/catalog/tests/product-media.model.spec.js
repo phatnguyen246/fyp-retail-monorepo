@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { describe, expect, it } from "vitest";
 import {
     createCatalogModels,
@@ -11,11 +12,14 @@ describe("product media metadata model", () => {
     it("creates a MongoDB-ready metadata document without binary content", () => {
         const createdAt = new Date("2026-03-12T09:00:00.000Z");
         const updatedAt = new Date("2026-03-12T09:05:00.000Z");
+        const mediaId = new ObjectId("65f000000000000000000090");
+        const productId = new ObjectId("65f000000000000000000006");
+        const variantId = new ObjectId("65f000000000000000000007");
 
         const media = createProductMediaMetadata({
-            _id: "media_iphone_16_black_front",
-            productId: "product_iphone_16",
-            variantId: "variant_iphone_16_black_128",
+            _id: mediaId,
+            productId,
+            variantId,
             url: "https://storage.googleapis.com/catalog/iphone-16/front.webp",
             storagePath: "catalog/products/product_iphone_16/variants/variant_iphone_16_black_128/front.webp",
             fileName: "front.webp",
@@ -27,9 +31,9 @@ describe("product media metadata model", () => {
         });
 
         expect(media).toEqual({
-            _id: "media_iphone_16_black_front",
-            productId: "product_iphone_16",
-            variantId: "variant_iphone_16_black_128",
+            _id: mediaId,
+            productId,
+            variantId,
             url: "https://storage.googleapis.com/catalog/iphone-16/front.webp",
             storagePath:
                 "catalog/products/product_iphone_16/variants/variant_iphone_16_black_128/front.webp",
@@ -46,10 +50,12 @@ describe("product media metadata model", () => {
         expect(media).not.toHaveProperty("data");
     });
 
-    it("exposes the reusable metadata shape and allowed mime types", () => {
+    it("exposes the reusable metadata shape and catalog model registry", () => {
         const models = createCatalogModels();
 
         expect(models.ProductMediaMetadata).toBe(PRODUCT_MEDIA_METADATA_SHAPE);
+        expect(models.Product).toBeDefined();
+        expect(models.Variant).toBeDefined();
         expect(models.createProductMediaMetadata).toBe(createProductMediaMetadata);
         expect(models.getAllowedProductMediaMimeTypes()).toEqual([
             "image/jpeg",
@@ -69,11 +75,11 @@ describe("product media metadata model", () => {
         ]);
     });
 
-    it("rejects invalid references and unsupported image mime types", () => {
+    it("rejects invalid ObjectId references and unsupported image mime types", () => {
         expect(() =>
             createProductMediaMetadata({
                 productId: "",
-                variantId: "variant_iphone_16_black_128",
+                variantId: new ObjectId("65f000000000000000000007"),
                 url: "https://example.com/front.png",
                 storagePath: "catalog/front.png",
                 fileName: "front.png",
@@ -84,8 +90,8 @@ describe("product media metadata model", () => {
 
         expect(() =>
             createProductMediaMetadata({
-                productId: "product_iphone_16",
-                variantId: "variant_iphone_16_black_128",
+                productId: new ObjectId("65f000000000000000000006"),
+                variantId: new ObjectId("65f000000000000000000007"),
                 url: "https://example.com/front.gif",
                 storagePath: "catalog/front.gif",
                 fileName: "front.gif",

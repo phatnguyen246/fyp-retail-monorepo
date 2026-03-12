@@ -28,6 +28,7 @@ export async function seedBrands({
             code: brand.code,
             document: {
                 ...brand,
+                status: "active",
                 createdAt: timestamp,
                 updatedAt: timestamp,
             },

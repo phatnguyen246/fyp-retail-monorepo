@@ -24,6 +24,7 @@ export async function seedCategories({
             code: category.code,
             document: {
                 ...category,
+                status: "active",
                 createdAt: timestamp,
                 updatedAt: timestamp,
             },

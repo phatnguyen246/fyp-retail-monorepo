@@ -28,6 +28,7 @@ export async function seedTags({
             code: tag.code,
             document: {
                 ...tag,
+                status: "active",
                 createdAt: timestamp,
                 updatedAt: timestamp,
             },
