@@ -251,4 +251,41 @@ describe("catalog admin routes", () => {
         expect(body.message).toBe("Catalog variant image upload request is invalid");
         expect(controller.uploadVariantImage).not.toHaveBeenCalled();
     });
+
+    it("routes variant image deletion requests to the delete controller", async () => {
+        const controller = {
+            createProduct: vi.fn(),
+            getProductDetailAdmin: vi.fn(),
+            updateProduct: vi.fn(),
+            softDeleteProduct: vi.fn(),
+            createVariant: vi.fn(),
+            updateVariant: vi.fn(),
+            softDeleteVariant: vi.fn(),
+            listVariantImages: vi.fn(),
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi.fn((req, res) => {
+                return res.status(200).json({
+                    variantId: req.params.variantId,
+                    mediaId: req.params.mediaId,
+                });
+            }),
+        };
+
+        runningServer = await startServer(controller);
+
+        const response = await fetch(
+            `${runningServer.url}/variants/65f000000000000000000007/images/65f000000000000000000090`,
+            {
+                method: "DELETE",
+            }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body).toEqual({
+            variantId: "65f000000000000000000007",
+            mediaId: "65f000000000000000000090",
+        });
+        expect(controller.deleteVariantImage).toHaveBeenCalledTimes(1);
+    });
 });

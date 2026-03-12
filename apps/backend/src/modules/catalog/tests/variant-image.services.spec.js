@@ -515,24 +515,27 @@ describe("variant image services", () => {
             variantId: variant._id,
             productId: product._id,
         });
+        const variantRepository = {
+            findVariantById: vi.fn().mockResolvedValue(variant),
+            removeMediaId: vi.fn().mockResolvedValue({ acknowledged: true }),
+        };
+        const mediaRepository = {
+            findMediaById: vi.fn().mockResolvedValue(media),
+            deleteMediaByIdForVariant: vi
+                .fn()
+                .mockResolvedValue({ deletedCount: 1 }),
+        };
+        const storage = {
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi.fn().mockResolvedValue(undefined),
+        };
         const deleteVariantImage = createDeleteVariantImageService({
             productRepository: {
                 findProductById: vi.fn().mockResolvedValue(product),
             },
-            variantRepository: {
-                findVariantById: vi.fn().mockResolvedValue(variant),
-                removeMediaId: vi.fn().mockResolvedValue({ acknowledged: true }),
-                addMediaId: vi.fn().mockResolvedValue({ acknowledged: true }),
-            },
-            mediaRepository: {
-                findMediaById: vi.fn().mockResolvedValue(media),
-                deleteMediaById: vi.fn().mockResolvedValue({ deletedCount: 1 }),
-                createMedia: vi.fn().mockResolvedValue({ acknowledged: true }),
-            },
-            storage: {
-                uploadVariantImage: vi.fn(),
-                deleteVariantImage: vi.fn().mockResolvedValue(undefined),
-            },
+            variantRepository,
+            mediaRepository,
+            storage,
             validation: createCatalogValidation(),
         });
 
@@ -542,9 +545,26 @@ describe("variant image services", () => {
         });
 
         expect(result).toEqual(media);
+        expect(storage.deleteVariantImage).toHaveBeenCalledWith(media.storagePath);
+        expect(variantRepository.removeMediaId).toHaveBeenCalledWith({
+            variantId: variant._id,
+            mediaId: media._id,
+        });
+        expect(mediaRepository.deleteMediaByIdForVariant).toHaveBeenCalledWith({
+            mediaId: media._id,
+            variantId: variant._id,
+        });
+        expect(
+            storage.deleteVariantImage.mock.invocationCallOrder[0]
+        ).toBeLessThan(variantRepository.removeMediaId.mock.invocationCallOrder[0]);
+        expect(
+            variantRepository.removeMediaId.mock.invocationCallOrder[0]
+        ).toBeLessThan(
+            mediaRepository.deleteMediaByIdForVariant.mock.invocationCallOrder[0]
+        );
     });
 
-    it("restores metadata and variant linkage when Firebase deletion fails", async () => {
+    it("returns a catalog-specific internal error and preserves metadata when Firebase deletion fails", async () => {
         const variant = createVariantFixture();
         const product = createProductFixture({
             _id: variant.productId,
@@ -557,12 +577,16 @@ describe("variant image services", () => {
         const variantRepository = {
             findVariantById: vi.fn().mockResolvedValue(variant),
             removeMediaId: vi.fn().mockResolvedValue({ acknowledged: true }),
-            addMediaId: vi.fn().mockResolvedValue({ acknowledged: true }),
         };
         const mediaRepository = {
             findMediaById: vi.fn().mockResolvedValue(media),
-            deleteMediaById: vi.fn().mockResolvedValue({ deletedCount: 1 }),
-            createMedia: vi.fn().mockResolvedValue({ acknowledged: true }),
+            deleteMediaByIdForVariant: vi.fn().mockResolvedValue({ deletedCount: 1 }),
+        };
+        const storage = {
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi
+                .fn()
+                .mockRejectedValue(new Error("firebase delete failed")),
         };
         const deleteVariantImage = createDeleteVariantImageService({
             productRepository: {
@@ -570,12 +594,7 @@ describe("variant image services", () => {
             },
             variantRepository,
             mediaRepository,
-            storage: {
-                uploadVariantImage: vi.fn(),
-                deleteVariantImage: vi
-                    .fn()
-                    .mockRejectedValue(new Error("firebase delete failed")),
-            },
+            storage,
             validation: createCatalogValidation(),
         });
 
@@ -584,11 +603,209 @@ describe("variant image services", () => {
                 variantId: variant._id.toHexString(),
                 mediaId: media._id.toHexString(),
             })
-        ).rejects.toThrow("firebase delete failed");
-        expect(mediaRepository.createMedia).toHaveBeenCalledWith({
-            document: media,
+        ).rejects.toMatchObject({
+            httpStatus: 500,
+            code: "CATALOG_INTERNAL_ERROR",
+            meta: expect.objectContaining({
+                variantId: variant._id.toHexString(),
+                mediaId: media._id.toHexString(),
+                productId: product._id.toHexString(),
+                storagePath: media.storagePath,
+                reason: "firebase delete failed",
+            }),
         });
-        expect(variantRepository.addMediaId).toHaveBeenCalledWith({
+        expect(storage.deleteVariantImage).toHaveBeenCalledWith(media.storagePath);
+        expect(variantRepository.removeMediaId).not.toHaveBeenCalled();
+        expect(mediaRepository.deleteMediaByIdForVariant).not.toHaveBeenCalled();
+    });
+
+    it("returns not found when the media metadata does not exist", async () => {
+        const variant = createVariantFixture();
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "active",
+        });
+        const storage = {
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi.fn(),
+        };
+        const variantRepository = {
+            findVariantById: vi.fn().mockResolvedValue(variant),
+            removeMediaId: vi.fn(),
+        };
+        const mediaRepository = {
+            findMediaById: vi.fn().mockResolvedValue(null),
+            deleteMediaByIdForVariant: vi.fn(),
+        };
+        const deleteVariantImage = createDeleteVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository,
+            mediaRepository,
+            storage,
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            deleteVariantImage({
+                variantId: variant._id.toHexString(),
+                mediaId: "65f000000000000000000090",
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 404,
+            code: "CATALOG_NOT_FOUND",
+        });
+        expect(storage.deleteVariantImage).not.toHaveBeenCalled();
+        expect(variantRepository.removeMediaId).not.toHaveBeenCalled();
+        expect(mediaRepository.deleteMediaByIdForVariant).not.toHaveBeenCalled();
+    });
+
+    it("returns not found when the media belongs to another variant", async () => {
+        const variant = createVariantFixture();
+        const otherVariantId = new ObjectId("65f000000000000000000099");
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "active",
+        });
+        const media = createProductMediaFixture({
+            variantId: otherVariantId,
+            productId: product._id,
+        });
+        const storage = {
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi.fn(),
+        };
+        const variantRepository = {
+            findVariantById: vi.fn().mockResolvedValue(variant),
+            removeMediaId: vi.fn(),
+        };
+        const mediaRepository = {
+            findMediaById: vi.fn().mockResolvedValue(media),
+            deleteMediaByIdForVariant: vi.fn(),
+        };
+        const deleteVariantImage = createDeleteVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository,
+            mediaRepository,
+            storage,
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            deleteVariantImage({
+                variantId: variant._id.toHexString(),
+                mediaId: media._id.toHexString(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 404,
+            code: "CATALOG_NOT_FOUND",
+        });
+        expect(storage.deleteVariantImage).not.toHaveBeenCalled();
+        expect(variantRepository.removeMediaId).not.toHaveBeenCalled();
+        expect(mediaRepository.deleteMediaByIdForVariant).not.toHaveBeenCalled();
+    });
+
+    it("returns not found when the media product reference is inconsistent with the variant", async () => {
+        const variant = createVariantFixture();
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "active",
+        });
+        const media = createProductMediaFixture({
+            variantId: variant._id,
+            productId: new ObjectId("65f000000000000000000088"),
+        });
+        const storage = {
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi.fn(),
+        };
+        const variantRepository = {
+            findVariantById: vi.fn().mockResolvedValue(variant),
+            removeMediaId: vi.fn(),
+        };
+        const mediaRepository = {
+            findMediaById: vi.fn().mockResolvedValue(media),
+            deleteMediaByIdForVariant: vi.fn(),
+        };
+        const deleteVariantImage = createDeleteVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository,
+            mediaRepository,
+            storage,
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            deleteVariantImage({
+                variantId: variant._id.toHexString(),
+                mediaId: media._id.toHexString(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 404,
+            code: "CATALOG_NOT_FOUND",
+        });
+        expect(storage.deleteVariantImage).not.toHaveBeenCalled();
+        expect(variantRepository.removeMediaId).not.toHaveBeenCalled();
+        expect(mediaRepository.deleteMediaByIdForVariant).not.toHaveBeenCalled();
+    });
+
+    it("returns a catalog-specific internal error when metadata cleanup fails after storage deletion", async () => {
+        const variant = createVariantFixture();
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "active",
+        });
+        const media = createProductMediaFixture({
+            variantId: variant._id,
+            productId: product._id,
+        });
+        const storage = {
+            uploadVariantImage: vi.fn(),
+            deleteVariantImage: vi.fn().mockResolvedValue(undefined),
+        };
+        const variantRepository = {
+            findVariantById: vi.fn().mockResolvedValue(variant),
+            removeMediaId: vi.fn().mockResolvedValue({ acknowledged: true }),
+        };
+        const mediaRepository = {
+            findMediaById: vi.fn().mockResolvedValue(media),
+            deleteMediaByIdForVariant: vi
+                .fn()
+                .mockRejectedValue(new Error("delete metadata failed")),
+        };
+        const deleteVariantImage = createDeleteVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository,
+            mediaRepository,
+            storage,
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            deleteVariantImage({
+                variantId: variant._id.toHexString(),
+                mediaId: media._id.toHexString(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 500,
+            code: "CATALOG_INTERNAL_ERROR",
+            meta: expect.objectContaining({
+                variantId: variant._id.toHexString(),
+                mediaId: media._id.toHexString(),
+                productId: product._id.toHexString(),
+                storagePath: media.storagePath,
+                reason: "delete metadata failed",
+            }),
+        });
+        expect(storage.deleteVariantImage).toHaveBeenCalledWith(media.storagePath);
+        expect(variantRepository.removeMediaId).toHaveBeenCalledWith({
             variantId: variant._id,
             mediaId: media._id,
         });

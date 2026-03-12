@@ -223,6 +223,37 @@ describe("catalog persistence", () => {
         );
     });
 
+    it("looks up and deletes media with variant-scoped ObjectId filters", async () => {
+        const collectionMock = createCollectionMock();
+        const db = createDbMock(collectionMock);
+        const mediaRepository = createCatalogMediaRepository({ db });
+        const media = createProductMediaFixture();
+
+        await mediaRepository.findMediaByIdForVariant({
+            mediaId: media._id.toHexString(),
+            variantId: media.variantId.toHexString(),
+        });
+        await mediaRepository.deleteMediaByIdForVariant({
+            mediaId: media._id.toHexString(),
+            variantId: media.variantId.toHexString(),
+        });
+
+        expect(collectionMock.findOne).toHaveBeenCalledWith(
+            {
+                _id: new ObjectId(media._id.toHexString()),
+                variantId: new ObjectId(media.variantId.toHexString()),
+            },
+            undefined
+        );
+        expect(collectionMock.deleteOne).toHaveBeenCalledWith(
+            {
+                _id: new ObjectId(media._id.toHexString()),
+                variantId: new ObjectId(media.variantId.toHexString()),
+            },
+            undefined
+        );
+    });
+
     it("inserts new documents and soft deletes product and variant records", async () => {
         const collectionMock = createCollectionMock();
         const db = createDbMock(collectionMock);

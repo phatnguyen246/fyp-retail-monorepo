@@ -23,6 +23,18 @@ export function createCatalogMediaRepository({
             });
         },
 
+        findMediaByIdForVariant({ mediaId, variantId, projection } = {}) {
+            return baseRepository.getCollection(
+                CATALOG_COLLECTIONS.productMediaMetadata
+            ).findOne(
+                {
+                    _id: toObjectId(mediaId, "mediaId"),
+                    variantId: toObjectId(variantId, "variantId"),
+                },
+                projection ? { projection } : undefined
+            );
+        },
+
         listMediaByVariantId({ variantId, projection } = {}) {
             return baseRepository.findManyByFilter({
                 collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
@@ -44,6 +56,18 @@ export function createCatalogMediaRepository({
                 id: mediaId,
                 options,
             });
+        },
+
+        deleteMediaByIdForVariant({ mediaId, variantId, options } = {}) {
+            return baseRepository.getCollection(
+                CATALOG_COLLECTIONS.productMediaMetadata
+            ).deleteOne(
+                {
+                    _id: toObjectId(mediaId, "mediaId"),
+                    variantId: toObjectId(variantId, "variantId"),
+                },
+                options
+            );
         },
     };
 }
