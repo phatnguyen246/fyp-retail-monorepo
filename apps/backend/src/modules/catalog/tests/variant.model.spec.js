@@ -66,4 +66,21 @@ describe("variant model", () => {
             })
         ).toThrow(/variant status/);
     });
+
+    it("enforces the shared pricing invariant in the model layer", () => {
+        expect(() =>
+            createVariant({
+                _id: new ObjectId("65f000000000000000000007"),
+                productId: new ObjectId("65f000000000000000000006"),
+                sku: "ip16-blk-128",
+                variantAttributes: {
+                    ram: "8GB",
+                    rom: "128GB",
+                    color: "Black",
+                },
+                originalPrice: 22990000,
+                salePrice: 24990000,
+            })
+        ).toThrow(/originalPrice/);
+    });
 });

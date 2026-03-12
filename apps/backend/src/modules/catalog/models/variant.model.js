@@ -1,4 +1,8 @@
 import {
+    assertVariantPricingInvariant,
+} from "../utils/catalog-invariants.js";
+import { normalizeSku } from "../utils/catalog-field-normalizers.js";
+import {
     createDocumentId,
     createSoftDeleteState,
     createTimestampPair,
@@ -178,11 +182,19 @@ export function createVariant(input = {}) {
         deletedAt: input.deletedAt,
         fallbackDeletedAt: updatedAt,
     });
+    const sku = normalizeRequiredString(normalizeSku(input.sku), "sku");
+    const originalPrice = normalizeNonNegativeNumber(
+        input.originalPrice,
+        "originalPrice"
+    );
+    const salePrice = normalizeNonNegativeNumber(input.salePrice, "salePrice");
+
+    assertVariantPricingInvariant({ originalPrice, salePrice });
 
     return {
         _id: createDocumentId(input._id, "_id"),
         productId: normalizeRequiredObjectId(input.productId, "productId"),
-        sku: normalizeRequiredString(input.sku, "sku"),
+        sku,
         variantAttributes: createVariantAttributes(input.variantAttributes),
         ramSort: normalizeNonNegativeInteger(input.ramSort, "ramSort", 0),
         romSort: normalizeNonNegativeInteger(input.romSort, "romSort", 0),
@@ -201,11 +213,8 @@ export function createVariant(input = {}) {
             "isPrimaryColor",
             false
         ),
-        originalPrice: normalizeNonNegativeNumber(
-            input.originalPrice,
-            "originalPrice"
-        ),
-        salePrice: normalizeNonNegativeNumber(input.salePrice, "salePrice"),
+        originalPrice,
+        salePrice,
         currency: normalizeCurrency(input.currency),
         mediaIds: normalizeObjectIdList(input.mediaIds, "mediaIds"),
         video: createVariantVideo(input.video),

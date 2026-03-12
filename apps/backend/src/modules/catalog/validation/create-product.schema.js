@@ -5,13 +5,32 @@ import {
     PRODUCT_TYPES,
 } from "../models/index.js";
 import {
+    normalizeBadgeCode,
+    normalizeBrandCode,
+    normalizeCategoryCode,
+    normalizeProductGroupCode,
+    normalizeTagCode,
+    normalizeTitle,
     coerceBooleanInput,
     normalizeCsvStringArrayInput,
     trimNullableTextInput,
-    trimTextInput,
 } from "./catalog.normalizers.js";
 
-const trimmedStringSchema = z.preprocess(trimTextInput, z.string().min(1));
+const titleSchema = z.preprocess(normalizeTitle, z.string().min(1));
+const productGroupCodeSchema = z.preprocess(
+    normalizeProductGroupCode,
+    z.string().min(1)
+);
+const brandCodeSchema = z.preprocess(normalizeBrandCode, z.string().min(1));
+const categoryCodeSchema = z.preprocess(
+    normalizeCategoryCode,
+    z.string().min(1)
+);
+const tagCodeSchema = z.preprocess(normalizeTagCode, z.string().min(1));
+const badgeCodeSchema = z.preprocess(
+    normalizeBadgeCode,
+    z.enum(PRODUCT_BADGE_CODES)
+);
 const optionalTrimmedStringSchema = z.preprocess(
     trimNullableTextInput,
     z.string().min(1).optional().nullable()
@@ -19,12 +38,12 @@ const optionalTrimmedStringSchema = z.preprocess(
 
 const badgeCodesSchema = z.preprocess(
     normalizeCsvStringArrayInput,
-    z.array(z.enum(PRODUCT_BADGE_CODES)).default([])
+    z.array(badgeCodeSchema).default([])
 );
 
 const tagCodesSchema = z.preprocess(
     normalizeCsvStringArrayInput,
-    z.array(trimmedStringSchema).default([])
+    z.array(tagCodeSchema).default([])
 );
 
 export const SMARTPHONE_SPECS_INPUT_SCHEMA = z
@@ -56,10 +75,10 @@ export const SMARTPHONE_SPECS_INPUT_SCHEMA = z
 
 export const CREATE_PRODUCT_INPUT_SCHEMA = z
     .object({
-        productGroupCode: trimmedStringSchema,
-        title: trimmedStringSchema,
-        brandCode: trimmedStringSchema,
-        categoryCode: trimmedStringSchema,
+        productGroupCode: productGroupCodeSchema,
+        title: titleSchema,
+        brandCode: brandCodeSchema,
+        categoryCode: categoryCodeSchema,
         productType: z.enum(PRODUCT_TYPES).default("smartphone"),
         shortDescription: optionalTrimmedStringSchema,
         longDescription: optionalTrimmedStringSchema,

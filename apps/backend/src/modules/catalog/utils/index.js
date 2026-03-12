@@ -5,6 +5,21 @@ export {
     toObjectIdArray,
     toOptionalObjectId,
 } from "./object-id.js";
+export {
+    normalizeBadgeCode,
+    normalizeBrandCode,
+    normalizeCategoryCode,
+    normalizeKeyword,
+    normalizeProductGroupCode,
+    normalizeSearchTitle,
+    normalizeSku,
+    normalizeTagCode,
+    normalizeTitle,
+} from "./catalog-field-normalizers.js";
+export {
+    assertVariantPricingInvariant,
+    assertVariantPricingPatchInvariant,
+} from "./catalog-invariants.js";
 
 export function createCatalogHealthPayload() {
     return {

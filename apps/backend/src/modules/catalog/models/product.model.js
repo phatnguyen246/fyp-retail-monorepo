@@ -1,6 +1,11 @@
 import removeAccents from "remove-accents";
 import slugify from "slugify";
 import {
+    normalizeProductGroupCode,
+    normalizeSearchTitle as normalizeSearchTitleValue,
+    normalizeTitle,
+} from "../utils/catalog-field-normalizers.js";
+import {
     createDocumentId,
     createSoftDeleteState,
     createTimestampPair,
@@ -430,7 +435,7 @@ export function createSmartphoneSpecs(input = {}) {
 
 export function createProduct(input = {}) {
     const productType = normalizeProductType(input.productType);
-    const title = normalizeRequiredString(input.title, "title");
+    const title = normalizeRequiredString(normalizeTitle(input.title), "title");
     const { createdAt, updatedAt } = createTimestampPair(input);
     const softDeleteState = createSoftDeleteState({
         isDeleted: input.isDeleted,
@@ -441,7 +446,7 @@ export function createProduct(input = {}) {
     return {
         _id: createDocumentId(input._id, "_id"),
         productGroupCode: normalizeRequiredString(
-            input.productGroupCode,
+            normalizeProductGroupCode(input.productGroupCode),
             "productGroupCode"
         ),
         title,
@@ -541,7 +546,7 @@ function normalizeSearchTitle(value, title) {
     const candidateValue = value !== undefined && value !== null ? value : title;
 
     return normalizeRequiredString(
-        removeAccents(candidateValue).toLowerCase().replace(/\s+/g, " "),
+        normalizeSearchTitleValue(candidateValue),
         "searchTitle"
     );
 }

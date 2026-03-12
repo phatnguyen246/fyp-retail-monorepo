@@ -5,14 +5,28 @@ import {
     PRODUCT_TYPES,
 } from "../models/index.js";
 import {
+    normalizeBadgeCode,
+    normalizeBrandCode,
+    normalizeCategoryCode,
+    normalizeTagCode,
+    normalizeTitle,
     coerceBooleanInput,
     normalizeCsvStringArrayInput,
     trimNullableTextInput,
-    trimTextInput,
 } from "./catalog.normalizers.js";
 import { SMARTPHONE_SPECS_INPUT_SCHEMA } from "./create-product.schema.js";
 
-const trimmedStringSchema = z.preprocess(trimTextInput, z.string().min(1));
+const titleSchema = z.preprocess(normalizeTitle, z.string().min(1));
+const brandCodeSchema = z.preprocess(normalizeBrandCode, z.string().min(1));
+const categoryCodeSchema = z.preprocess(
+    normalizeCategoryCode,
+    z.string().min(1)
+);
+const tagCodeSchema = z.preprocess(normalizeTagCode, z.string().min(1));
+const badgeCodeSchema = z.preprocess(
+    normalizeBadgeCode,
+    z.enum(PRODUCT_BADGE_CODES)
+);
 const optionalTrimmedStringSchema = z.preprocess(
     trimNullableTextInput,
     z.string().min(1).optional().nullable()
@@ -20,19 +34,19 @@ const optionalTrimmedStringSchema = z.preprocess(
 
 export const UPDATE_PRODUCT_INPUT_SCHEMA = z
     .object({
-        title: trimmedStringSchema.optional(),
-        brandCode: trimmedStringSchema.optional(),
-        categoryCode: trimmedStringSchema.optional(),
+        title: titleSchema.optional(),
+        brandCode: brandCodeSchema.optional(),
+        categoryCode: categoryCodeSchema.optional(),
         productType: z.enum(PRODUCT_TYPES).optional(),
         shortDescription: optionalTrimmedStringSchema,
         longDescription: optionalTrimmedStringSchema,
         tagCodes: z
-            .preprocess(normalizeCsvStringArrayInput, z.array(trimmedStringSchema))
+            .preprocess(normalizeCsvStringArrayInput, z.array(tagCodeSchema))
             .optional(),
         badges: z
             .preprocess(
                 normalizeCsvStringArrayInput,
-                z.array(z.enum(PRODUCT_BADGE_CODES))
+                z.array(badgeCodeSchema)
             )
             .optional(),
         specs: SMARTPHONE_SPECS_INPUT_SCHEMA.optional(),

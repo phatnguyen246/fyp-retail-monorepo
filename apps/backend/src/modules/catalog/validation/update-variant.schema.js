@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { VARIANT_STATUSES } from "../models/index.js";
+import { assertVariantPricingInvariant } from "../utils/catalog-invariants.js";
 import {
     coerceBooleanInput,
     coerceIntegerInput,
@@ -52,6 +53,17 @@ export const UPDATE_VARIANT_INPUT_SCHEMA = z
         status: z.enum(VARIANT_STATUSES).optional(),
     })
     .strict()
+    .superRefine((value, ctx) => {
+        try {
+            assertVariantPricingInvariant(value, { allowPartial: true });
+        } catch (error) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["salePrice"],
+                message: error.message,
+            });
+        }
+    })
     .refine((value) => Object.keys(value).length > 0, {
         message: "Catalog update variant input requires at least one mutable field",
     });

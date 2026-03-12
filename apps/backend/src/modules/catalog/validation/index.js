@@ -2,10 +2,24 @@ import {
     coerceBooleanInput,
     coerceIntegerInput,
     coerceNumberInput,
+    collapseWhitespaceTextInput,
+    normalizeBadgeCode,
+    normalizeBrandCode,
+    normalizeCategoryCode,
     normalizeCsvStringArrayInput,
+    normalizeKeyword,
+    normalizeProductGroupCode,
+    normalizeSearchTitle,
+    normalizeSku,
+    normalizeTagCode,
+    normalizeTitle,
     trimNullableTextInput,
     trimTextInput,
 } from "./catalog.normalizers.js";
+import {
+    assertVariantPricingInvariant,
+    assertVariantPricingPatchInvariant,
+} from "../utils/catalog-invariants.js";
 import {
     CREATE_PRODUCT_INPUT_SCHEMA,
     parseCreateProductInput,
@@ -25,6 +39,10 @@ import {
     LIST_PRODUCTS_QUERY_SCHEMA,
     parseListProductsQuery,
 } from "./list-products.schema.js";
+import {
+    parseProductDiscoveryQuery,
+    PRODUCT_DISCOVERY_QUERY_SCHEMA,
+} from "./product-discovery-query.schema.js";
 import {
     SEARCH_PRODUCTS_QUERY_SCHEMA,
     parseSearchProductsQuery,
@@ -42,10 +60,24 @@ export {
     coerceBooleanInput,
     coerceIntegerInput,
     coerceNumberInput,
+    collapseWhitespaceTextInput,
+    normalizeBadgeCode,
+    normalizeBrandCode,
+    normalizeCategoryCode,
     normalizeCsvStringArrayInput,
+    normalizeKeyword,
+    normalizeProductGroupCode,
+    normalizeSearchTitle,
+    normalizeSku,
+    normalizeTagCode,
+    normalizeTitle,
     trimNullableTextInput,
     trimTextInput,
 } from "./catalog.normalizers.js";
+export {
+    assertVariantPricingInvariant,
+    assertVariantPricingPatchInvariant,
+} from "../utils/catalog-invariants.js";
 export {
     CREATE_PRODUCT_INPUT_SCHEMA,
     parseCreateProductInput,
@@ -65,6 +97,10 @@ export {
     LIST_PRODUCTS_QUERY_SCHEMA,
     parseListProductsQuery,
 } from "./list-products.schema.js";
+export {
+    PRODUCT_DISCOVERY_QUERY_SCHEMA,
+    parseProductDiscoveryQuery,
+} from "./product-discovery-query.schema.js";
 export {
     SEARCH_PRODUCTS_QUERY_SCHEMA,
     parseSearchProductsQuery,
@@ -88,6 +124,7 @@ export function createCatalogValidation() {
         createVariantSchema: CREATE_VARIANT_INPUT_SCHEMA,
         updateVariantSchema: UPDATE_VARIANT_INPUT_SCHEMA,
         importProductRowSchema: IMPORT_PRODUCT_ROW_SCHEMA,
+        productDiscoverySchema: PRODUCT_DISCOVERY_QUERY_SCHEMA,
         listProductsSchema: LIST_PRODUCTS_QUERY_SCHEMA,
         searchProductsSchema: SEARCH_PRODUCTS_QUERY_SCHEMA,
         smartphoneSpecsSchema: SMARTPHONE_SPECS_INPUT_SCHEMA,
@@ -98,13 +135,26 @@ export function createCatalogValidation() {
         parseCreateVariantInput,
         parseUpdateVariantInput,
         parseImportProductRow,
+        parseProductDiscoveryQuery,
         parseListProductsQuery,
         parseSearchProductsQuery,
+        assertVariantPricingInvariant,
+        assertVariantPricingPatchInvariant,
         normalizers: {
             coerceBooleanInput,
             coerceIntegerInput,
             coerceNumberInput,
+            collapseWhitespaceTextInput,
+            normalizeBadgeCode,
+            normalizeBrandCode,
+            normalizeCategoryCode,
             normalizeCsvStringArrayInput,
+            normalizeKeyword,
+            normalizeProductGroupCode,
+            normalizeSearchTitle,
+            normalizeSku,
+            normalizeTagCode,
+            normalizeTitle,
             trimNullableTextInput,
             trimTextInput,
         },

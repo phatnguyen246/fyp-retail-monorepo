@@ -5,16 +5,38 @@ import {
     PRODUCT_TYPES,
     VARIANT_STATUSES,
 } from "../models/index.js";
+import { assertVariantPricingInvariant } from "../utils/catalog-invariants.js";
 import {
     coerceBooleanInput,
     coerceIntegerInput,
     coerceNumberInput,
+    normalizeBadgeCode,
+    normalizeBrandCode,
+    normalizeCategoryCode,
     normalizeCsvStringArrayInput,
+    normalizeProductGroupCode,
+    normalizeSku,
+    normalizeTagCode,
+    normalizeTitle,
     trimNullableTextInput,
-    trimTextInput,
 } from "./catalog.normalizers.js";
 
-const trimmedStringSchema = z.preprocess(trimTextInput, z.string().min(1));
+const trimmedStringSchema = z.preprocess(normalizeTitle, z.string().min(1));
+const productGroupCodeSchema = z.preprocess(
+    normalizeProductGroupCode,
+    z.string().min(1)
+);
+const brandCodeSchema = z.preprocess(normalizeBrandCode, z.string().min(1));
+const categoryCodeSchema = z.preprocess(
+    normalizeCategoryCode,
+    z.string().min(1)
+);
+const skuSchema = z.preprocess(normalizeSku, z.string().min(1));
+const tagCodeSchema = z.preprocess(normalizeTagCode, z.string().min(1));
+const badgeCodeSchema = z.preprocess(
+    normalizeBadgeCode,
+    z.enum(PRODUCT_BADGE_CODES)
+);
 const optionalTrimmedStringSchema = z.preprocess(
     trimNullableTextInput,
     z.string().min(1).optional().nullable()
@@ -30,21 +52,21 @@ const nonNegativeNumberSchema = z.preprocess(
 
 export const IMPORT_PRODUCT_ROW_SCHEMA = z
     .object({
-        productGroupCode: trimmedStringSchema,
+        productGroupCode: productGroupCodeSchema,
         title: trimmedStringSchema,
-        brandCode: trimmedStringSchema,
-        categoryCode: trimmedStringSchema,
+        brandCode: brandCodeSchema,
+        categoryCode: categoryCodeSchema,
         productType: z.enum(PRODUCT_TYPES).default("smartphone"),
         productStatus: z.enum(PRODUCT_STATUSES).default("draft"),
         shortDescription: optionalTrimmedStringSchema,
         longDescription: optionalTrimmedStringSchema,
         tagCodes: z
-            .preprocess(normalizeCsvStringArrayInput, z.array(trimmedStringSchema))
+            .preprocess(normalizeCsvStringArrayInput, z.array(tagCodeSchema))
             .default([]),
         badges: z
             .preprocess(
                 normalizeCsvStringArrayInput,
-                z.array(z.enum(PRODUCT_BADGE_CODES))
+                z.array(badgeCodeSchema)
             )
             .default([]),
         contactWhenOutOfStock: z
@@ -66,7 +88,7 @@ export const IMPORT_PRODUCT_ROW_SCHEMA = z
         weight: optionalTrimmedStringSchema,
         material: optionalTrimmedStringSchema,
         waterResistance: optionalTrimmedStringSchema,
-        sku: trimmedStringSchema,
+        sku: skuSchema,
         ram: trimmedStringSchema,
         rom: trimmedStringSchema,
         color: trimmedStringSchema,
@@ -84,7 +106,18 @@ export const IMPORT_PRODUCT_ROW_SCHEMA = z
         videoThumbnailUrl: optionalTrimmedStringSchema,
         variantStatus: z.enum(VARIANT_STATUSES).default("active"),
     })
-    .strict();
+    .strict()
+    .superRefine((value, ctx) => {
+        try {
+            assertVariantPricingInvariant(value);
+        } catch (error) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["salePrice"],
+                message: error.message,
+            });
+        }
+    });
 
 export function parseImportProductRow(input) {
     return IMPORT_PRODUCT_ROW_SCHEMA.parse(input);
