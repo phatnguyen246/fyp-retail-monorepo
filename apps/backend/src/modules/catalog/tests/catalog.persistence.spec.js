@@ -16,7 +16,9 @@ function createCollectionMock() {
         find: vi.fn().mockReturnValue({
             toArray: vi.fn().mockResolvedValue([]),
         }),
+        insertOne: vi.fn().mockResolvedValue({ acknowledged: true }),
         updateOne: vi.fn().mockResolvedValue({ acknowledged: true }),
+        updateMany: vi.fn().mockResolvedValue({ acknowledged: true }),
     };
 }
 
@@ -113,6 +115,9 @@ describe("catalog persistence", () => {
             codes: ["camera-phone", "battery-phone"],
         });
         await variantRepository.findVariantBySku({ sku: variant.sku });
+        await variantRepository.findVariantById({
+            variantId: variant._id.toHexString(),
+        });
         await variantRepository.updateVariantCoreFields({
             variantId: variant._id.toHexString(),
             coreFields: {
@@ -133,6 +138,11 @@ describe("catalog persistence", () => {
         expect(collectionMock.findOne).toHaveBeenNthCalledWith(
             2,
             { sku: "IP16-BLK-128" },
+            undefined
+        );
+        expect(collectionMock.findOne).toHaveBeenNthCalledWith(
+            3,
+            { _id: new ObjectId(variant._id.toHexString()) },
             undefined
         );
         expect(collectionMock.updateOne).toHaveBeenCalledWith(
@@ -166,6 +176,68 @@ describe("catalog persistence", () => {
         );
         expect(collectionMock.find).toHaveBeenCalledWith(
             { productId: new ObjectId(product._id.toHexString()) },
+            undefined
+        );
+    });
+
+    it("inserts new documents and soft deletes product and variant records", async () => {
+        const collectionMock = createCollectionMock();
+        const db = createDbMock(collectionMock);
+        const productRepository = createCatalogProductRepository({ db });
+        const variantRepository = createCatalogVariantRepository({ db });
+        const product = createProductFixture();
+        const variant = createVariantFixture();
+
+        await productRepository.createProduct({
+            document: product,
+        });
+        await variantRepository.createVariant({
+            document: variant,
+        });
+        await productRepository.softDeleteProductById({
+            productId: product._id.toHexString(),
+            deletedAt: product.updatedAt,
+            updatedAt: product.updatedAt,
+            updatedBy: "admin-1",
+        });
+        await variantRepository.softDeleteVariantById({
+            variantId: variant._id.toHexString(),
+            deletedAt: variant.updatedAt,
+            updatedAt: variant.updatedAt,
+        });
+        await variantRepository.softDeleteVariantsByProductId({
+            productId: product._id.toHexString(),
+            deletedAt: product.updatedAt,
+            updatedAt: product.updatedAt,
+        });
+
+        expect(collectionMock.insertOne).toHaveBeenNthCalledWith(
+            1,
+            product,
+            undefined
+        );
+        expect(collectionMock.insertOne).toHaveBeenNthCalledWith(
+            2,
+            variant,
+            undefined
+        );
+        expect(collectionMock.updateOne).toHaveBeenCalledWith(
+            { _id: new ObjectId(product._id.toHexString()) },
+            {
+                $set: expect.objectContaining({
+                    isDeleted: true,
+                    updatedBy: "admin-1",
+                }),
+            },
+            undefined
+        );
+        expect(collectionMock.updateMany).toHaveBeenCalledWith(
+            { productId: new ObjectId(product._id.toHexString()) },
+            {
+                $set: expect.objectContaining({
+                    isDeleted: true,
+                }),
+            },
             undefined
         );
     });

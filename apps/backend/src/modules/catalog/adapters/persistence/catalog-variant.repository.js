@@ -16,12 +16,28 @@ export function createCatalogVariantRepository({
             });
         },
 
+        findVariantById({ variantId, projection } = {}) {
+            return baseRepository.findOneById({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                id: variantId,
+                projection,
+            });
+        },
+
         findVariantsByProductId({ productId, projection } = {}) {
             return baseRepository.findManyByField({
                 collectionName: CATALOG_COLLECTIONS.variants,
                 fieldName: "productId",
                 value: toObjectId(productId, "productId"),
                 projection,
+            });
+        },
+
+        createVariant({ document, options } = {}) {
+            return baseRepository.insertOne({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                document,
+                options,
             });
         },
 
@@ -70,6 +86,39 @@ export function createCatalogVariantRepository({
                 id: variantId,
                 set: {
                     ...derivedFields,
+                    updatedAt,
+                },
+            });
+        },
+
+        softDeleteVariantById({
+            variantId,
+            deletedAt = new Date(),
+            updatedAt = deletedAt,
+        } = {}) {
+            return baseRepository.updateOneById({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                id: variantId,
+                set: {
+                    isDeleted: true,
+                    deletedAt,
+                    updatedAt,
+                },
+            });
+        },
+
+        softDeleteVariantsByProductId({
+            productId,
+            deletedAt = new Date(),
+            updatedAt = deletedAt,
+        } = {}) {
+            return baseRepository.updateManyByField({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                fieldName: "productId",
+                value: toObjectId(productId, "productId"),
+                set: {
+                    isDeleted: true,
+                    deletedAt,
                     updatedAt,
                 },
             });

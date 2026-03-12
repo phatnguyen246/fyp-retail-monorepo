@@ -105,3 +105,14 @@
 - `product.status` never stores `deleted`.
 - `variant.status` never stores `draft` or `deleted`.
 - When `isDeleted = true`, the document is excluded from normal read flows regardless of `status`.
+
+## Admin CRUD Contract
+
+- Public catalog health remains available at `/catalog/health`.
+- Admin CRUD routes use `_id` in the path under `/admin/catalog`.
+- Product admin create and update input still uses `brandCode`, `categoryCode`, and `tagCodes`.
+- Variant admin create uses `POST /admin/catalog/products/:productId/variants`.
+- Variant admin update and delete use `variantId` in the path.
+- `sku` is immutable after create in the admin CRUD flow.
+- Product soft delete cascades soft delete to its variants by setting `isDeleted = true` and `deletedAt`.
+- Admin product detail returns the product and all linked variants, including soft-deleted variants.

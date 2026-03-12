@@ -48,6 +48,10 @@ export function createCatalogBaseRepository({ db } = {}) {
             );
         },
 
+        insertOne({ collectionName, document, options } = {}) {
+            return getCollection(collectionName).insertOne(document, options);
+        },
+
         findOneById({ collectionName, id, projection }) {
             return getCollection(collectionName).findOne(
                 { _id: toObjectId(id, "_id") },
@@ -113,6 +117,14 @@ export function createCatalogBaseRepository({ db } = {}) {
         updateOneById({ collectionName, id, set, options }) {
             return getCollection(collectionName).updateOne(
                 { _id: toObjectId(id, "_id") },
+                { $set: set },
+                options
+            );
+        },
+
+        updateManyByField({ collectionName, fieldName, value, set, options } = {}) {
+            return getCollection(collectionName).updateMany(
+                { [fieldName]: value },
                 { $set: set },
                 options
             );

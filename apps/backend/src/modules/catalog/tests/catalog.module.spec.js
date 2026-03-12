@@ -10,5 +10,12 @@ describe("catalog module", () => {
             module: "catalog",
         });
         expect(typeof services.rebuildProductDerivedFields).toBe("function");
+        expect(typeof services.createProduct).toBe("function");
+        expect(typeof services.updateProduct).toBe("function");
+        expect(typeof services.getProductDetailAdmin).toBe("function");
+        expect(typeof services.softDeleteProduct).toBe("function");
+        expect(typeof services.createVariant).toBe("function");
+        expect(typeof services.updateVariant).toBe("function");
+        expect(typeof services.softDeleteVariant).toBe("function");
     });
 });

@@ -24,6 +24,14 @@ export function createCatalogProductRepository({
             });
         },
 
+        createProduct({ document, options } = {}) {
+            return baseRepository.insertOne({
+                collectionName: CATALOG_COLLECTIONS.products,
+                document,
+                options,
+            });
+        },
+
         upsertProductByProductGroupCode({
             productGroupCode,
             document,
@@ -73,6 +81,24 @@ export function createCatalogProductRepository({
                 set: {
                     ...derivedFields,
                     updatedAt,
+                },
+            });
+        },
+
+        softDeleteProductById({
+            productId,
+            deletedAt = new Date(),
+            updatedAt = deletedAt,
+            updatedBy,
+        } = {}) {
+            return baseRepository.updateOneById({
+                collectionName: CATALOG_COLLECTIONS.products,
+                id: productId,
+                set: {
+                    isDeleted: true,
+                    deletedAt,
+                    updatedAt,
+                    ...(updatedBy !== undefined ? { updatedBy } : {}),
                 },
             });
         },

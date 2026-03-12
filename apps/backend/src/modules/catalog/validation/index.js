@@ -1,4 +1,14 @@
 import {
+    ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
+    parseAdminCreateVariantInput,
+} from "./admin-create-variant.schema.js";
+import {
+    parseProductIdParams,
+    parseVariantIdParams,
+    PRODUCT_ID_PARAMS_SCHEMA,
+    VARIANT_ID_PARAMS_SCHEMA,
+} from "./admin-resource-params.schema.js";
+import {
     coerceBooleanInput,
     coerceIntegerInput,
     coerceNumberInput,
@@ -56,6 +66,16 @@ import {
     parseUpdateVariantInput,
 } from "./update-variant.schema.js";
 
+export {
+    ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
+    parseAdminCreateVariantInput,
+} from "./admin-create-variant.schema.js";
+export {
+    parseProductIdParams,
+    parseVariantIdParams,
+    PRODUCT_ID_PARAMS_SCHEMA,
+    VARIANT_ID_PARAMS_SCHEMA,
+} from "./admin-resource-params.schema.js";
 export {
     coerceBooleanInput,
     coerceIntegerInput,
@@ -119,10 +139,13 @@ export function createCatalogValidation() {
         validateHealthRequest() {
             return { ok: true };
         },
+        adminCreateVariantSchema: ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
         createProductSchema: CREATE_PRODUCT_INPUT_SCHEMA,
         updateProductSchema: UPDATE_PRODUCT_INPUT_SCHEMA,
         createVariantSchema: CREATE_VARIANT_INPUT_SCHEMA,
         updateVariantSchema: UPDATE_VARIANT_INPUT_SCHEMA,
+        productIdParamsSchema: PRODUCT_ID_PARAMS_SCHEMA,
+        variantIdParamsSchema: VARIANT_ID_PARAMS_SCHEMA,
         importProductRowSchema: IMPORT_PRODUCT_ROW_SCHEMA,
         productDiscoverySchema: PRODUCT_DISCOVERY_QUERY_SCHEMA,
         listProductsSchema: LIST_PRODUCTS_QUERY_SCHEMA,
@@ -130,10 +153,13 @@ export function createCatalogValidation() {
         smartphoneSpecsSchema: SMARTPHONE_SPECS_INPUT_SCHEMA,
         variantAttributesSchema: VARIANT_ATTRIBUTES_INPUT_SCHEMA,
         variantVideoSchema: VARIANT_VIDEO_INPUT_SCHEMA,
+        parseAdminCreateVariantInput,
         parseCreateProductInput,
         parseUpdateProductInput,
         parseCreateVariantInput,
         parseUpdateVariantInput,
+        parseProductIdParams,
+        parseVariantIdParams,
         parseImportProductRow,
         parseProductDiscoveryQuery,
         parseListProductsQuery,

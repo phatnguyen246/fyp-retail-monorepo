@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
     assertVariantPricingInvariant,
     createCatalogValidation,
+    parseAdminCreateVariantInput,
+    parseProductIdParams,
     parseProductDiscoveryQuery,
     parseCreateProductInput,
     parseCreateVariantInput,
@@ -10,6 +12,7 @@ import {
     parseSearchProductsQuery,
     parseUpdateProductInput,
     parseUpdateVariantInput,
+    parseVariantIdParams,
 } from "../validation/index.js";
 import { createProductImportRowFixture } from "./fixtures/index.js";
 
@@ -162,6 +165,59 @@ describe("catalog validation", () => {
                 status: "draft",
             })
         ).toThrow();
+    });
+
+    it("parses admin create variant input without product identity fields and validates ObjectId route params", () => {
+        const parsed = parseAdminCreateVariantInput({
+            sku: "ip16-blk-128",
+            variantAttributes: {
+                ram: "8GB",
+                rom: "128GB",
+                color: "Black",
+            },
+            originalPrice: "24990000",
+            salePrice: "22990000",
+        });
+
+        expect(parsed).toMatchObject({
+            sku: "IP16-BLK-128",
+            status: "active",
+            currency: "VND",
+        });
+        expect(
+            parseProductIdParams({
+                productId: "65f000000000000000000006",
+            })
+        ).toEqual({
+            productId: "65f000000000000000000006",
+        });
+        expect(
+            parseVariantIdParams({
+                variantId: "65f000000000000000000007",
+            })
+        ).toEqual({
+            variantId: "65f000000000000000000007",
+        });
+
+        expect(() =>
+            parseAdminCreateVariantInput({
+                productId: "65f000000000000000000006",
+                sku: "IP16-BLK-128",
+                variantAttributes: {
+                    ram: "8GB",
+                    rom: "128GB",
+                    color: "Black",
+                },
+                originalPrice: 24990000,
+                salePrice: 22990000,
+            })
+        ).toThrow();
+
+        expect(() =>
+            parseProductIdParams({
+                productId: "invalid-object-id",
+            })
+        ).toThrow(/productId/);
     });
 
     it("parses import rows, discovery queries, and search/list compatibility parsers", () => {
