@@ -1,7 +1,7 @@
-export function createCatalogAdapters() {
+import { createCatalogPersistence } from "./persistence/index.js";
+
+export function createCatalogAdapters({ db } = {}) {
     return {
-        noop() {
-            return null;
-        },
+        persistence: createCatalogPersistence({ db }),
     };
 }

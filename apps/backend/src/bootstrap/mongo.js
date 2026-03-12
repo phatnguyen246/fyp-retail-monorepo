@@ -1,31 +1,26 @@
-// apps/backend/src/bootstrap/mongo.js
-import mongoose from "mongoose";
+import { MongoClient } from "mongodb";
 
 export async function connectMongo({
-    mongooseClient = mongoose,
+    MongoClientClass = MongoClient,
     mongoUri = process.env.MONGODB_URI,
     logger = console,
 } = {}) {
     if (!mongoUri) {
-        throw new Error("Missing MONGO_URI environment variable");
+        throw new Error("Missing MONGODB_URI environment variable");
     }
 
-    mongooseClient.connection.on("connected", () => {
-        logger.log("MongoDB connected");
-    });
-
-    mongooseClient.connection.on("disconnected", () => {
-        logger.log("MongoDB disconnected");
-    });
-
-    mongooseClient.connection.on("error", (err) => {
-        logger.error("MongoDB connection error:", err);
-    });
+    const client = new MongoClientClass(mongoUri);
 
     try {
-        await mongooseClient.connect(mongoUri);
+        await client.connect();
+        const db = client.db();
+
+        logger.log(`MongoDB connected to database "${db.databaseName}"`);
+
+        return { client, db };
     } catch (err) {
         logger.error("MongoDB connect failed:", err);
+        await client.close().catch(() => undefined);
         throw err;
     }
 }

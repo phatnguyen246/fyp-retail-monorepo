@@ -3,13 +3,15 @@ import express from "express";
 import { registerModules } from "./modules.js";
 import { connectMongo } from "./mongo.js";
 
-export async function createApp() {
-    await connectMongo();
+export async function createApp({ connectMongoFn = connectMongo } = {}) {
+    const { client, db } = await connectMongoFn();
 
     const app = express();
     app.use(express.json());
+    app.locals.mongoClient = client;
+    app.locals.db = db;
 
-    registerModules(app);
+    registerModules({ app, db });
 
     // Error handler (global)
     app.use((err, _req, res, _next) => {

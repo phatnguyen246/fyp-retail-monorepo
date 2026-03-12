@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "nodemon index.js",
     "test": "vitest run",
-    "dev:test": "pnpm test && pnpm dev"
+    "dev:test": "pnpm test && pnpm dev",
+    "db:setup:catalog": "node src/modules/catalog/seeds/setup-catalog-indexes.js",
+    "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.11",
@@ -20,7 +22,6 @@
     "firebase-admin": "^13.7.0",
     "helmet": "^8.1.0",
     "mongodb": "^7.1.0",
-    "mongoose": "^9.1.5",
     "multer": "^2.1.1",
     "pino": "^10.3.1",
     "qs": "^6.15.0",
