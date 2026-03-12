@@ -9,6 +9,14 @@ import {
 } from "./setup-catalog-indexes.js";
 import { seedCatalogBase } from "./seed-catalog-base.js";
 
+function expectNoIndexForKey(indexCalls, forbiddenKey) {
+    expect(indexCalls).not.toContainEqual(
+        expect.objectContaining({
+            key: forbiddenKey,
+        })
+    );
+}
+
 function makeRepositoryMock() {
     return {
         ensureIndex: vi.fn().mockResolvedValue(undefined),
@@ -110,7 +118,7 @@ describe("catalog seeds", () => {
         await ensureCatalogIndexes({ repository });
 
         expect(repository.ensureUniqueIndex).toHaveBeenCalledTimes(7);
-        expect(repository.ensureIndex).toHaveBeenCalledTimes(1);
+        expect(repository.ensureIndex).toHaveBeenCalledTimes(10);
         expect(repository.ensureUniqueIndex).toHaveBeenNthCalledWith(1, {
             collectionName: "brands",
             key: { code: 1 },
@@ -137,10 +145,67 @@ describe("catalog seeds", () => {
             indexName: "badges_code_unique",
         });
         expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: { isDeleted: 1, status: 1, categoryId: 1, brandId: 1 },
+            indexName: "products_deleted_status_category_brand",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: { createdAt: -1 },
+            indexName: "products_created_at_desc",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: { slug: 1 },
+            indexName: "products_slug",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: { searchTitle: 1 },
+            indexName: "products_search_title",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: { tagIds: 1 },
+            indexName: "products_tag_ids",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "variants",
+            key: { productId: 1, status: 1 },
+            indexName: "variants_product_status",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "variants",
+            key: {
+                "variantAttributes.ram": 1,
+                "variantAttributes.rom": 1,
+            },
+            indexName: "variants_ram_rom",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "variants",
+            key: { "variantAttributes.color": 1 },
+            indexName: "variants_color",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "variants",
+            key: { salePrice: 1 },
+            indexName: "variants_sale_price",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
             collectionName: "productMediaMetadata",
             key: { variantId: 1, sortOrder: 1, createdAt: 1 },
             indexName: "product_media_variant_sort_created_at",
         });
+
+        const ensureIndexCalls = repository.ensureIndex.mock.calls.map(
+            ([definition]) => definition
+        );
+
+        expectNoIndexForKey(ensureIndexCalls, { defaultSelectedVariantId: 1 });
+        expectNoIndexForKey(ensureIndexCalls, { tags: 1 });
+        expectNoIndexForKey(ensureIndexCalls, { stock: 1 });
+        expectNoIndexForKey(ensureIndexCalls, { isInStock: 1 });
     });
 
     it("runs index setup and closes the connection", async () => {
