@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
     assertVariantPricingInvariant,
+    parseCloneProductInput,
+    parseCompareProductsInput,
     createCatalogValidation,
+    parseImportProductsFile,
     parseMediaIdParams,
     parseAdminCreateVariantInput,
     parseVariantMediaParams,
@@ -12,6 +15,7 @@ import {
     parseImportProductRow,
     parseListProductsQuery,
     parseSearchProductsQuery,
+    parseStorefrontProductDetailParams,
     parseUpdateProductInput,
     parseUpdateVariantInput,
     parseVariantIdParams,
@@ -337,6 +341,65 @@ describe("catalog validation", () => {
                 page: "1.9",
             })
         ).toThrow();
+        expect(
+            parseStorefrontProductDetailParams({
+                productId: "65f000000000000000000006",
+                slug: "iPhone 16",
+            })
+        ).toEqual({
+            productId: "65f000000000000000000006",
+            slug: "iphone-16",
+        });
+        expect(
+            parseCompareProductsInput({
+                productIds: [
+                    "65f000000000000000000006",
+                    "65f000000000000000000008",
+                ],
+            })
+        ).toEqual({
+            productIds: [
+                "65f000000000000000000006",
+                "65f000000000000000000008",
+            ],
+        });
+        expect(
+            parseCloneProductInput({
+                productGroupCode: " apple_iphone_16_copy ",
+                title: " iPhone 16 Copy ",
+            })
+        ).toEqual({
+            productGroupCode: "APPLE_IPHONE_16_COPY",
+            title: "iPhone 16 Copy",
+        });
+        expect(
+            parseImportProductsFile({
+                fieldname: "file",
+                originalname: "catalog.csv",
+                mimetype: "text/csv",
+                size: 10,
+                buffer: Buffer.from("header\nvalue"),
+            })
+        ).toMatchObject({
+            fieldname: "file",
+            originalname: "catalog.csv",
+        });
+        expect(() =>
+            parseCompareProductsInput({
+                productIds: [
+                    "65f000000000000000000006",
+                    "65f000000000000000000006",
+                ],
+            })
+        ).toThrow(/unique/);
+        expect(() =>
+            parseImportProductsFile({
+                fieldname: "file",
+                originalname: "catalog.txt",
+                size: 10,
+                buffer: Buffer.from("header\nvalue"),
+            })
+        ).toThrow(/csv/i);
     });
 
     it("exposes grouped schemas, helpers, and invariants through createCatalogValidation", () => {
@@ -345,8 +408,12 @@ describe("catalog validation", () => {
         expect(validation.validateHealthRequest()).toEqual({ ok: true });
         expect(validation.createProductSchema).toBeDefined();
         expect(validation.createVariantSchema).toBeDefined();
+        expect(validation.compareProductsSchema).toBeDefined();
+        expect(validation.cloneProductSchema).toBeDefined();
         expect(validation.importProductRowSchema).toBeDefined();
+        expect(validation.importProductsFileSchema).toBeDefined();
         expect(validation.productDiscoverySchema).toBeDefined();
+        expect(validation.storefrontProductDetailParamsSchema).toBeDefined();
         expect(validation.parseCreateProductInput).toBe(parseCreateProductInput);
         expect(validation.parseUpdateProductInput).toBe(parseUpdateProductInput);
         expect(validation.parseProductDiscoveryQuery).toBe(parseProductDiscoveryQuery);

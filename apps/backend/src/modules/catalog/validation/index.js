@@ -1,7 +1,15 @@
 import {
+    COMPARE_PRODUCTS_INPUT_SCHEMA,
+    parseCompareProductsInput,
+} from "./compare-products.schema.js";
+import {
     ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
     parseAdminCreateVariantInput,
 } from "./admin-create-variant.schema.js";
+import {
+    CLONE_PRODUCT_INPUT_SCHEMA,
+    parseCloneProductInput,
+} from "./clone-product.schema.js";
 import {
     MEDIA_ID_PARAMS_SCHEMA,
     parseProductIdParams,
@@ -50,6 +58,10 @@ import {
     parseImportProductRow,
 } from "./import-product-row.schema.js";
 import {
+    IMPORT_PRODUCTS_FILE_SCHEMA,
+    parseImportProductsFile,
+} from "./import-products-request.schema.js";
+import {
     LIST_PRODUCTS_QUERY_SCHEMA,
     parseListProductsQuery,
 } from "./list-products.schema.js";
@@ -61,6 +73,10 @@ import {
     SEARCH_PRODUCTS_QUERY_SCHEMA,
     parseSearchProductsQuery,
 } from "./search-products.schema.js";
+import {
+    parseStorefrontProductDetailParams,
+    STOREFRONT_PRODUCT_DETAIL_PARAMS_SCHEMA,
+} from "./storefront-product-detail.schema.js";
 import {
     UPDATE_PRODUCT_INPUT_SCHEMA,
     parseUpdateProductInput,
@@ -71,9 +87,17 @@ import {
 } from "./update-variant.schema.js";
 
 export {
+    COMPARE_PRODUCTS_INPUT_SCHEMA,
+    parseCompareProductsInput,
+} from "./compare-products.schema.js";
+export {
     ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
     parseAdminCreateVariantInput,
 } from "./admin-create-variant.schema.js";
+export {
+    CLONE_PRODUCT_INPUT_SCHEMA,
+    parseCloneProductInput,
+} from "./clone-product.schema.js";
 export {
     MEDIA_ID_PARAMS_SCHEMA,
     parseProductIdParams,
@@ -122,6 +146,10 @@ export {
     parseImportProductRow,
 } from "./import-product-row.schema.js";
 export {
+    IMPORT_PRODUCTS_FILE_SCHEMA,
+    parseImportProductsFile,
+} from "./import-products-request.schema.js";
+export {
     LIST_PRODUCTS_QUERY_SCHEMA,
     parseListProductsQuery,
 } from "./list-products.schema.js";
@@ -133,6 +161,10 @@ export {
     SEARCH_PRODUCTS_QUERY_SCHEMA,
     parseSearchProductsQuery,
 } from "./search-products.schema.js";
+export {
+    parseStorefrontProductDetailParams,
+    STOREFRONT_PRODUCT_DETAIL_PARAMS_SCHEMA,
+} from "./storefront-product-detail.schema.js";
 export {
     UPDATE_PRODUCT_INPUT_SCHEMA,
     parseUpdateProductInput,
@@ -147,7 +179,9 @@ export function createCatalogValidation() {
         validateHealthRequest() {
             return { ok: true };
         },
+        compareProductsSchema: COMPARE_PRODUCTS_INPUT_SCHEMA,
         adminCreateVariantSchema: ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
+        cloneProductSchema: CLONE_PRODUCT_INPUT_SCHEMA,
         createProductSchema: CREATE_PRODUCT_INPUT_SCHEMA,
         updateProductSchema: UPDATE_PRODUCT_INPUT_SCHEMA,
         createVariantSchema: CREATE_VARIANT_INPUT_SCHEMA,
@@ -157,13 +191,18 @@ export function createCatalogValidation() {
         mediaIdParamsSchema: MEDIA_ID_PARAMS_SCHEMA,
         variantMediaParamsSchema: VARIANT_MEDIA_PARAMS_SCHEMA,
         importProductRowSchema: IMPORT_PRODUCT_ROW_SCHEMA,
+        importProductsFileSchema: IMPORT_PRODUCTS_FILE_SCHEMA,
         productDiscoverySchema: PRODUCT_DISCOVERY_QUERY_SCHEMA,
         listProductsSchema: LIST_PRODUCTS_QUERY_SCHEMA,
         searchProductsSchema: SEARCH_PRODUCTS_QUERY_SCHEMA,
+        storefrontProductDetailParamsSchema:
+            STOREFRONT_PRODUCT_DETAIL_PARAMS_SCHEMA,
         smartphoneSpecsSchema: SMARTPHONE_SPECS_INPUT_SCHEMA,
         variantAttributesSchema: VARIANT_ATTRIBUTES_INPUT_SCHEMA,
         variantVideoSchema: VARIANT_VIDEO_INPUT_SCHEMA,
+        parseCompareProductsInput,
         parseAdminCreateVariantInput,
+        parseCloneProductInput,
         parseCreateProductInput,
         parseUpdateProductInput,
         parseCreateVariantInput,
@@ -173,9 +212,11 @@ export function createCatalogValidation() {
         parseVariantMediaParams,
         parseVariantIdParams,
         parseImportProductRow,
+        parseImportProductsFile,
         parseProductDiscoveryQuery,
         parseListProductsQuery,
         parseSearchProductsQuery,
+        parseStorefrontProductDetailParams,
         assertVariantPricingInvariant,
         assertVariantPricingPatchInvariant,
         normalizers: {

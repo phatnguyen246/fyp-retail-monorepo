@@ -34,6 +34,15 @@ export function createCatalogConflictError(message, meta) {
     });
 }
 
+export function createCatalogBadRequestError(message, meta) {
+    return createCatalogHttpError({
+        httpStatus: 400,
+        code: "CATALOG_BAD_REQUEST",
+        message,
+        meta,
+    });
+}
+
 export function createCatalogUnprocessableEntityError(message, meta) {
     return createCatalogHttpError({
         httpStatus: 422,

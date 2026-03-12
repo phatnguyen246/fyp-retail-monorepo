@@ -52,6 +52,8 @@ describe("catalog admin routes", () => {
     it("parses a single multipart image file for the upload route", async () => {
         const controller = {
             createProduct: vi.fn(),
+            importProducts: vi.fn(),
+            cloneProduct: vi.fn(),
             getProductDetailAdmin: vi.fn(),
             updateProduct: vi.fn(),
             softDeleteProduct: vi.fn(),
@@ -103,6 +105,8 @@ describe("catalog admin routes", () => {
     it("rejects unsupported image formats with HTTP 422 before reaching the controller", async () => {
         const controller = {
             createProduct: vi.fn(),
+            importProducts: vi.fn(),
+            cloneProduct: vi.fn(),
             getProductDetailAdmin: vi.fn(),
             updateProduct: vi.fn(),
             softDeleteProduct: vi.fn(),
@@ -142,6 +146,8 @@ describe("catalog admin routes", () => {
     it("maps multer file-size errors to HTTP 422", async () => {
         const controller = {
             createProduct: vi.fn(),
+            importProducts: vi.fn(),
+            cloneProduct: vi.fn(),
             getProductDetailAdmin: vi.fn(),
             updateProduct: vi.fn(),
             softDeleteProduct: vi.fn(),
@@ -181,6 +187,8 @@ describe("catalog admin routes", () => {
     it("rejects multipart requests without an image file", async () => {
         const controller = {
             createProduct: vi.fn(),
+            importProducts: vi.fn(),
+            cloneProduct: vi.fn(),
             getProductDetailAdmin: vi.fn(),
             updateProduct: vi.fn(),
             softDeleteProduct: vi.fn(),
@@ -215,6 +223,8 @@ describe("catalog admin routes", () => {
     it("rejects malformed upload requests with an unexpected file field", async () => {
         const controller = {
             createProduct: vi.fn(),
+            importProducts: vi.fn(),
+            cloneProduct: vi.fn(),
             getProductDetailAdmin: vi.fn(),
             updateProduct: vi.fn(),
             softDeleteProduct: vi.fn(),
@@ -255,6 +265,8 @@ describe("catalog admin routes", () => {
     it("routes variant image deletion requests to the delete controller", async () => {
         const controller = {
             createProduct: vi.fn(),
+            importProducts: vi.fn(),
+            cloneProduct: vi.fn(),
             getProductDetailAdmin: vi.fn(),
             updateProduct: vi.fn(),
             softDeleteProduct: vi.fn(),

@@ -4,9 +4,15 @@ import { createCatalogHealthPayload } from "../utils/index.js";
 import { createCreateProductService } from "./create-product.service.js";
 import { createCreateVariantService } from "./create-variant.service.js";
 import { createDeleteVariantImageService } from "./delete-variant-image.service.js";
+import { createCloneProductService } from "./clone-product.service.js";
+import { createCompareProductsService } from "./compare-products.service.js";
 import { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
+import { createGetProductDetailStorefrontService } from "./get-product-detail-storefront.service.js";
+import { createImportProductsService } from "./import-products.service.js";
+import { createListProductsService } from "./list-products.service.js";
 import { createListVariantImagesService } from "./list-variant-images.service.js";
 import { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
+import { createSearchProductsService } from "./search-products.service.js";
 import { createSoftDeleteProductService } from "./soft-delete-product.service.js";
 import { createSoftDeleteVariantService } from "./soft-delete-variant.service.js";
 import { createUploadVariantImageService } from "./upload-variant-image.service.js";
@@ -16,9 +22,15 @@ import { createUpdateVariantService } from "./update-variant.service.js";
 export { createCreateProductService } from "./create-product.service.js";
 export { createCreateVariantService } from "./create-variant.service.js";
 export { createDeleteVariantImageService } from "./delete-variant-image.service.js";
+export { createCloneProductService } from "./clone-product.service.js";
+export { createCompareProductsService } from "./compare-products.service.js";
 export { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
+export { createGetProductDetailStorefrontService } from "./get-product-detail-storefront.service.js";
+export { createImportProductsService } from "./import-products.service.js";
+export { createListProductsService } from "./list-products.service.js";
 export { createListVariantImagesService } from "./list-variant-images.service.js";
 export { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
+export { createSearchProductsService } from "./search-products.service.js";
 export { createSoftDeleteProductService } from "./soft-delete-product.service.js";
 export { createSoftDeleteVariantService } from "./soft-delete-variant.service.js";
 export { createUploadVariantImageService } from "./upload-variant-image.service.js";
@@ -44,6 +56,31 @@ export function createCatalogServices({
             return createCatalogHealthPayload();
         },
         rebuildProductDerivedFields,
+        listProducts: createListProductsService({
+            productRepository,
+            referenceRepository,
+            variantRepository,
+            validation,
+        }),
+        searchProducts: createSearchProductsService({
+            productRepository,
+            referenceRepository,
+            variantRepository,
+            validation,
+        }),
+        getProductDetailStorefront: createGetProductDetailStorefrontService({
+            productRepository,
+            referenceRepository,
+            variantRepository,
+            mediaRepository,
+            validation,
+        }),
+        compareProducts: createCompareProductsService({
+            productRepository,
+            referenceRepository,
+            variantRepository,
+            validation,
+        }),
         createProduct: createCreateProductService({
             productRepository,
             referenceRepository,
@@ -58,6 +95,17 @@ export function createCatalogServices({
         getProductDetailAdmin: createGetProductDetailAdminService({
             productRepository,
             variantRepository,
+            validation,
+        }),
+        importProducts: createImportProductsService({
+            productRepository,
+            referenceRepository,
+            variantRepository,
+            validation,
+            rebuildProductDerivedFields,
+        }),
+        cloneProduct: createCloneProductService({
+            productRepository,
             validation,
         }),
         softDeleteProduct: createSoftDeleteProductService({

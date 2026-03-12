@@ -1,5 +1,5 @@
 import { CATALOG_COLLECTIONS } from "../../constants/index.js";
-import { toObjectId } from "../../utils/object-id.js";
+import { toObjectId, toObjectIdArray } from "../../utils/object-id.js";
 import { createCatalogBaseRepository } from "./catalog-base.repository.js";
 
 export function createCatalogVariantRepository({
@@ -31,6 +31,80 @@ export function createCatalogVariantRepository({
                 value: toObjectId(productId, "productId"),
                 projection,
             });
+        },
+
+        findVariantsByProductIds({ productIds, projection } = {}) {
+            return baseRepository.findManyByFieldValues({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                fieldName: "productId",
+                values: toObjectIdArray(productIds, "productIds"),
+                projection,
+            });
+        },
+
+        async findProductIdsByDiscovery({
+            productIds,
+            ram = [],
+            rom = [],
+            minPrice,
+            maxPrice,
+        } = {}) {
+            const filter = {
+                status: "active",
+                isDeleted: {
+                    $ne: true,
+                },
+            };
+
+            if (Array.isArray(productIds) && productIds.length > 0) {
+                filter.productId = {
+                    $in: toObjectIdArray(productIds, "productIds"),
+                };
+            }
+
+            if (Array.isArray(ram) && ram.length > 0) {
+                filter["variantAttributes.ram"] = {
+                    $in: ram,
+                };
+            }
+
+            if (Array.isArray(rom) && rom.length > 0) {
+                filter["variantAttributes.rom"] = {
+                    $in: rom,
+                };
+            }
+
+            if (
+                typeof minPrice === "number" ||
+                typeof maxPrice === "number"
+            ) {
+                filter.salePrice = {
+                    ...(typeof minPrice === "number" ? { $gte: minPrice } : {}),
+                    ...(typeof maxPrice === "number" ? { $lte: maxPrice } : {}),
+                };
+            }
+
+            const matches = await baseRepository.findManyByFilter({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                filter,
+                projection: {
+                    productId: 1,
+                },
+            });
+            const uniqueProductIds = new Map();
+
+            for (const match of matches) {
+                if (!match?.productId) {
+                    continue;
+                }
+
+                uniqueProductIds.set(
+                    match.productId.toHexString(),
+                    match.productId
+                );
+            }
+
+            return [...uniqueProductIds.values()];
         },
 
         createVariant({ document, options } = {}) {

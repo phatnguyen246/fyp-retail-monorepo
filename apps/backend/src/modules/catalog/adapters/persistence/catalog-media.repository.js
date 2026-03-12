@@ -1,5 +1,5 @@
 import { CATALOG_COLLECTIONS } from "../../constants/index.js";
-import { toObjectId } from "../../utils/object-id.js";
+import { toObjectId, toObjectIdArray } from "../../utils/object-id.js";
 import { createCatalogBaseRepository } from "./catalog-base.repository.js";
 
 export function createCatalogMediaRepository({
@@ -43,6 +43,24 @@ export function createCatalogMediaRepository({
                 },
                 projection,
                 sort: {
+                    sortOrder: 1,
+                    createdAt: 1,
+                    _id: 1,
+                },
+            });
+        },
+
+        listMediaByVariantIds({ variantIds, projection } = {}) {
+            return baseRepository.findManyByFilter({
+                collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+                filter: {
+                    variantId: {
+                        $in: toObjectIdArray(variantIds, "variantIds"),
+                    },
+                },
+                projection,
+                sort: {
+                    variantId: 1,
                     sortOrder: 1,
                     createdAt: 1,
                     _id: 1,

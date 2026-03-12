@@ -10,9 +10,15 @@ describe("catalog module", () => {
             module: "catalog",
         });
         expect(typeof services.rebuildProductDerivedFields).toBe("function");
+        expect(typeof services.listProducts).toBe("function");
+        expect(typeof services.searchProducts).toBe("function");
+        expect(typeof services.getProductDetailStorefront).toBe("function");
+        expect(typeof services.compareProducts).toBe("function");
         expect(typeof services.createProduct).toBe("function");
         expect(typeof services.updateProduct).toBe("function");
         expect(typeof services.getProductDetailAdmin).toBe("function");
+        expect(typeof services.importProducts).toBe("function");
+        expect(typeof services.cloneProduct).toBe("function");
         expect(typeof services.softDeleteProduct).toBe("function");
         expect(typeof services.createVariant).toBe("function");
         expect(typeof services.updateVariant).toBe("function");
