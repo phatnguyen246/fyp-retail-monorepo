@@ -46,3 +46,5 @@ Thumbs.db
 # Runtime temp files
 tmp/
 temp/
+
+apps/backend/credentials/

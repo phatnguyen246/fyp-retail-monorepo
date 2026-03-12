@@ -232,7 +232,7 @@ export function assertProductAllowsVariantMutation(product) {
 
 export function assertVariantParentProductExists(product, variant) {
     if (!product) {
-        throw createCatalogConflictError(
+        throw createCatalogNotFoundError(
             `Catalog parent product not found for variant: ${variant?._id}`,
             {
                 variantId: variant?._id,

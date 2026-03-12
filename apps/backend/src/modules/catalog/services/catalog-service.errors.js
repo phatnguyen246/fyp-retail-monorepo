@@ -52,6 +52,15 @@ export function createCatalogServiceUnavailableError(message, meta) {
     });
 }
 
+export function createCatalogInternalError(message, meta) {
+    return createCatalogHttpError({
+        httpStatus: 500,
+        code: "CATALOG_INTERNAL_ERROR",
+        message,
+        meta,
+    });
+}
+
 export function isDuplicateKeyError(error) {
     return error?.code === 11000;
 }

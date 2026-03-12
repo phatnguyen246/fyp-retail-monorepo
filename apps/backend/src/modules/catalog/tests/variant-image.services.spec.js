@@ -145,6 +145,144 @@ describe("variant image services", () => {
         });
     });
 
+    it("rejects upload when no file is provided", async () => {
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {},
+            variantRepository: {},
+            mediaRepository: {},
+            storage: {
+                uploadVariantImage: vi.fn(),
+                deleteVariantImage: vi.fn(),
+            },
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: "65f000000000000000000007",
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 422,
+            code: "CATALOG_UNPROCESSABLE_ENTITY",
+        });
+    });
+
+    it("rejects upload when variant image storage is unavailable", async () => {
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {},
+            variantRepository: {},
+            mediaRepository: {},
+            storage: {},
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: "65f000000000000000000007",
+                file: createUploadFile(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 503,
+            code: "CATALOG_STORAGE_UNAVAILABLE",
+        });
+    });
+
+    it("rejects upload when the parent product does not exist", async () => {
+        const variant = createVariantFixture();
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(null),
+            },
+            variantRepository: {
+                findVariantById: vi.fn().mockResolvedValue(variant),
+            },
+            mediaRepository: {
+                listMediaByVariantId: vi.fn(),
+            },
+            storage: {
+                uploadVariantImage: vi.fn(),
+                deleteVariantImage: vi.fn(),
+            },
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: variant._id.toHexString(),
+                file: createUploadFile(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 404,
+            code: "CATALOG_NOT_FOUND",
+        });
+    });
+
+    it("rejects upload when the variant is soft deleted", async () => {
+        const variant = createVariantFixture({
+            isDeleted: true,
+        });
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {
+                findProductById: vi.fn(),
+            },
+            variantRepository: {
+                findVariantById: vi.fn().mockResolvedValue(variant),
+            },
+            mediaRepository: {
+                listMediaByVariantId: vi.fn(),
+            },
+            storage: {
+                uploadVariantImage: vi.fn(),
+                deleteVariantImage: vi.fn(),
+            },
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: variant._id.toHexString(),
+                file: createUploadFile(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 409,
+            code: "CATALOG_CONFLICT",
+        });
+    });
+
+    it("rejects upload when the parent product is discontinued", async () => {
+        const variant = createVariantFixture();
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "discontinued",
+        });
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository: {
+                findVariantById: vi.fn().mockResolvedValue(variant),
+            },
+            mediaRepository: {
+                listMediaByVariantId: vi.fn(),
+            },
+            storage: {
+                uploadVariantImage: vi.fn(),
+                deleteVariantImage: vi.fn(),
+            },
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: variant._id.toHexString(),
+                file: createUploadFile(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 409,
+            code: "CATALOG_CONFLICT",
+        });
+    });
+
     it("rejects upload when a variant already has 10 images", async () => {
         const variant = createVariantFixture();
         const product = createProductFixture({
@@ -224,9 +362,110 @@ describe("variant image services", () => {
                 variantId: variant._id.toHexString(),
                 file: createUploadFile(),
             })
-        ).rejects.toThrow("link failed");
+        ).rejects.toMatchObject({
+            httpStatus: 500,
+            code: "CATALOG_INTERNAL_ERROR",
+            meta: expect.objectContaining({
+                reason: "link failed",
+            }),
+        });
         expect(mediaRepository.deleteMediaById).toHaveBeenCalledWith({
             mediaId: expect.any(ObjectId),
+        });
+        expect(storage.deleteVariantImage).toHaveBeenCalledWith(
+            "catalog/products/p123/variants/v456/generated.png"
+        );
+    });
+
+    it("returns a catalog-specific internal error when storage upload fails", async () => {
+        const variant = createVariantFixture();
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "active",
+        });
+        const storage = {
+            uploadVariantImage: vi.fn().mockRejectedValue(new Error("bucket save failed")),
+            deleteVariantImage: vi.fn(),
+        };
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository: {
+                findVariantById: vi.fn().mockResolvedValue(variant),
+            },
+            mediaRepository: {
+                listMediaByVariantId: vi.fn().mockResolvedValue([]),
+                createMedia: vi.fn(),
+                deleteMediaById: vi.fn(),
+                findMediaById: vi.fn(),
+            },
+            storage,
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: variant._id.toHexString(),
+                file: createUploadFile(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 500,
+            code: "CATALOG_INTERNAL_ERROR",
+            meta: expect.objectContaining({
+                reason: "bucket save failed",
+            }),
+        });
+    });
+
+    it("returns a catalog-specific internal error when metadata persistence fails", async () => {
+        const variant = createVariantFixture();
+        const product = createProductFixture({
+            _id: variant.productId,
+            status: "active",
+        });
+        const mediaRepository = {
+            listMediaByVariantId: vi.fn().mockResolvedValue([]),
+            createMedia: vi.fn().mockRejectedValue(new Error("insert failed")),
+            deleteMediaById: vi.fn(),
+            findMediaById: vi.fn(),
+        };
+        const storage = {
+            uploadVariantImage: vi.fn().mockResolvedValue({
+                storagePath: "catalog/products/p123/variants/v456/generated.png",
+                url: "https://storage.googleapis.com/catalog-assets/catalog/products/p123/variants/v456/generated.png",
+                fileName: "generated.png",
+                mimeType: "image/png",
+                size: 1024,
+            }),
+            deleteVariantImage: vi.fn().mockResolvedValue(undefined),
+        };
+        const uploadVariantImage = createUploadVariantImageService({
+            productRepository: {
+                findProductById: vi.fn().mockResolvedValue(product),
+            },
+            variantRepository: {
+                findVariantById: vi.fn().mockResolvedValue(variant),
+                addMediaId: vi.fn(),
+            },
+            mediaRepository,
+            storage,
+            validation: createCatalogValidation(),
+        });
+
+        await expect(
+            uploadVariantImage({
+                variantId: variant._id.toHexString(),
+                file: createUploadFile(),
+            })
+        ).rejects.toMatchObject({
+            httpStatus: 500,
+            code: "CATALOG_INTERNAL_ERROR",
+            meta: expect.objectContaining({
+                reason: "insert failed",
+                storagePath:
+                    "catalog/products/p123/variants/v456/generated.png",
+            }),
         });
         expect(storage.deleteVariantImage).toHaveBeenCalledWith(
             "catalog/products/p123/variants/v456/generated.png"

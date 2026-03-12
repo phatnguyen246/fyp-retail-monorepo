@@ -5,6 +5,7 @@ import {
 import { createCatalogValidation } from "../validation/index.js";
 import {
     createCatalogConflictError,
+    createCatalogInternalError,
     isDuplicateKeyError,
 } from "./catalog-service.errors.js";
 import {
@@ -66,10 +67,24 @@ export function createUploadVariantImageService({
             ...file,
             originalname: storedFileName,
         };
-        const uploadedMedia = await storage.uploadVariantImage(uploadFile, {
-            productId: product._id.toHexString(),
-            variantId: variant._id.toHexString(),
-        });
+        let uploadedMedia;
+
+        try {
+            uploadedMedia = await storage.uploadVariantImage(uploadFile, {
+                productId: product._id.toHexString(),
+                variantId: variant._id.toHexString(),
+            });
+        } catch (error) {
+            throw createCatalogInternalError(
+                `Catalog variant image upload failed for variant: ${variant._id}`,
+                {
+                    variantId: parsedParams.variantId,
+                    productId: product._id.toHexString(),
+                    reason: error?.message ?? "Unknown storage upload error",
+                }
+            );
+        }
+
         const media = createProductMediaMetadata({
             productId: product._id,
             variantId: variant._id,
@@ -119,7 +134,16 @@ export function createUploadVariantImageService({
                 );
             }
 
-            throw error;
+            throw createCatalogInternalError(
+                `Catalog variant image persistence failed for variant: ${variant._id}`,
+                {
+                    variantId: parsedParams.variantId,
+                    productId: product._id.toHexString(),
+                    mediaId: media._id.toHexString(),
+                    storagePath: media.storagePath,
+                    reason: error?.message ?? "Unknown media persistence error",
+                }
+            );
         }
 
         return mediaRepository.findMediaById({

@@ -177,4 +177,78 @@ describe("catalog admin routes", () => {
         expect(body.code).toBe("CATALOG_UNPROCESSABLE_ENTITY");
         expect(controller.uploadVariantImage).not.toHaveBeenCalled();
     });
+
+    it("rejects multipart requests without an image file", async () => {
+        const controller = {
+            createProduct: vi.fn(),
+            getProductDetailAdmin: vi.fn(),
+            updateProduct: vi.fn(),
+            softDeleteProduct: vi.fn(),
+            createVariant: vi.fn(),
+            updateVariant: vi.fn(),
+            softDeleteVariant: vi.fn(),
+            listVariantImages: vi.fn(),
+            deleteVariantImage: vi.fn(),
+            uploadVariantImage: vi.fn(),
+        };
+        const formData = new FormData();
+
+        runningServer = await startServer(controller);
+
+        const response = await fetch(
+            `${runningServer.url}/variants/65f000000000000000000007/images`,
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(422);
+        expect(body.code).toBe("CATALOG_UNPROCESSABLE_ENTITY");
+        expect(body.message).toBe(
+            "Catalog variant image upload requires an image file"
+        );
+        expect(controller.uploadVariantImage).not.toHaveBeenCalled();
+    });
+
+    it("rejects malformed upload requests with an unexpected file field", async () => {
+        const controller = {
+            createProduct: vi.fn(),
+            getProductDetailAdmin: vi.fn(),
+            updateProduct: vi.fn(),
+            softDeleteProduct: vi.fn(),
+            createVariant: vi.fn(),
+            updateVariant: vi.fn(),
+            softDeleteVariant: vi.fn(),
+            listVariantImages: vi.fn(),
+            deleteVariantImage: vi.fn(),
+            uploadVariantImage: vi.fn(),
+        };
+        const formData = new FormData();
+
+        formData.set(
+            "unexpected",
+            new Blob([Buffer.from("png-binary")], {
+                type: "image/png",
+            }),
+            "front.png"
+        );
+
+        runningServer = await startServer(controller);
+
+        const response = await fetch(
+            `${runningServer.url}/variants/65f000000000000000000007/images`,
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(422);
+        expect(body.code).toBe("CATALOG_UNPROCESSABLE_ENTITY");
+        expect(body.message).toBe("Catalog variant image upload request is invalid");
+        expect(controller.uploadVariantImage).not.toHaveBeenCalled();
+    });
 });

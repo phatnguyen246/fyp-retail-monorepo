@@ -74,7 +74,28 @@ export function createVariantImageUploadMiddleware({
 
     return function variantImageUploadMiddleware(req, res, next) {
         upload(req, res, (error) => {
-            next(mapVariantImageUploadError(error));
+            const mappedError = mapVariantImageUploadError(error);
+
+            if (mappedError) {
+                next(mappedError);
+
+                return;
+            }
+
+            if (!req.file) {
+                next(
+                    createCatalogUnprocessableEntityError(
+                        "Catalog variant image upload requires an image file",
+                        {
+                            field: CATALOG_VARIANT_IMAGE_FORM_FIELD,
+                        }
+                    )
+                );
+
+                return;
+            }
+
+            next();
         });
     };
 }
