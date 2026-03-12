@@ -17,5 +17,8 @@ describe("catalog module", () => {
         expect(typeof services.createVariant).toBe("function");
         expect(typeof services.updateVariant).toBe("function");
         expect(typeof services.softDeleteVariant).toBe("function");
+        expect(typeof services.uploadVariantImage).toBe("function");
+        expect(typeof services.listVariantImages).toBe("function");
+        expect(typeof services.deleteVariantImage).toBe("function");
     });
 });

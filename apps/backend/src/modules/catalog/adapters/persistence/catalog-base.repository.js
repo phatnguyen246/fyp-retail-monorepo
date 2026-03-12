@@ -9,27 +9,38 @@ export function createCatalogBaseRepository({ db } = {}) {
         return db.collection(collectionName);
     }
 
-    function ensureUniqueIndex({
+    function ensureIndex({
         collectionName,
         key,
         indexName,
+        unique = false,
         partialFilterExpression,
     }) {
         return getCollection(collectionName).createIndex(key, {
-            unique: true,
+            unique,
             name: indexName,
             ...(partialFilterExpression ? { partialFilterExpression } : {}),
         });
     }
 
     return {
-        ensureUniqueIndex,
+        ensureIndex,
+
+        getCollection,
+
+        ensureUniqueIndex(definition) {
+            return ensureIndex({
+                ...definition,
+                unique: true,
+            });
+        },
 
         ensureCodeUniqueIndex({ collectionName, indexName }) {
-            return ensureUniqueIndex({
+            return ensureIndex({
                 collectionName,
                 key: { code: 1 },
                 indexName,
+                unique: true,
             });
         },
 
@@ -66,6 +77,24 @@ export function createCatalogBaseRepository({ db } = {}) {
                     projection ? { projection } : undefined
                 )
                 .toArray();
+        },
+
+        findManyByFilter({
+            collectionName,
+            filter = {},
+            projection,
+            sort,
+        } = {}) {
+            const cursor = getCollection(collectionName).find(
+                filter,
+                projection ? { projection } : undefined
+            );
+
+            if (sort && Object.keys(sort).length > 0) {
+                cursor.sort(sort);
+            }
+
+            return cursor.toArray();
         },
 
         findManyByFieldValues({
@@ -122,10 +151,25 @@ export function createCatalogBaseRepository({ db } = {}) {
             );
         },
 
+        updateOneByIdWithOperators({ collectionName, id, update, options }) {
+            return getCollection(collectionName).updateOne(
+                { _id: toObjectId(id, "_id") },
+                update,
+                options
+            );
+        },
+
         updateManyByField({ collectionName, fieldName, value, set, options } = {}) {
             return getCollection(collectionName).updateMany(
                 { [fieldName]: value },
                 { $set: set },
+                options
+            );
+        },
+
+        deleteOneById({ collectionName, id, options } = {}) {
+            return getCollection(collectionName).deleteOne(
+                { _id: toObjectId(id, "_id") },
                 options
             );
         },

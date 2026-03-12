@@ -91,6 +91,44 @@ export function createCatalogVariantRepository({
             });
         },
 
+        addMediaId({
+            variantId,
+            mediaId,
+            updatedAt = new Date(),
+        } = {}) {
+            return baseRepository.updateOneByIdWithOperators({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                id: variantId,
+                update: {
+                    $addToSet: {
+                        mediaIds: toObjectId(mediaId, "mediaId"),
+                    },
+                    $set: {
+                        updatedAt,
+                    },
+                },
+            });
+        },
+
+        removeMediaId({
+            variantId,
+            mediaId,
+            updatedAt = new Date(),
+        } = {}) {
+            return baseRepository.updateOneByIdWithOperators({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                id: variantId,
+                update: {
+                    $pull: {
+                        mediaIds: toObjectId(mediaId, "mediaId"),
+                    },
+                    $set: {
+                        updatedAt,
+                    },
+                },
+            });
+        },
+
         softDeleteVariantById({
             variantId,
             deletedAt = new Date(),

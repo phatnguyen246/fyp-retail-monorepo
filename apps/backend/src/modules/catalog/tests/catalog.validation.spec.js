@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
     assertVariantPricingInvariant,
     createCatalogValidation,
+    parseMediaIdParams,
     parseAdminCreateVariantInput,
+    parseVariantMediaParams,
     parseProductIdParams,
     parseProductDiscoveryQuery,
     parseCreateProductInput,
@@ -197,6 +199,22 @@ describe("catalog validation", () => {
             })
         ).toEqual({
             variantId: "65f000000000000000000007",
+        });
+        expect(
+            parseMediaIdParams({
+                mediaId: "65f000000000000000000090",
+            })
+        ).toEqual({
+            mediaId: "65f000000000000000000090",
+        });
+        expect(
+            parseVariantMediaParams({
+                variantId: "65f000000000000000000007",
+                mediaId: "65f000000000000000000090",
+            })
+        ).toEqual({
+            variantId: "65f000000000000000000007",
+            mediaId: "65f000000000000000000090",
         });
 
         expect(() =>

@@ -3,9 +3,13 @@ import {
     parseAdminCreateVariantInput,
 } from "./admin-create-variant.schema.js";
 import {
+    MEDIA_ID_PARAMS_SCHEMA,
     parseProductIdParams,
+    parseMediaIdParams,
+    parseVariantMediaParams,
     parseVariantIdParams,
     PRODUCT_ID_PARAMS_SCHEMA,
+    VARIANT_MEDIA_PARAMS_SCHEMA,
     VARIANT_ID_PARAMS_SCHEMA,
 } from "./admin-resource-params.schema.js";
 import {
@@ -71,9 +75,13 @@ export {
     parseAdminCreateVariantInput,
 } from "./admin-create-variant.schema.js";
 export {
+    MEDIA_ID_PARAMS_SCHEMA,
     parseProductIdParams,
+    parseMediaIdParams,
+    parseVariantMediaParams,
     parseVariantIdParams,
     PRODUCT_ID_PARAMS_SCHEMA,
+    VARIANT_MEDIA_PARAMS_SCHEMA,
     VARIANT_ID_PARAMS_SCHEMA,
 } from "./admin-resource-params.schema.js";
 export {
@@ -146,6 +154,8 @@ export function createCatalogValidation() {
         updateVariantSchema: UPDATE_VARIANT_INPUT_SCHEMA,
         productIdParamsSchema: PRODUCT_ID_PARAMS_SCHEMA,
         variantIdParamsSchema: VARIANT_ID_PARAMS_SCHEMA,
+        mediaIdParamsSchema: MEDIA_ID_PARAMS_SCHEMA,
+        variantMediaParamsSchema: VARIANT_MEDIA_PARAMS_SCHEMA,
         importProductRowSchema: IMPORT_PRODUCT_ROW_SCHEMA,
         productDiscoverySchema: PRODUCT_DISCOVERY_QUERY_SCHEMA,
         listProductsSchema: LIST_PRODUCTS_QUERY_SCHEMA,
@@ -159,6 +169,8 @@ export function createCatalogValidation() {
         parseCreateVariantInput,
         parseUpdateVariantInput,
         parseProductIdParams,
+        parseMediaIdParams,
+        parseVariantMediaParams,
         parseVariantIdParams,
         parseImportProductRow,
         parseProductDiscoveryQuery,

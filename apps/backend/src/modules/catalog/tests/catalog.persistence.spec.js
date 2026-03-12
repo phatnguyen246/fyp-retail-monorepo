@@ -2,20 +2,29 @@ import { ObjectId } from "mongodb";
 import { describe, expect, it, vi } from "vitest";
 import {
     createCatalogBaseRepository,
+    createCatalogMediaRepository,
     createCatalogPersistence,
     createCatalogProductRepository,
     createCatalogReferenceRepository,
     createCatalogVariantRepository,
 } from "../adapters/persistence/index.js";
-import { createProductFixture, createVariantFixture } from "./fixtures/index.js";
+import {
+    createProductFixture,
+    createProductMediaFixture,
+    createVariantFixture,
+} from "./fixtures/index.js";
 
 function createCollectionMock() {
+    const cursor = {
+        sort: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([]),
+    };
+
     return {
         createIndex: vi.fn().mockResolvedValue("ok"),
+        deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
         findOne: vi.fn().mockResolvedValue(null),
-        find: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue([]),
-        }),
+        find: vi.fn().mockReturnValue(cursor),
         insertOne: vi.fn().mockResolvedValue({ acknowledged: true }),
         updateOne: vi.fn().mockResolvedValue({ acknowledged: true }),
         updateMany: vi.fn().mockResolvedValue({ acknowledged: true }),
@@ -124,6 +133,14 @@ describe("catalog persistence", () => {
                 salePrice: 21990000,
             },
         });
+        await variantRepository.addMediaId({
+            variantId: variant._id.toHexString(),
+            mediaId: "65f000000000000000000090",
+        });
+        await variantRepository.removeMediaId({
+            variantId: variant._id.toHexString(),
+            mediaId: "65f000000000000000000090",
+        });
 
         expect(collectionMock.findOne).toHaveBeenNthCalledWith(
             1,
@@ -151,6 +168,32 @@ describe("catalog persistence", () => {
                 $set: expect.objectContaining({
                     salePrice: 21990000,
                 }),
+            },
+            undefined
+        );
+        expect(collectionMock.updateOne).toHaveBeenNthCalledWith(
+            2,
+            { _id: new ObjectId(variant._id.toHexString()) },
+            {
+                $addToSet: {
+                    mediaIds: new ObjectId("65f000000000000000000090"),
+                },
+                $set: {
+                    updatedAt: expect.any(Date),
+                },
+            },
+            undefined
+        );
+        expect(collectionMock.updateOne).toHaveBeenNthCalledWith(
+            3,
+            { _id: new ObjectId(variant._id.toHexString()) },
+            {
+                $pull: {
+                    mediaIds: new ObjectId("65f000000000000000000090"),
+                },
+                $set: {
+                    updatedAt: expect.any(Date),
+                },
             },
             undefined
         );
@@ -242,6 +285,40 @@ describe("catalog persistence", () => {
         );
     });
 
+    it("persists, lists, and deletes product media metadata", async () => {
+        const collectionMock = createCollectionMock();
+        const db = createDbMock(collectionMock);
+        const mediaRepository = createCatalogMediaRepository({ db });
+        const media = createProductMediaFixture();
+
+        await mediaRepository.createMedia({
+            document: media,
+        });
+        await mediaRepository.findMediaById({
+            mediaId: media._id.toHexString(),
+        });
+        await mediaRepository.listMediaByVariantId({
+            variantId: media.variantId.toHexString(),
+        });
+        await mediaRepository.deleteMediaById({
+            mediaId: media._id.toHexString(),
+        });
+
+        expect(collectionMock.insertOne).toHaveBeenCalledWith(media, undefined);
+        expect(collectionMock.findOne).toHaveBeenCalledWith(
+            { _id: new ObjectId(media._id.toHexString()) },
+            undefined
+        );
+        expect(collectionMock.find).toHaveBeenCalledWith(
+            { variantId: new ObjectId(media.variantId.toHexString()) },
+            undefined
+        );
+        expect(collectionMock.deleteOne).toHaveBeenCalledWith(
+            { _id: new ObjectId(media._id.toHexString()) },
+            undefined
+        );
+    });
+
     it("wires specialized repositories through createCatalogPersistence", () => {
         const collectionMock = createCollectionMock();
         const db = createDbMock(collectionMock);
@@ -250,6 +327,7 @@ describe("catalog persistence", () => {
         expect(persistence.baseRepository).toBeDefined();
         expect(persistence.productRepository).toBeDefined();
         expect(persistence.referenceRepository).toBeDefined();
+        expect(persistence.mediaRepository).toBeDefined();
         expect(persistence.variantRepository).toBeDefined();
     });
 });

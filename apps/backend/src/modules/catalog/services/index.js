@@ -3,19 +3,25 @@ import { createCatalogValidation } from "../validation/index.js";
 import { createCatalogHealthPayload } from "../utils/index.js";
 import { createCreateProductService } from "./create-product.service.js";
 import { createCreateVariantService } from "./create-variant.service.js";
+import { createDeleteVariantImageService } from "./delete-variant-image.service.js";
 import { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
+import { createListVariantImagesService } from "./list-variant-images.service.js";
 import { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
 import { createSoftDeleteProductService } from "./soft-delete-product.service.js";
 import { createSoftDeleteVariantService } from "./soft-delete-variant.service.js";
+import { createUploadVariantImageService } from "./upload-variant-image.service.js";
 import { createUpdateProductService } from "./update-product.service.js";
 import { createUpdateVariantService } from "./update-variant.service.js";
 
 export { createCreateProductService } from "./create-product.service.js";
 export { createCreateVariantService } from "./create-variant.service.js";
+export { createDeleteVariantImageService } from "./delete-variant-image.service.js";
 export { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
+export { createListVariantImagesService } from "./list-variant-images.service.js";
 export { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
 export { createSoftDeleteProductService } from "./soft-delete-product.service.js";
 export { createSoftDeleteVariantService } from "./soft-delete-variant.service.js";
+export { createUploadVariantImageService } from "./upload-variant-image.service.js";
 export { createUpdateProductService } from "./update-product.service.js";
 export { createUpdateVariantService } from "./update-variant.service.js";
 
@@ -25,6 +31,8 @@ export function createCatalogServices({
 } = {}) {
     const productRepository = adapters?.persistence?.productRepository;
     const referenceRepository = adapters?.persistence?.referenceRepository;
+    const mediaRepository = adapters?.persistence?.mediaRepository;
+    const storage = adapters?.storage;
     const variantRepository = adapters?.persistence?.variantRepository;
     const rebuildProductDerivedFields = createRebuildProductDerivedFieldsService({
         productRepository,
@@ -74,6 +82,25 @@ export function createCatalogServices({
             variantRepository,
             validation,
             rebuildProductDerivedFields,
+        }),
+        uploadVariantImage: createUploadVariantImageService({
+            productRepository,
+            variantRepository,
+            mediaRepository,
+            storage,
+            validation,
+        }),
+        listVariantImages: createListVariantImagesService({
+            variantRepository,
+            mediaRepository,
+            validation,
+        }),
+        deleteVariantImage: createDeleteVariantImageService({
+            productRepository,
+            variantRepository,
+            mediaRepository,
+            storage,
+            validation,
         }),
     };
 }

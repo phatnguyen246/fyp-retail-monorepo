@@ -36,12 +36,33 @@ const INDEX_DEFINITIONS = [
     },
 ];
 
+const NON_UNIQUE_INDEX_DEFINITIONS = [
+    {
+        collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+        key: { variantId: 1, sortOrder: 1, createdAt: 1 },
+        indexName: "product_media_variant_sort_created_at",
+    },
+];
+
+const UNIQUE_INDEX_DEFINITIONS = [
+    ...INDEX_DEFINITIONS,
+    {
+        collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+        key: { storagePath: 1 },
+        indexName: "product_media_storage_path_unique",
+    },
+];
+
 export async function ensureCatalogIndexes({
     db,
     repository = createCatalogBaseRepository({ db }),
 } = {}) {
-    for (const definition of INDEX_DEFINITIONS) {
+    for (const definition of UNIQUE_INDEX_DEFINITIONS) {
         await repository.ensureUniqueIndex(definition);
+    }
+
+    for (const definition of NON_UNIQUE_INDEX_DEFINITIONS) {
+        await repository.ensureIndex(definition);
     }
 }
 

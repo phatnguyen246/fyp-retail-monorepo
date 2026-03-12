@@ -11,6 +11,7 @@ import { seedCatalogBase } from "./seed-catalog-base.js";
 
 function makeRepositoryMock() {
     return {
+        ensureIndex: vi.fn().mockResolvedValue(undefined),
         ensureUniqueIndex: vi.fn().mockResolvedValue(undefined),
         upsertSeedDocument: vi.fn().mockResolvedValue(undefined),
     };
@@ -103,12 +104,13 @@ describe("catalog seeds", () => {
         });
     });
 
-    it("ensures unique indexes for catalog base collections", async () => {
+    it("ensures catalog indexes for base collections and media metadata", async () => {
         const repository = makeRepositoryMock();
 
         await ensureCatalogIndexes({ repository });
 
-        expect(repository.ensureUniqueIndex).toHaveBeenCalledTimes(6);
+        expect(repository.ensureUniqueIndex).toHaveBeenCalledTimes(7);
+        expect(repository.ensureIndex).toHaveBeenCalledTimes(1);
         expect(repository.ensureUniqueIndex).toHaveBeenNthCalledWith(1, {
             collectionName: "brands",
             key: { code: 1 },
@@ -124,10 +126,20 @@ describe("catalog seeds", () => {
             key: { sku: 1 },
             indexName: "variants_sku_unique",
         });
+        expect(repository.ensureUniqueIndex).toHaveBeenNthCalledWith(7, {
+            collectionName: "productMediaMetadata",
+            key: { storagePath: 1 },
+            indexName: "product_media_storage_path_unique",
+        });
         expect(repository.ensureUniqueIndex).toHaveBeenNthCalledWith(4, {
             collectionName: "badges",
             key: { code: 1 },
             indexName: "badges_code_unique",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "productMediaMetadata",
+            key: { variantId: 1, sortOrder: 1, createdAt: 1 },
+            indexName: "product_media_variant_sort_created_at",
         });
     });
 

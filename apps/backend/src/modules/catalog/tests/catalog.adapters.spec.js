@@ -7,6 +7,7 @@ describe("catalog adapters", () => {
 
         expect(adapters.persistence).toBeDefined();
         expect(adapters.persistence.baseRepository).toBeDefined();
+        expect(adapters.persistence.mediaRepository).toBeDefined();
         expect(adapters).not.toHaveProperty("storage");
     });
 

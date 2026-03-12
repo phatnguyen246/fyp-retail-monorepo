@@ -9,6 +9,10 @@ export {
     createCategoryFixture,
 } from "./category.fixture.js";
 export {
+    PRODUCT_MEDIA_FIXTURE_TIMESTAMP,
+    createProductMediaFixture,
+} from "./product-media.fixture.js";
+export {
     PRODUCT_FIXTURE_TIMESTAMP,
     PRODUCT_IPHONE_16_ID,
     createCatalogProductGraphFixture,

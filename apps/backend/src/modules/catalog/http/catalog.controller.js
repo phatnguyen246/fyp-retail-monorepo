@@ -65,5 +65,31 @@ export function createCatalogController({ services }) {
 
             return res.status(200).json(variant);
         },
+
+        async uploadVariantImage(req, res) {
+            const media = await services.uploadVariantImage({
+                variantId: req.params.variantId,
+                file: req.file,
+            });
+
+            return res.status(201).json(media);
+        },
+
+        async listVariantImages(req, res) {
+            const media = await services.listVariantImages({
+                variantId: req.params.variantId,
+            });
+
+            return res.status(200).json(media);
+        },
+
+        async deleteVariantImage(req, res) {
+            const media = await services.deleteVariantImage({
+                variantId: req.params.variantId,
+                mediaId: req.params.mediaId,
+            });
+
+            return res.status(200).json(media);
+        },
     };
 }

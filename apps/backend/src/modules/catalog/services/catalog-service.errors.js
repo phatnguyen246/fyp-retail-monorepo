@@ -43,6 +43,15 @@ export function createCatalogUnprocessableEntityError(message, meta) {
     });
 }
 
+export function createCatalogServiceUnavailableError(message, meta) {
+    return createCatalogHttpError({
+        httpStatus: 503,
+        code: "CATALOG_STORAGE_UNAVAILABLE",
+        message,
+        meta,
+    });
+}
+
 export function isDuplicateKeyError(error) {
     return error?.code === 11000;
 }

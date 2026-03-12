@@ -1,0 +1,49 @@
+import { CATALOG_COLLECTIONS } from "../../constants/index.js";
+import { toObjectId } from "../../utils/object-id.js";
+import { createCatalogBaseRepository } from "./catalog-base.repository.js";
+
+export function createCatalogMediaRepository({
+    db,
+    baseRepository = createCatalogBaseRepository({ db }),
+} = {}) {
+    return {
+        createMedia({ document, options } = {}) {
+            return baseRepository.insertOne({
+                collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+                document,
+                options,
+            });
+        },
+
+        findMediaById({ mediaId, projection } = {}) {
+            return baseRepository.findOneById({
+                collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+                id: mediaId,
+                projection,
+            });
+        },
+
+        listMediaByVariantId({ variantId, projection } = {}) {
+            return baseRepository.findManyByFilter({
+                collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+                filter: {
+                    variantId: toObjectId(variantId, "variantId"),
+                },
+                projection,
+                sort: {
+                    sortOrder: 1,
+                    createdAt: 1,
+                    _id: 1,
+                },
+            });
+        },
+
+        deleteMediaById({ mediaId, options } = {}) {
+            return baseRepository.deleteOneById({
+                collectionName: CATALOG_COLLECTIONS.productMediaMetadata,
+                id: mediaId,
+                options,
+            });
+        },
+    };
+}
