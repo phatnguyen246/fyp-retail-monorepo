@@ -24,6 +24,15 @@ export function createCatalogVariantRepository({
             });
         },
 
+        findVariantsByIds({ variantIds, projection } = {}) {
+            return baseRepository.findManyByFieldValues({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                fieldName: "_id",
+                values: toObjectIdArray(variantIds, "variantIds"),
+                projection,
+            });
+        },
+
         findVariantsByProductId({ productId, projection } = {}) {
             return baseRepository.findManyByField({
                 collectionName: CATALOG_COLLECTIONS.variants,

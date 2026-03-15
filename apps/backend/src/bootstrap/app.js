@@ -1,4 +1,5 @@
 // apps/backend/src/bootstrap/app.js
+import cookieParser from "cookie-parser";
 import express from "express";
 import { createGlobalErrorHandler } from "./error-handler.js";
 import { registerModules } from "./modules.js";
@@ -16,6 +17,7 @@ export async function createApp({
 
     const app = express();
     app.use(express.json());
+    app.use(cookieParser());
     app.locals.mongoClient = client;
     app.locals.db = db;
     app.locals.storage = resolvedStorage ?? null;
