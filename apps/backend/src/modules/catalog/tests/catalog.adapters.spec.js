@@ -5,6 +5,9 @@ describe("catalog adapters", () => {
     it("returns persistence adapters without storage when no bucket is injected", () => {
         const adapters = createCatalogAdapters();
 
+        expect(adapters.inventory).toBeDefined();
+        expect(typeof adapters.inventory.readInventoryByVariantId).toBe("function");
+        expect(typeof adapters.inventory.readInventoryByVariantIds).toBe("function");
         expect(adapters.persistence).toBeDefined();
         expect(adapters.persistence.baseRepository).toBeDefined();
         expect(adapters.persistence.mediaRepository).toBeDefined();
@@ -21,6 +24,7 @@ describe("catalog adapters", () => {
 
         const adapters = createCatalogAdapters({ storage });
 
+        expect(adapters.inventory).toBeDefined();
         expect(adapters.persistence).toBeDefined();
         expect(adapters.storage).toBeDefined();
         expect(typeof adapters.storage.buildVariantImageStoragePath).toBe(

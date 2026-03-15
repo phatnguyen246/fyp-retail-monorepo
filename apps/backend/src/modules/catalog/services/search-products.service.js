@@ -5,12 +5,15 @@ import {
     buildStorefrontListItem,
     hydrateStorefrontReferences,
 } from "./catalog-storefront.service-helpers.js";
+import { hydrateCatalogProductsWithLiveInventory } from "./catalog-live-inventory.helpers.js";
 
 export function createSearchProductsService({
+    inventoryAdapter,
     productRepository,
     referenceRepository,
     variantRepository,
     validation = createCatalogValidation(),
+    logger = console,
 } = {}) {
     return async function searchProducts({ query } = {}) {
         const parsedQuery = validation.parseSearchProductsQuery(query ?? {});
@@ -49,16 +52,32 @@ export function createSearchProductsService({
                 filter: resolvedFilter.filter,
             }),
         ]);
-        const references = await hydrateStorefrontReferences({
-            referenceRepository,
-            products,
-        });
+        const [references, variants] = await Promise.all([
+            hydrateStorefrontReferences({
+                referenceRepository,
+                products,
+            }),
+            variantRepository.findVariantsByProductIds({
+                productIds: products.map((product) => product._id),
+            }),
+        ]);
+        const { productAvailabilityById } = await hydrateCatalogProductsWithLiveInventory(
+            {
+                inventoryAdapter,
+                products,
+                variants,
+                logger,
+            }
+        );
 
         return {
             data: products.map((product) =>
                 buildStorefrontListItem({
                     product,
                     references,
+                    hasInStockVariants:
+                        productAvailabilityById.get(product._id.toHexString())
+                            ?.hasInStockVariants ?? false,
                 })
             ),
             meta: buildPaginationMeta({

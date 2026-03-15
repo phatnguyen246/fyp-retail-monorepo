@@ -40,7 +40,9 @@ export { createUpdateVariantService } from "./update-variant.service.js";
 export function createCatalogServices({
     adapters = createCatalogAdapters(),
     validation = createCatalogValidation(),
+    logger = console,
 } = {}) {
+    const inventoryAdapter = adapters?.inventory;
     const productRepository = adapters?.persistence?.productRepository;
     const referenceRepository = adapters?.persistence?.referenceRepository;
     const mediaRepository = adapters?.persistence?.mediaRepository;
@@ -57,29 +59,37 @@ export function createCatalogServices({
         },
         rebuildProductDerivedFields,
         listProducts: createListProductsService({
+            inventoryAdapter,
             productRepository,
             referenceRepository,
             variantRepository,
             validation,
+            logger,
         }),
         searchProducts: createSearchProductsService({
+            inventoryAdapter,
             productRepository,
             referenceRepository,
             variantRepository,
             validation,
+            logger,
         }),
         getProductDetailStorefront: createGetProductDetailStorefrontService({
+            inventoryAdapter,
             productRepository,
             referenceRepository,
             variantRepository,
             mediaRepository,
             validation,
+            logger,
         }),
         compareProducts: createCompareProductsService({
+            inventoryAdapter,
             productRepository,
             referenceRepository,
             variantRepository,
             validation,
+            logger,
         }),
         createProduct: createCreateProductService({
             productRepository,

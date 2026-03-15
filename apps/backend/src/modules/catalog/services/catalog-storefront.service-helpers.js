@@ -1,4 +1,5 @@
 import { filterActiveCatalogVariants } from "../utils/filter-active-catalog-variants.js";
+import { resolveDefaultSelectedVariant } from "../utils/resolve-default-selected-variant.js";
 import { createCatalogNotFoundError } from "./catalog-service.errors.js";
 
 function toIdString(value) {
@@ -156,16 +157,6 @@ function mapVariant(variant, mediaByVariantId = new Map()) {
     };
 }
 
-function findDefaultVariant(product, variants = []) {
-    const defaultVariantId = toIdString(product?.defaultSelectedVariantId);
-
-    if (!defaultVariantId) {
-        return variants[0] ?? null;
-    }
-
-    return variants.find((variant) => toIdString(variant?._id) === defaultVariantId) ?? null;
-}
-
 export function assertStorefrontProductVisible(product, { productId } = {}) {
     if (
         !product ||
@@ -253,6 +244,7 @@ export function groupMediaByVariantId(mediaList = []) {
 export function buildStorefrontListItem({
     product,
     references,
+    hasInStockVariants = product?.hasInStockVariants === true,
 } = {}) {
     return {
         id: toIdString(product._id),
@@ -273,7 +265,7 @@ export function buildStorefrontListItem({
         ),
         minSalePrice: product.minSalePrice,
         minOriginalPrice: product.minOriginalPrice,
-        hasInStockVariants: product.hasInStockVariants === true,
+        hasInStockVariants,
     };
 }
 
@@ -282,26 +274,25 @@ export function buildStorefrontProductDetail({
     variants = [],
     references,
     mediaByVariantId,
+    hasInStockVariants = product?.hasInStockVariants === true,
 } = {}) {
     const activeVariants = [...filterActiveCatalogVariants(variants)].sort(
         sortVariantsForStorefront
     );
+    const defaultVariant = resolveDefaultSelectedVariant(activeVariants);
 
     return {
         ...buildStorefrontListItem({
             product,
             references,
+            hasInStockVariants,
         }),
         longDescription: product.longDescription,
         specs: product.specs,
-        defaultSelectedVariantId: toIdString(product.defaultSelectedVariantId),
-        defaultVariant: (() => {
-            const defaultVariant = findDefaultVariant(product, activeVariants);
-
-            return defaultVariant
-                ? mapVariant(defaultVariant, mediaByVariantId)
-                : null;
-        })(),
+        defaultSelectedVariantId: toIdString(defaultVariant?._id),
+        defaultVariant: defaultVariant
+            ? mapVariant(defaultVariant, mediaByVariantId)
+            : null,
         variants: activeVariants.map((variant) =>
             mapVariant(variant, mediaByVariantId)
         ),
@@ -312,20 +303,22 @@ export function buildStorefrontCompareItem({
     product,
     variants = [],
     references,
+    hasInStockVariants = product?.hasInStockVariants === true,
 } = {}) {
     const activeVariants = [...filterActiveCatalogVariants(variants)].sort(
         sortVariantsForStorefront
     );
-    const defaultVariant = findDefaultVariant(product, activeVariants);
+    const defaultVariant = resolveDefaultSelectedVariant(activeVariants);
 
     return {
         product: {
             ...buildStorefrontListItem({
                 product,
                 references,
+                hasInStockVariants,
             }),
             specs: product.specs,
-            defaultSelectedVariantId: toIdString(product.defaultSelectedVariantId),
+            defaultSelectedVariantId: toIdString(defaultVariant?._id),
         },
         defaultVariant: defaultVariant
             ? mapVariant(defaultVariant, new Map())

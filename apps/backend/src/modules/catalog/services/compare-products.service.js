@@ -4,12 +4,15 @@ import {
     buildStorefrontCompareItem,
     hydrateStorefrontReferences,
 } from "./catalog-storefront.service-helpers.js";
+import { hydrateCatalogProductsWithLiveInventory } from "./catalog-live-inventory.helpers.js";
 
 export function createCompareProductsService({
+    inventoryAdapter,
     productRepository,
     referenceRepository,
     variantRepository,
     validation = createCatalogValidation(),
+    logger = console,
 } = {}) {
     return async function compareProducts({ input } = {}) {
         const parsedInput = validation.parseCompareProductsInput(input ?? {});
@@ -29,43 +32,37 @@ export function createCompareProductsService({
         const variants = await variantRepository.findVariantsByProductIds({
             productIds: parsedInput.productIds,
         });
-        const variantsByProductId = groupVariantsByProductId(variants);
         const orderedProducts = parsedInput.productIds.map((productId) =>
             productById.get(productId)
         );
-        const references = await hydrateStorefrontReferences({
-            referenceRepository,
-            products: orderedProducts,
-        });
+        const [references, liveCatalogGraph] = await Promise.all([
+            hydrateStorefrontReferences({
+                referenceRepository,
+                products: orderedProducts,
+            }),
+            hydrateCatalogProductsWithLiveInventory({
+                inventoryAdapter,
+                products: orderedProducts,
+                variants,
+                logger,
+            }),
+        ]);
 
         return {
             items: orderedProducts.map((product) =>
                 buildStorefrontCompareItem({
                     product,
-                    variants: variantsByProductId.get(product._id.toHexString()) ?? [],
+                    variants:
+                        liveCatalogGraph.variantsByProductId.get(
+                            product._id.toHexString()
+                        ) ?? [],
                     references,
+                    hasInStockVariants:
+                        liveCatalogGraph.productAvailabilityById.get(
+                            product._id.toHexString()
+                        )?.hasInStockVariants ?? false,
                 })
             ),
         };
     };
-}
-
-function groupVariantsByProductId(variants = []) {
-    const variantsByProductId = new Map();
-
-    for (const variant of variants) {
-        const productId = variant?.productId?.toHexString?.();
-
-        if (!productId) {
-            continue;
-        }
-
-        if (!variantsByProductId.has(productId)) {
-            variantsByProductId.set(productId, []);
-        }
-
-        variantsByProductId.get(productId).push(variant);
-    }
-
-    return variantsByProductId;
 }

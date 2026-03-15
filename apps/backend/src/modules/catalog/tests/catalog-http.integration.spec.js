@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../../../bootstrap/app.js";
+import { createInventoryRecord } from "../../inventory/models/index.js";
 import { CATALOG_PRODUCT_IMPORT_FORM_FIELD } from "../constants/index.js";
 import {
     createBrandFixture,
@@ -87,10 +88,103 @@ function createCatalogState() {
         products: [iphoneProduct, galaxyProduct, hiddenDraftProduct],
         variants: [iphoneVariant, galaxyVariant],
         productMediaMetadata: [iphoneMedia],
+        inventoryRecords: [
+            createInventoryRecord({
+                _id: new ObjectId("65f000000000000000000091"),
+                variantId: iphoneVariant._id,
+                stockQuantity: 5,
+                lowStockThreshold: 3,
+                createdAt: new Date("2026-03-12T00:00:00.000Z"),
+                updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+            }),
+            createInventoryRecord({
+                _id: new ObjectId("65f000000000000000000092"),
+                variantId: galaxyVariant._id,
+                stockQuantity: 7,
+                lowStockThreshold: 3,
+                createdAt: new Date("2026-03-12T00:00:00.000Z"),
+                updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+            }),
+        ],
     };
 }
 
-function createInMemoryDb(seedState = createCatalogState()) {
+function createCatalogStateWithZeroInventory() {
+    const state = createCatalogState();
+
+    state.inventoryRecords = state.inventoryRecords.map((inventoryRecord) =>
+        createInventoryRecord({
+            _id: inventoryRecord._id,
+            variantId: inventoryRecord.variantId,
+            stockQuantity: 0,
+            lowStockThreshold: inventoryRecord.lowStockThreshold,
+            createdAt: inventoryRecord.createdAt,
+            updatedAt: inventoryRecord.updatedAt,
+        })
+    );
+
+    return state;
+}
+
+function createCatalogStateWithDetailLiveMismatch() {
+    const state = createCatalogState();
+
+    state.variants[0] = {
+        ...state.variants[0],
+        isInStock: false,
+    };
+
+    return state;
+}
+
+function createCatalogStateWithCompareLiveMismatch() {
+    const state = createCatalogState();
+    const secondIphoneVariant = createVariantFixture({
+        _id: new ObjectId("65f000000000000000000093"),
+        productId: new ObjectId("65f000000000000000000006"),
+        sku: "IP16-BLU-256",
+        variantAttributes: {
+            ram: "8GB",
+            rom: "256GB",
+            color: "Blue",
+        },
+        originalPrice: 26990000,
+        salePrice: 24990000,
+        isInStock: false,
+    });
+
+    state.variants = [
+        {
+            ...state.variants[0],
+            isInStock: true,
+        },
+        secondIphoneVariant,
+        ...state.variants.slice(1),
+    ];
+    state.inventoryRecords = [
+        createInventoryRecord({
+            _id: new ObjectId("65f000000000000000000094"),
+            variantId: state.variants[0]._id,
+            stockQuantity: 0,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+        createInventoryRecord({
+            _id: new ObjectId("65f000000000000000000095"),
+            variantId: secondIphoneVariant._id,
+            stockQuantity: 4,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+        state.inventoryRecords[1],
+    ];
+
+    return state;
+}
+
+function createInMemoryDb(seedState = createCatalogState(), options = {}) {
     const collections = new Map(
         Object.entries(seedState).map(([name, documents]) => [name, [...documents]])
     );
@@ -101,6 +195,8 @@ function createInMemoryDb(seedState = createCatalogState()) {
         }
 
         const documents = collections.get(name);
+        const shouldFailInventoryReads =
+            options.failInventoryReads === true && name === "inventoryRecords";
 
         return {
             createIndex: async () => "ok",
@@ -112,9 +208,20 @@ function createInMemoryDb(seedState = createCatalogState()) {
                     insertedId: document._id,
                 };
             },
-            findOne: async (filter, _options) =>
-                documents.find((document) => matchesFilter(document, filter)) ?? null,
-            find: (filter = {}, _options) => createCursor(documents, filter),
+            findOne: async (filter, _options) => {
+                if (shouldFailInventoryReads) {
+                    throw new Error("Inventory read unavailable");
+                }
+
+                return documents.find((document) => matchesFilter(document, filter)) ?? null;
+            },
+            find: (filter = {}, _options) => {
+                if (shouldFailInventoryReads) {
+                    throw new Error("Inventory read unavailable");
+                }
+
+                return createCursor(documents, filter);
+            },
             updateOne: async (filter, update, options = {}) => {
                 const index = documents.findIndex((document) =>
                     matchesFilter(document, filter)
@@ -385,8 +492,8 @@ function escapeCsvValue(value) {
     return stringValue;
 }
 
-async function startServer(seedState) {
-    const db = createInMemoryDb(seedState);
+async function startServer(seedState, options = {}) {
+    const db = createInMemoryDb(seedState, options);
     const client = {
         close: async () => undefined,
     };
@@ -683,6 +790,24 @@ describe("catalog http integration", () => {
         expect(invalidSearchBody.code).toBe("VALIDATION_ERROR");
     });
 
+    it("derives storefront list and search stock live from inventory instead of catalog denormalized fields", async () => {
+        runningServer = await startServer(createCatalogStateWithZeroInventory());
+
+        const listResponse = await fetch(
+            `${runningServer.url}/catalog/products?brand=APPLE&page=1&limit=10`
+        );
+        const listBody = await listResponse.json();
+        const searchResponse = await fetch(
+            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+        );
+        const searchBody = await searchResponse.json();
+
+        expect(listResponse.status).toBe(200);
+        expect(listBody.data[0].hasInStockVariants).toBe(false);
+        expect(searchResponse.status).toBe(200);
+        expect(searchBody.data[0].hasInStockVariants).toBe(false);
+    });
+
     it("returns storefront product detail and compare responses with canonical slug meta", async () => {
         runningServer = await startServer(createCatalogState());
 
@@ -782,5 +907,99 @@ describe("catalog http integration", () => {
 
         expect(missingCompareResponse.status).toBe(404);
         expect(missingCompareBody.code).toBe("CATALOG_NOT_FOUND");
+    });
+
+    it("hydrates storefront detail and compare stock from live inventory", async () => {
+        runningServer = await startServer(createCatalogStateWithDetailLiveMismatch());
+
+        const detailResponse = await fetch(
+            `${runningServer.url}/catalog/products/65f000000000000000000006/iphone-16`
+        );
+        const detailBody = await detailResponse.json();
+
+        expect(detailResponse.status).toBe(200);
+        expect(detailBody.data.defaultVariant).toMatchObject({
+            sku: "IP16-BLK-128",
+            isInStock: true,
+        });
+        expect(detailBody.data.variants[0].isInStock).toBe(true);
+
+        await new Promise((resolve) => {
+            runningServer.server.close(resolve);
+        });
+        runningServer = await startServer(createCatalogStateWithCompareLiveMismatch());
+
+        const compareResponse = await fetch(
+            `${runningServer.url}/catalog/compare`,
+            {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    productIds: [
+                        "65f000000000000000000006",
+                        "65f000000000000000000008",
+                    ],
+                }),
+            }
+        );
+        const compareBody = await compareResponse.json();
+
+        expect(compareResponse.status).toBe(200);
+        expect(compareBody.data.items[0]).toMatchObject({
+            product: {
+                defaultSelectedVariantId: "65f000000000000000000093",
+            },
+            defaultVariant: {
+                sku: "IP16-BLU-256",
+                isInStock: true,
+            },
+        });
+    });
+
+    it("falls back to out-of-stock when inventory reads fail but storefront responses stay successful", async () => {
+        runningServer = await startServer(createCatalogState(), {
+            failInventoryReads: true,
+        });
+
+        const [listResponse, detailResponse, searchResponse, compareResponse] =
+            await Promise.all([
+                fetch(
+                    `${runningServer.url}/catalog/products?brand=APPLE&page=1&limit=10`
+                ),
+                fetch(
+                    `${runningServer.url}/catalog/products/65f000000000000000000006/iphone-16`
+                ),
+                fetch(`${runningServer.url}/catalog/search?q=điện thoại samsung`),
+                fetch(`${runningServer.url}/catalog/compare`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        productIds: [
+                            "65f000000000000000000006",
+                            "65f000000000000000000008",
+                        ],
+                    }),
+                }),
+            ]);
+        const listBody = await listResponse.json();
+        const detailBody = await detailResponse.json();
+        const searchBody = await searchResponse.json();
+        const compareBody = await compareResponse.json();
+
+        expect(listResponse.status).toBe(200);
+        expect(listBody.data[0].hasInStockVariants).toBe(false);
+        expect(detailResponse.status).toBe(200);
+        expect(detailBody.data.defaultVariant.isInStock).toBe(false);
+        expect(detailBody.data.variants.every((variant) => variant.isInStock === false)).toBe(
+            true
+        );
+        expect(searchResponse.status).toBe(200);
+        expect(searchBody.data[0].hasInStockVariants).toBe(false);
+        expect(compareResponse.status).toBe(200);
+        expect(compareBody.data.items[0].defaultVariant.isInStock).toBe(false);
     });
 });
