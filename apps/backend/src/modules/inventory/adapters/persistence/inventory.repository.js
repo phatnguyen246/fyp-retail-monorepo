@@ -1,0 +1,78 @@
+import { INVENTORY_COLLECTIONS } from "../../constants/index.js";
+import { toObjectId, toObjectIdArray } from "../../utils/object-id.js";
+import { createInventoryBaseRepository } from "./inventory-base.repository.js";
+
+export function createInventoryRepository({
+    db,
+    baseRepository = createInventoryBaseRepository({ db }),
+} = {}) {
+    return {
+        findInventoryRecordByVariantId({ variantId, projection } = {}) {
+            return baseRepository.findOneByField({
+                collectionName: INVENTORY_COLLECTIONS.inventoryRecords,
+                fieldName: "variantId",
+                value: toObjectId(variantId, "variantId"),
+                projection,
+            });
+        },
+
+        findInventoryRecordsByVariantIds({ variantIds, projection } = {}) {
+            return baseRepository.findManyByFieldValues({
+                collectionName: INVENTORY_COLLECTIONS.inventoryRecords,
+                fieldName: "variantId",
+                values: toObjectIdArray(variantIds, "variantIds"),
+                projection,
+            });
+        },
+
+        createInventoryRecord({ document, options } = {}) {
+            return baseRepository.insertOne({
+                collectionName: INVENTORY_COLLECTIONS.inventoryRecords,
+                document,
+                options,
+            });
+        },
+
+        updateInventoryRecordByVariantId({
+            variantId,
+            updates,
+            updatedAt = new Date(),
+        } = {}) {
+            return baseRepository.updateOneByField({
+                collectionName: INVENTORY_COLLECTIONS.inventoryRecords,
+                fieldName: "variantId",
+                value: toObjectId(variantId, "variantId"),
+                set: {
+                    ...updates,
+                    updatedAt,
+                },
+            });
+        },
+
+        findLowStockInventoryRecords({
+            projection,
+            limit,
+        } = {}) {
+            const cursor = baseRepository
+                .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)
+                .find(
+                    {
+                        $expr: {
+                            $lte: ["$stockQuantity", "$lowStockThreshold"],
+                        },
+                    },
+                    projection ? { projection } : undefined
+                )
+                .sort({
+                    stockQuantity: 1,
+                    updatedAt: 1,
+                });
+
+            if (Number.isInteger(limit) && limit > 0) {
+                cursor.limit(limit);
+            }
+
+            return cursor.toArray();
+        },
+    };
+}

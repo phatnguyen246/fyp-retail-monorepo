@@ -7,6 +7,7 @@
     "test": "vitest run",
     "dev:test": "pnpm test && pnpm dev",
     "db:setup:catalog": "node src/modules/catalog/seeds/setup-catalog-indexes.js",
+    "db:setup:inventory": "node src/modules/inventory/seeds/setup-inventory-indexes.js",
     "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js"
   },
   "devDependencies": {
