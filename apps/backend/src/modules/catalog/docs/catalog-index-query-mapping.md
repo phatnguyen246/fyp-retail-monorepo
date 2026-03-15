@@ -18,17 +18,20 @@ This note documents the MongoDB indexes that support the current catalog query p
 | --- | --- | --- | --- |
 | Filter products by soft-delete, status, category, and brand | `products` | `products_deleted_status_category_brand` | Covers the main catalog list filter shape already described by the discovery schema. |
 | Sort newest products first by `createdAt` | `products` | `products_created_at_desc` | Supports MVP newest-first ordering. |
+| Filter visible storefront products and sort by `createdAt` with stable pagination | `products` | `products_storefront_visibility_created_at` | Covers `isDeleted`, `status`, `hasActiveVariants`, then `createdAt` + `_id` for stable newest ordering. |
 | Lookup product by `slug` | `products` | `products_slug` | Supports future slug-based reads without treating slug as a unique business key. |
 | Search by normalized `searchTitle` | `products` | `products_search_title` | Supports title-based matching on the persisted normalized field. |
-| Filter products by tags | `products` | `products_tag_ids` | Codebase persistence stores `tagIds`, not `tags`. |
+| Filter products by tags | `products` | `products_tag_ids` | Codebase persistence stores `tagIds`, not `tags`, and storefront discovery now resolves requested tag codes before applying tag filters. |
+| Filter visible storefront products by `minSalePrice` and sort by price with stable pagination | `products` | `products_storefront_visibility_min_sale_price` | Supports product-level price filtering and price asc/desc ordering on the derived field. |
 | Filter active variants inside one product | `variants` | `variants_product_status` | Matches product-scoped variant listing with status filtering. |
 | Filter or group variants by RAM and ROM | `variants` | `variants_ram_rom` | Supports attribute-driven filtering on the persisted nested fields. |
 | Filter variants by color | `variants` | `variants_color` | Supports color-specific variant filtering. |
-| Sort or filter variants by `salePrice` | `variants` | `variants_sale_price` | Supports basic price-driven variant discovery. |
+| Sort or filter variants by `salePrice` | `variants` | `variants_sale_price` | Retained for legacy or future variant-scoped price reads; storefront discovery now uses `product.minSalePrice` for price filters. |
 
 ## Implementation notes
 
 - Story wording mentions `tags`, but the current product persistence model stores tag references in `tagIds`.
+- Storefront discovery applies AND semantics for requested tags by resolving every requested tag code first, then filtering products on `tagIds`.
 - Story wording also mentions stock-related indexing, but catalog persistence does not own a stable stock field. The current model only has derived `isInStock`, so Task J intentionally adds no stock index.
 - Task J intentionally adds no index on `defaultSelectedVariantId` because the current codebase does not query products by that field.
 - `slug` is indexed for lookup support only. The current codebase does not enforce slug uniqueness, so it is not treated as a unique identifier in this story.

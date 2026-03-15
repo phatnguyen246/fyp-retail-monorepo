@@ -60,6 +60,7 @@ export function createCatalogServices({
         rebuildProductDerivedFields,
         listProducts: createListProductsService({
             inventoryAdapter,
+            mediaRepository,
             productRepository,
             referenceRepository,
             variantRepository,
@@ -68,6 +69,7 @@ export function createCatalogServices({
         }),
         searchProducts: createSearchProductsService({
             inventoryAdapter,
+            mediaRepository,
             productRepository,
             referenceRepository,
             variantRepository,

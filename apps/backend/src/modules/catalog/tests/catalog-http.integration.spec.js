@@ -184,6 +184,120 @@ function createCatalogStateWithCompareLiveMismatch() {
     return state;
 }
 
+function createCatalogStateForDiscoveryQueries() {
+    const state = createCatalogState();
+    const category = state.categories[0];
+    const batteryTag = state.tags[1];
+    const oppoBrand = createBrandFixture({
+        _id: new ObjectId("65f0000000000000000000a0"),
+        code: "OPPO",
+        name: "Oppo",
+    });
+    const secondIphoneVariant = createVariantFixture({
+        _id: new ObjectId("65f000000000000000000093"),
+        productId: new ObjectId("65f000000000000000000006"),
+        sku: "IP16-BLU-256",
+        variantAttributes: {
+            ram: "12GB",
+            rom: "256GB",
+            color: "Blue",
+        },
+        originalPrice: 26990000,
+        salePrice: 24990000,
+        isInStock: false,
+    });
+    const oppoProduct = createProductReadModelFixture({
+        _id: new ObjectId("65f0000000000000000000a1"),
+        productGroupCode: "OPPO_RENO_12",
+        title: "Oppo Reno 12",
+        slug: "oppo-reno-12",
+        searchTitle: "oppo reno 12",
+        brandId: oppoBrand._id,
+        categoryId: category._id,
+        tagIds: [batteryTag._id],
+        contactWhenOutOfStock: true,
+        defaultSelectedVariantId: new ObjectId("65f0000000000000000000a2"),
+        listingVariantSnapshot: {
+            variantId: new ObjectId("65f0000000000000000000a2"),
+            sku: "RENO12-GRN-128",
+            color: "Green",
+            ram: "8GB",
+            rom: "128GB",
+            salePrice: 22990000,
+            originalPrice: 23990000,
+            currency: "VND",
+        },
+        minSalePrice: 22990000,
+        minOriginalPrice: 23990000,
+        badges: ["installment"],
+    });
+    const oppoVariant = createVariantFixture({
+        _id: new ObjectId("65f0000000000000000000a2"),
+        productId: oppoProduct._id,
+        sku: "RENO12-GRN-128",
+        variantAttributes: {
+            ram: "8GB",
+            rom: "128GB",
+            color: "Green",
+        },
+        originalPrice: 23990000,
+        salePrice: 22990000,
+        isInStock: false,
+    });
+    const secondIphoneMedia = createProductMediaFixture({
+        _id: new ObjectId("65f000000000000000000096"),
+        productId: new ObjectId("65f000000000000000000006"),
+        variantId: secondIphoneVariant._id,
+        url: "https://storage.googleapis.com/catalog-assets/catalog/products/p123/variants/v789/blue.webp",
+        storagePath: "catalog/products/p123/variants/v789/blue.webp",
+        fileName: "blue.webp",
+    });
+
+    state.brands.push(oppoBrand);
+    state.products = [...state.products, oppoProduct];
+    state.variants = [state.variants[0], secondIphoneVariant, state.variants[1], oppoVariant];
+    state.productMediaMetadata = [
+        ...state.productMediaMetadata,
+        secondIphoneMedia,
+    ];
+    state.inventoryRecords = [
+        createInventoryRecord({
+            _id: new ObjectId("65f000000000000000000091"),
+            variantId: state.variants[0]._id,
+            stockQuantity: 5,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+        createInventoryRecord({
+            _id: new ObjectId("65f000000000000000000097"),
+            variantId: secondIphoneVariant._id,
+            stockQuantity: 0,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+        createInventoryRecord({
+            _id: new ObjectId("65f000000000000000000092"),
+            variantId: state.variants[2]._id,
+            stockQuantity: 7,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+        createInventoryRecord({
+            _id: new ObjectId("65f000000000000000000098"),
+            variantId: oppoVariant._id,
+            stockQuantity: 0,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+    ];
+
+    return state;
+}
+
 function createInMemoryDb(seedState = createCatalogState(), options = {}) {
     const collections = new Map(
         Object.entries(seedState).map(([name, documents]) => [name, [...documents]])
@@ -400,6 +514,18 @@ function matchesFilter(document, filter = {}) {
                 }
 
                 return candidates.some((candidate) => isEqualValue(value, candidate));
+            }
+
+            if ("$all" in condition) {
+                const candidates = condition.$all ?? [];
+
+                if (!Array.isArray(value)) {
+                    return false;
+                }
+
+                return candidates.every((candidate) =>
+                    value.some((item) => isEqualValue(item, candidate))
+                );
             }
 
             if ("$gte" in condition || "$lte" in condition) {
@@ -806,6 +932,116 @@ describe("catalog http integration", () => {
         expect(listBody.data[0].hasInStockVariants).toBe(false);
         expect(searchResponse.status).toBe(200);
         expect(searchBody.data[0].hasInStockVariants).toBe(false);
+    });
+
+    it("supports optional keyword on product listing and returns additive discovery payload fields", async () => {
+        runningServer = await startServer(createCatalogStateForDiscoveryQueries());
+
+        const response = await fetch(
+            `${runningServer.url}/catalog/products?q=IPHONE&sortMode=price_desc`
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toHaveLength(1);
+        expect(body.data[0]).toMatchObject({
+            id: "65f000000000000000000006",
+            productId: "65f000000000000000000006",
+            title: "iPhone 16",
+            contactWhenOutOfStock: false,
+            listingVariantSnapshot: {
+                variantId: "65f000000000000000000007",
+            },
+            defaultSelectedVariant: {
+                variantId: "65f000000000000000000007",
+                ram: "8GB",
+                rom: "128GB",
+                color: "Black",
+                salePrice: 22990000,
+                originalPrice: 24990000,
+                thumbnail:
+                    "https://storage.googleapis.com/catalog-assets/catalog/products/p123/variants/v456/front.webp",
+                inStock: true,
+            },
+            hasInStockVariants: true,
+        });
+        expect(body.data[0].variantsSummary).toEqual([
+            expect.objectContaining({
+                variantId: "65f000000000000000000007",
+                color: "Black",
+                thumbnail:
+                    "https://storage.googleapis.com/catalog-assets/catalog/products/p123/variants/v456/front.webp",
+                inStock: true,
+            }),
+            expect.objectContaining({
+                variantId: "65f000000000000000000093",
+                color: "Blue",
+                thumbnail:
+                    "https://storage.googleapis.com/catalog-assets/catalog/products/p123/variants/v789/blue.webp",
+                inStock: false,
+            }),
+        ]);
+    });
+
+    it("applies tags AND semantics, product-level price filters, same-variant matching, and canonical sort modes", async () => {
+        runningServer = await startServer(createCatalogStateForDiscoveryQueries());
+
+        const andTagsResponse = await fetch(
+            `${runningServer.url}/catalog/products?tags=camera-phone,battery-phone&ram=12GB&minPrice=22000000&maxPrice=23000000`
+        );
+        const andTagsBody = await andTagsResponse.json();
+        const sameVariantMissResponse = await fetch(
+            `${runningServer.url}/catalog/products?ram=8GB&rom=256GB`
+        );
+        const sameVariantMissBody = await sameVariantMissResponse.json();
+        const sameVariantHitResponse = await fetch(
+            `${runningServer.url}/catalog/products?brand=APPLE&ram=12GB&rom=256GB&color=Blue`
+        );
+        const sameVariantHitBody = await sameVariantHitResponse.json();
+        const newestResponse = await fetch(
+            `${runningServer.url}/catalog/products?sortMode=newest`
+        );
+        const newestBody = await newestResponse.json();
+        const priceAscResponse = await fetch(
+            `${runningServer.url}/catalog/products?sortMode=price_asc`
+        );
+        const priceAscBody = await priceAscResponse.json();
+        const priceDescResponse = await fetch(
+            `${runningServer.url}/catalog/products?sortMode=price_desc`
+        );
+        const priceDescBody = await priceDescResponse.json();
+
+        expect(andTagsResponse.status).toBe(200);
+        expect(andTagsBody.data).toHaveLength(1);
+        expect(andTagsBody.data[0].id).toBe("65f000000000000000000006");
+
+        expect(sameVariantMissResponse.status).toBe(200);
+        expect(sameVariantMissBody.data).toEqual([]);
+
+        expect(sameVariantHitResponse.status).toBe(200);
+        expect(sameVariantHitBody.data).toHaveLength(1);
+        expect(sameVariantHitBody.data[0].id).toBe("65f000000000000000000006");
+
+        expect(newestResponse.status).toBe(200);
+        expect(newestBody.data.map((item) => item.id)).toEqual([
+            "65f0000000000000000000a1",
+            "65f000000000000000000008",
+            "65f000000000000000000006",
+        ]);
+
+        expect(priceAscResponse.status).toBe(200);
+        expect(priceAscBody.data.map((item) => item.id)).toEqual([
+            "65f000000000000000000006",
+            "65f0000000000000000000a1",
+            "65f000000000000000000008",
+        ]);
+
+        expect(priceDescResponse.status).toBe(200);
+        expect(priceDescBody.data.map((item) => item.id)).toEqual([
+            "65f000000000000000000008",
+            "65f0000000000000000000a1",
+            "65f000000000000000000006",
+        ]);
     });
 
     it("returns storefront product detail and compare responses with canonical slug meta", async () => {

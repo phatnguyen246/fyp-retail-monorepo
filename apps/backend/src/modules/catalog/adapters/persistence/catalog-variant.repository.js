@@ -46,8 +46,7 @@ export function createCatalogVariantRepository({
             productIds,
             ram = [],
             rom = [],
-            minPrice,
-            maxPrice,
+            color = [],
         } = {}) {
             const filter = {
                 status: "active",
@@ -74,13 +73,9 @@ export function createCatalogVariantRepository({
                 };
             }
 
-            if (
-                typeof minPrice === "number" ||
-                typeof maxPrice === "number"
-            ) {
-                filter.salePrice = {
-                    ...(typeof minPrice === "number" ? { $gte: minPrice } : {}),
-                    ...(typeof maxPrice === "number" ? { $lte: maxPrice } : {}),
+            if (Array.isArray(color) && color.length > 0) {
+                filter["variantAttributes.color"] = {
+                    $in: color,
                 };
             }
 

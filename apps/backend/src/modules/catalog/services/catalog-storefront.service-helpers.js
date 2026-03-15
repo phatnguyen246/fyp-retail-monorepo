@@ -157,6 +157,29 @@ function mapVariant(variant, mediaByVariantId = new Map()) {
     };
 }
 
+function resolveVariantThumbnail(mediaByVariantId = new Map(), variantId) {
+    if (!variantId) {
+        return null;
+    }
+
+    return mediaByVariantId.get(variantId)?.[0]?.url ?? null;
+}
+
+function mapVariantSummary(variant, mediaByVariantId = new Map()) {
+    const variantId = toIdString(variant?._id);
+
+    return {
+        variantId,
+        ram: variant?.variantAttributes?.ram ?? null,
+        rom: variant?.variantAttributes?.rom ?? null,
+        color: variant?.variantAttributes?.color ?? null,
+        salePrice: variant?.salePrice ?? null,
+        originalPrice: variant?.originalPrice ?? null,
+        thumbnail: resolveVariantThumbnail(mediaByVariantId, variantId),
+        inStock: variant?.isInStock === true,
+    };
+}
+
 export function assertStorefrontProductVisible(product, { productId } = {}) {
     if (
         !product ||
@@ -244,10 +267,18 @@ export function groupMediaByVariantId(mediaList = []) {
 export function buildStorefrontListItem({
     product,
     references,
+    variants = [],
+    mediaByVariantId = new Map(),
     hasInStockVariants = product?.hasInStockVariants === true,
 } = {}) {
+    const activeVariants = [...filterActiveCatalogVariants(variants)].sort(
+        sortVariantsForStorefront
+    );
+    const defaultSelectedVariant = resolveDefaultSelectedVariant(activeVariants);
+
     return {
         id: toIdString(product._id),
+        productId: toIdString(product._id),
         title: product.title,
         slug: product.slug,
         productType: product.productType,
@@ -265,6 +296,13 @@ export function buildStorefrontListItem({
         ),
         minSalePrice: product.minSalePrice,
         minOriginalPrice: product.minOriginalPrice,
+        contactWhenOutOfStock: product.contactWhenOutOfStock === true,
+        defaultSelectedVariant: defaultSelectedVariant
+            ? mapVariantSummary(defaultSelectedVariant, mediaByVariantId)
+            : null,
+        variantsSummary: activeVariants.map((variant) =>
+            mapVariantSummary(variant, mediaByVariantId)
+        ),
         hasInStockVariants,
     };
 }
@@ -285,6 +323,8 @@ export function buildStorefrontProductDetail({
         ...buildStorefrontListItem({
             product,
             references,
+            variants: activeVariants,
+            mediaByVariantId,
             hasInStockVariants,
         }),
         longDescription: product.longDescription,
@@ -315,6 +355,7 @@ export function buildStorefrontCompareItem({
             ...buildStorefrontListItem({
                 product,
                 references,
+                variants: activeVariants,
                 hasInStockVariants,
             }),
             specs: product.specs,

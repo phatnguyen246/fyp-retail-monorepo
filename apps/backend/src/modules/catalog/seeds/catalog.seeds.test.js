@@ -118,7 +118,7 @@ describe("catalog seeds", () => {
         await ensureCatalogIndexes({ repository });
 
         expect(repository.ensureUniqueIndex).toHaveBeenCalledTimes(7);
-        expect(repository.ensureIndex).toHaveBeenCalledTimes(10);
+        expect(repository.ensureIndex).toHaveBeenCalledTimes(12);
         expect(repository.ensureUniqueIndex).toHaveBeenNthCalledWith(1, {
             collectionName: "brands",
             key: { code: 1 },
@@ -156,6 +156,17 @@ describe("catalog seeds", () => {
         });
         expect(repository.ensureIndex).toHaveBeenCalledWith({
             collectionName: "products",
+            key: {
+                isDeleted: 1,
+                status: 1,
+                hasActiveVariants: 1,
+                createdAt: -1,
+                _id: -1,
+            },
+            indexName: "products_storefront_visibility_created_at",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
             key: { slug: 1 },
             indexName: "products_slug",
         });
@@ -168,6 +179,17 @@ describe("catalog seeds", () => {
             collectionName: "products",
             key: { tagIds: 1 },
             indexName: "products_tag_ids",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: {
+                isDeleted: 1,
+                status: 1,
+                hasActiveVariants: 1,
+                minSalePrice: 1,
+                _id: 1,
+            },
+            indexName: "products_storefront_visibility_min_sale_price",
         });
         expect(repository.ensureIndex).toHaveBeenCalledWith({
             collectionName: "variants",

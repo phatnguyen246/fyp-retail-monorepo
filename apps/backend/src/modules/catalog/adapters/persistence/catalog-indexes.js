@@ -52,6 +52,11 @@ const NON_UNIQUE_INDEX_DEFINITIONS = [
     },
     {
         collectionName: CATALOG_COLLECTIONS.products,
+        key: { isDeleted: 1, status: 1, hasActiveVariants: 1, createdAt: -1, _id: -1 },
+        indexName: "products_storefront_visibility_created_at",
+    },
+    {
+        collectionName: CATALOG_COLLECTIONS.products,
         key: { slug: 1 },
         indexName: "products_slug",
     },
@@ -64,6 +69,11 @@ const NON_UNIQUE_INDEX_DEFINITIONS = [
         collectionName: CATALOG_COLLECTIONS.products,
         key: { tagIds: 1 },
         indexName: "products_tag_ids",
+    },
+    {
+        collectionName: CATALOG_COLLECTIONS.products,
+        key: { isDeleted: 1, status: 1, hasActiveVariants: 1, minSalePrice: 1, _id: 1 },
+        indexName: "products_storefront_visibility_min_sale_price",
     },
     {
         collectionName: CATALOG_COLLECTIONS.variants,
@@ -107,4 +117,3 @@ export async function ensureCatalogIndexes({
         await repository.ensureIndex(definition);
     }
 }
-

@@ -18,6 +18,11 @@ const PRODUCT_DISCOVERY_SORT_FIELDS = [
     "title",
     "minSalePrice",
 ];
+const PRODUCT_DISCOVERY_SORT_MODES = [
+    "newest",
+    "price_asc",
+    "price_desc",
+];
 const PRODUCT_DISCOVERY_SORT_ORDERS = ["asc", "desc"];
 const PRODUCT_DISCOVERY_SORT_VALUES = PRODUCT_DISCOVERY_SORT_FIELDS.flatMap(
     (fieldName) =>
@@ -43,25 +48,94 @@ const nonNegativeNumberSchema = z.preprocess(
     coerceNumberInput,
     z.number().nonnegative()
 );
+const sortModeSchema = z.enum(PRODUCT_DISCOVERY_SORT_MODES);
 const sortFieldSchema = z.enum(PRODUCT_DISCOVERY_SORT_FIELDS);
 const sortOrderSchema = z.enum(PRODUCT_DISCOVERY_SORT_ORDERS);
 const sortSchema = z.enum(PRODUCT_DISCOVERY_SORT_VALUES);
 
-function createProductDiscoverySort({ sort, sortBy, sortOrder } = {}) {
+function mapSortModeToSortConfig(sortMode) {
+    switch (sortMode) {
+        case "newest":
+            return {
+                sort: "createdAt:desc",
+                sortBy: "createdAt",
+                sortOrder: "desc",
+            };
+        case "price_asc":
+            return {
+                sort: "minSalePrice:asc",
+                sortBy: "minSalePrice",
+                sortOrder: "asc",
+            };
+        case "price_desc":
+            return {
+                sort: "minSalePrice:desc",
+                sortBy: "minSalePrice",
+                sortOrder: "desc",
+            };
+        default:
+            return null;
+    }
+}
+
+function resolveSortMode({ sort, sortBy, sortOrder } = {}) {
+    if (sort === "createdAt:desc" || (sortBy === "createdAt" && sortOrder === "desc")) {
+        return "newest";
+    }
+
+    if (
+        sort === "minSalePrice:asc" ||
+        (sortBy === "minSalePrice" && sortOrder === "asc")
+    ) {
+        return "price_asc";
+    }
+
+    if (
+        sort === "minSalePrice:desc" ||
+        (sortBy === "minSalePrice" && sortOrder === "desc")
+    ) {
+        return "price_desc";
+    }
+
+    return null;
+}
+
+function createProductDiscoverySort({
+    sortMode,
+    sort,
+    sortBy,
+    sortOrder,
+} = {}) {
+    if (sortMode) {
+        return {
+            sortMode,
+            ...mapSortModeToSortConfig(sortMode),
+        };
+    }
+
     if (sort) {
         const [resolvedSortBy, resolvedSortOrder] = sort.split(":");
 
         return {
+            sortMode: resolveSortMode({
+                sort,
+                sortBy: resolvedSortBy,
+                sortOrder: resolvedSortOrder,
+            }),
             sort,
             sortBy: resolvedSortBy,
             sortOrder: resolvedSortOrder,
         };
     }
 
-    const resolvedSortBy = sortBy ?? "updatedAt";
+    const resolvedSortBy = sortBy ?? "createdAt";
     const resolvedSortOrder = sortOrder ?? "desc";
 
     return {
+        sortMode: resolveSortMode({
+            sortBy: resolvedSortBy,
+            sortOrder: resolvedSortOrder,
+        }),
         sort: `${resolvedSortBy}:${resolvedSortOrder}`,
         sortBy: resolvedSortBy,
         sortOrder: resolvedSortOrder,
@@ -97,12 +171,14 @@ function createCanonicalProductDiscoveryQuery(value) {
         categoryCode,
         ram: value.ram,
         rom: value.rom,
+        color: value.color,
         tagCodes,
         minPrice: value.minPrice,
         maxPrice: value.maxPrice,
         page: value.page ?? 1,
         limit,
         pageSize: limit,
+        sortMode: sortConfig.sortMode,
         sort: sortConfig.sort,
         sortBy: sortConfig.sortBy,
         sortOrder: sortConfig.sortOrder,
@@ -126,6 +202,9 @@ export const PRODUCT_DISCOVERY_QUERY_SCHEMA = z
         rom: z
             .preprocess(normalizeCsvStringArrayInput, z.array(compactStringSchema))
             .default([]),
+        color: z
+            .preprocess(normalizeCsvStringArrayInput, z.array(compactStringSchema))
+            .default([]),
         tagCodes: z
             .preprocess(normalizeCsvStringArrayInput, z.array(tagCodeSchema))
             .default([]),
@@ -140,6 +219,7 @@ export const PRODUCT_DISCOVERY_QUERY_SCHEMA = z
         includeDeleted: z
             .preprocess(coerceBooleanInput, z.boolean())
             .default(false),
+        sortMode: sortModeSchema.optional(),
         sort: sortSchema.optional(),
         sortBy: sortFieldSchema.optional(),
         sortOrder: sortOrderSchema.optional(),

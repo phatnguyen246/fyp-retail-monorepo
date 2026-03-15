@@ -3,20 +3,20 @@ import { normalizeSearchTitle } from "../utils/catalog-field-normalizers.js";
 import {
     buildPaginationMeta,
     buildStorefrontListItem,
+    groupMediaByVariantId,
     hydrateStorefrontReferences,
 } from "./catalog-storefront.service-helpers.js";
 import { hydrateCatalogProductsWithLiveInventory } from "./catalog-live-inventory.helpers.js";
 
-export function createListProductsService({
+export function createStorefrontProductDiscoveryExecutor({
     inventoryAdapter,
+    mediaRepository,
     productRepository,
     referenceRepository,
     variantRepository,
-    validation = createCatalogValidation(),
     logger = console,
 } = {}) {
-    return async function listProducts({ query } = {}) {
-        const parsedQuery = validation.parseListProductsQuery(query ?? {});
+    return async function executeStorefrontProductDiscovery({ parsedQuery } = {}) {
         const resolvedFilter = await resolveStorefrontDiscoveryFilter({
             query: parsedQuery,
             productRepository,
@@ -57,20 +57,33 @@ export function createListProductsService({
                 productIds: products.map((product) => product._id),
             }),
         ]);
-        const { productAvailabilityById } = await hydrateCatalogProductsWithLiveInventory(
-            {
-                inventoryAdapter,
-                products,
-                variants,
-                logger,
-            }
-        );
+        const {
+            liveVariants,
+            variantsByProductId,
+            productAvailabilityById,
+        } = await hydrateCatalogProductsWithLiveInventory({
+            inventoryAdapter,
+            products,
+            variants,
+            logger,
+        });
+        const mediaList =
+            typeof mediaRepository?.listMediaByVariantIds === "function" &&
+            liveVariants.length > 0
+                ? await mediaRepository.listMediaByVariantIds({
+                      variantIds: liveVariants.map((variant) => variant._id),
+                  })
+                : [];
+        const mediaByVariantId = groupMediaByVariantId(mediaList);
 
         return {
             data: products.map((product) =>
                 buildStorefrontListItem({
                     product,
                     references,
+                    variants:
+                        variantsByProductId.get(product._id.toHexString()) ?? [],
+                    mediaByVariantId,
                     hasInStockVariants:
                         productAvailabilityById.get(product._id.toHexString())
                             ?.hasInStockVariants ?? false,
@@ -85,12 +98,40 @@ export function createListProductsService({
     };
 }
 
+export function createListProductsService({
+    inventoryAdapter,
+    mediaRepository,
+    productRepository,
+    referenceRepository,
+    variantRepository,
+    validation = createCatalogValidation(),
+    logger = console,
+} = {}) {
+    const executeStorefrontProductDiscovery = createStorefrontProductDiscoveryExecutor(
+        {
+            inventoryAdapter,
+            mediaRepository,
+            productRepository,
+            referenceRepository,
+            variantRepository,
+            logger,
+        }
+    );
+
+    return async function listProducts({ query } = {}) {
+        const parsedQuery = validation.parseListProductsQuery(query ?? {});
+
+        return executeStorefrontProductDiscovery({
+            parsedQuery,
+        });
+    };
+}
+
 export async function resolveStorefrontDiscoveryFilter({
     query,
     productRepository,
     referenceRepository,
     variantRepository,
-    includeKeyword = false,
 } = {}) {
     const baseFilter = {
         status: "active",
@@ -104,18 +145,11 @@ export async function resolveStorefrontDiscoveryFilter({
         baseFilter.productType = query.productType;
     }
 
-    if (includeKeyword) {
-        const normalizedKeyword =
-            query.keyword && typeof query.keyword === "string"
-                ? query.keyword
-                : null;
-
-        if (normalizedKeyword) {
-            baseFilter.searchTitle = {
-                $regex: escapeRegex(normalizeSearchTitle(normalizedKeyword)),
-                $options: "i",
-            };
-        }
+    if (query.keyword && typeof query.keyword === "string") {
+        baseFilter.searchTitle = {
+            $regex: escapeRegex(normalizeSearchTitle(query.keyword)),
+            $options: "i",
+        };
     }
 
     if (query.brandCode) {
@@ -151,22 +185,35 @@ export async function resolveStorefrontDiscoveryFilter({
             codes: query.tagCodes,
         });
 
-        if (tags.length === 0) {
+        if (tags.length !== query.tagCodes.length) {
             return {
                 noMatches: true,
             };
         }
 
         baseFilter.tagIds = {
-            $in: tags.map((tag) => tag._id),
+            $all: tags.map((tag) => tag._id),
+        };
+    }
+
+    if (
+        typeof query.minPrice === "number" ||
+        typeof query.maxPrice === "number"
+    ) {
+        baseFilter.minSalePrice = {
+            ...(typeof query.minPrice === "number"
+                ? { $gte: query.minPrice }
+                : {}),
+            ...(typeof query.maxPrice === "number"
+                ? { $lte: query.maxPrice }
+                : {}),
         };
     }
 
     if (
         query.ram.length > 0 ||
         query.rom.length > 0 ||
-        typeof query.minPrice === "number" ||
-        typeof query.maxPrice === "number"
+        query.color.length > 0
     ) {
         const candidateProducts = await productRepository.findProductsByFilter({
             filter: baseFilter,
@@ -186,8 +233,7 @@ export async function resolveStorefrontDiscoveryFilter({
             productIds: candidateProductIds,
             ram: query.ram,
             rom: query.rom,
-            minPrice: query.minPrice,
-            maxPrice: query.maxPrice,
+            color: query.color,
         });
 
         if (productIds.length === 0) {
@@ -216,6 +262,6 @@ function createProductSort(query) {
 
     return {
         [query.sortBy]: direction,
-        _id: 1,
+        _id: direction,
     };
 }

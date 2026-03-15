@@ -265,11 +265,12 @@ describe("catalog validation", () => {
             brand: "apple",
             category: "smartphone",
             tags: ["camera-phone", "battery-phone"],
+            color: "Black,Blue",
             page: "2",
             limit: "10",
             minPrice: "1000",
             maxPrice: "2000",
-            sort: "minSalePrice:asc",
+            sortMode: "price_desc",
         });
         const discoveryQuery = parseProductDiscoveryQuery({
             keyword: "  Điện   thoại   Samsung  ",
@@ -278,11 +279,16 @@ describe("catalog validation", () => {
             tags: "camera-phone,battery-phone",
             ram: "8GB,12GB",
             rom: ["128GB", "256GB"],
+            color: ["Black", "Blue"],
             page: "2",
             limit: "10",
             minPrice: "1000",
             maxPrice: "2000",
             sort: "minSalePrice:asc",
+        });
+        const sortModePriorityQuery = parseProductDiscoveryQuery({
+            sortMode: "newest",
+            sort: "title:asc",
         });
 
         expect(importRow).toMatchObject({
@@ -312,12 +318,16 @@ describe("catalog validation", () => {
             brandCode: "APPLE",
             categoryCode: "SMARTPHONE",
             tagCodes: ["camera-phone", "battery-phone"],
+            color: ["Black", "Blue"],
             minPrice: 1000,
             maxPrice: 2000,
             page: 2,
             limit: 10,
             pageSize: 10,
-            sort: "minSalePrice:asc",
+            sortMode: "price_desc",
+            sort: "minSalePrice:desc",
+            sortBy: "minSalePrice",
+            sortOrder: "desc",
             includeDeleted: false,
         });
         expect(discoveryQuery).toMatchObject({
@@ -327,7 +337,14 @@ describe("catalog validation", () => {
             categoryCode: "SMARTPHONE",
             ram: ["8GB", "12GB"],
             rom: ["128GB", "256GB"],
+            color: ["Black", "Blue"],
             tagCodes: ["camera-phone", "battery-phone"],
+        });
+        expect(sortModePriorityQuery).toMatchObject({
+            sortMode: "newest",
+            sort: "createdAt:desc",
+            sortBy: "createdAt",
+            sortOrder: "desc",
         });
 
         expect(() =>
