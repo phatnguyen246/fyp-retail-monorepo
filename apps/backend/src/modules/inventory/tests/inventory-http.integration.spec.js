@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../../../bootstrap/app.js";
+import { createAuthTestCookie } from "../../auth/tests/auth-test.helpers.js";
 import { createInventoryRecord } from "../models/index.js";
 import {
     createBrandFixture,
@@ -9,6 +10,8 @@ import {
     createTagFixture,
     createVariantFixture,
 } from "../../catalog/tests/fixtures/index.js";
+
+const ADMIN_AUTH_COOKIE = createAuthTestCookie();
 
 function createBaseCatalogState() {
     const brand = createBrandFixture();
@@ -429,6 +432,7 @@ describe("inventory http integration", () => {
             method: "POST",
             headers: {
                 "content-type": "application/json",
+                cookie: ADMIN_AUTH_COOKIE,
             },
             body: JSON.stringify({
                 variantId: "65f000000000000000000302",
@@ -463,6 +467,7 @@ describe("inventory http integration", () => {
                 method: "PATCH",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     stockQuantity: 0,
@@ -492,6 +497,7 @@ describe("inventory http integration", () => {
                 method: "PATCH",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     stockQuantity: 0,
@@ -526,6 +532,7 @@ describe("inventory http integration", () => {
             method: "POST",
             headers: {
                 "content-type": "application/json",
+                cookie: ADMIN_AUTH_COOKIE,
             },
             body: JSON.stringify({
                 variantId: "65f000000000000000000399",

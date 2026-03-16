@@ -1,0 +1,9 @@
+export const AUTH_MODULE_NAME = "auth";
+export const AUTH_BASE_PATH = "/auth";
+export const AUTH_ACCESS_TOKEN_COOKIE_NAME = "auth_access_token";
+export const AUTH_ACCESS_TOKEN_LIFETIME_SECONDS = 60 * 60;
+export const AUTH_ACCESS_TOKEN_LIFETIME_MS =
+    AUTH_ACCESS_TOKEN_LIFETIME_SECONDS * 1000;
+export const AUTH_LOGIN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+export const AUTH_LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 5;
+

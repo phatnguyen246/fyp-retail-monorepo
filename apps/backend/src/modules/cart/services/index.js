@@ -4,12 +4,14 @@ import { createCartValidation } from "../validation/index.js";
 import { createAddCartItemService } from "./add-cart-item.service.js";
 import { createClearCartService } from "./clear-cart.service.js";
 import { createGetCartService } from "./get-cart.service.js";
+import { createMergeGuestCartToCustomerService } from "./merge-guest-cart-to-customer.service.js";
 import { createRemoveCartItemService } from "./remove-cart-item.service.js";
 import { createUpdateCartItemService } from "./update-cart-item.service.js";
 
 export { createAddCartItemService } from "./add-cart-item.service.js";
 export { createClearCartService } from "./clear-cart.service.js";
 export { createGetCartService } from "./get-cart.service.js";
+export { createMergeGuestCartToCustomerService } from "./merge-guest-cart-to-customer.service.js";
 export { createRemoveCartItemService } from "./remove-cart-item.service.js";
 export { createUpdateCartItemService } from "./update-cart-item.service.js";
 
@@ -49,6 +51,9 @@ export function createCartServices({
             validation,
         }),
         clearCart: createClearCartService({
+            cartRepository,
+        }),
+        mergeGuestCartToCustomer: createMergeGuestCartToCustomerService({
             cartRepository,
         }),
     };

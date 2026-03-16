@@ -9,7 +9,15 @@ import { createInventoryController } from "./http/inventory.controller.js";
 import { createInventoryRouter } from "./http/inventory.routes.js";
 import { createInventoryServices } from "./services/index.js";
 
-export function registerInventoryModule({ app, db }) {
+function passThroughMiddleware(_req, _res, next) {
+    next();
+}
+
+export function registerInventoryModule({
+    app,
+    db,
+    adminMiddleware = passThroughMiddleware,
+} = {}) {
     const adapters = createInventoryAdapters({ db });
     const services = createInventoryServices({ adapters });
     const controller = createInventoryController({ services });
@@ -20,7 +28,7 @@ export function registerInventoryModule({ app, db }) {
     });
 
     app.use(INVENTORY_BASE_PATH, router);
-    app.use(INVENTORY_ADMIN_BASE_PATH, adminRouter);
+    app.use(INVENTORY_ADMIN_BASE_PATH, adminMiddleware, adminRouter);
 
     return {
         adapters,

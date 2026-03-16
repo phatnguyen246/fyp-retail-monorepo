@@ -9,7 +9,16 @@ import {
 } from "./constants/index.js";
 import { createCatalogAdapters } from "./adapters/index.js";
 
-export function registerCatalogModule({ app, db, storage }) {
+function passThroughMiddleware(_req, _res, next) {
+    next();
+}
+
+export function registerCatalogModule({
+    app,
+    db,
+    storage,
+    adminMiddleware = passThroughMiddleware,
+} = {}) {
     const adapters = createCatalogAdapters({ db, storage });
     const services = createCatalogServices({ adapters });
     const storefrontController = createCatalogStorefrontController({ services });
@@ -18,7 +27,7 @@ export function registerCatalogModule({ app, db, storage }) {
     const adminRouter = createCatalogAdminRouter({ controller: adminController });
 
     app.use(CATALOG_BASE_PATH, router);
-    app.use(CATALOG_ADMIN_BASE_PATH, adminRouter);
+    app.use(CATALOG_ADMIN_BASE_PATH, adminMiddleware, adminRouter);
 
     return {
         adapters,

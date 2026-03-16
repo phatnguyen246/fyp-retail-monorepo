@@ -6,9 +6,11 @@
     "dev": "nodemon index.js",
     "test": "vitest run",
     "dev:test": "pnpm test && pnpm dev",
+    "db:setup:account": "node src/modules/account/seeds/setup-account-indexes.js",
     "db:setup:catalog": "node src/modules/catalog/seeds/setup-catalog-indexes.js",
     "db:setup:cart": "node src/modules/cart/seeds/setup-cart-indexes.js",
     "db:setup:inventory": "node src/modules/inventory/seeds/setup-inventory-indexes.js",
+    "seed:account:admin": "pnpm run db:setup:account && node src/modules/account/seeds/seed-admin-account.js",
     "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js"
   },
   "devDependencies": {
@@ -16,14 +18,17 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "csv-parse": "^6.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
     "firebase-admin": "^13.7.0",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
     "multer": "^2.1.1",
     "pino": "^10.3.1",

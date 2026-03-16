@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../../../bootstrap/app.js";
+import { createAuthTestCookie } from "../../auth/tests/auth-test.helpers.js";
 import { createInventoryRecord } from "../../inventory/models/index.js";
 import { CATALOG_PRODUCT_IMPORT_FORM_FIELD } from "../constants/index.js";
 import {
@@ -13,6 +14,8 @@ import {
     createTagFixture,
     createVariantFixture,
 } from "./fixtures/index.js";
+
+const ADMIN_AUTH_COOKIE = createAuthTestCookie();
 
 function createCatalogState() {
     const appleBrand = createBrandFixture();
@@ -673,6 +676,7 @@ describe("catalog http integration", () => {
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     productGroupCode: "APPLE_IPHONE_17",
@@ -701,6 +705,7 @@ describe("catalog http integration", () => {
                 method: "PATCH",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     title: "iPhone 16 Ultra",
@@ -725,6 +730,7 @@ describe("catalog http integration", () => {
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     productGroupCode: "APPLE_IPHONE_18",
@@ -746,6 +752,7 @@ describe("catalog http integration", () => {
                 method: "PATCH",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     title: "Missing Product",
@@ -785,6 +792,9 @@ describe("catalog http integration", () => {
             `${runningServer.url}/admin/catalog/products/import`,
             {
                 method: "POST",
+                headers: {
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
                 body: formData,
             }
         );
@@ -823,6 +833,9 @@ describe("catalog http integration", () => {
             `${runningServer.url}/admin/catalog/products/import`,
             {
                 method: "POST",
+                headers: {
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
                 body: invalidFormData,
             }
         );
@@ -841,6 +854,7 @@ describe("catalog http integration", () => {
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     productGroupCode: "APPLE_IPHONE_16_COPY",
@@ -863,6 +877,7 @@ describe("catalog http integration", () => {
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
                 },
                 body: JSON.stringify({
                     productGroupCode: "APPLE_IPHONE_16",
