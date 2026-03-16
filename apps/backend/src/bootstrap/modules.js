@@ -38,7 +38,13 @@ export function registerModules({ app, db, storage }) {
         db,
         adminMiddleware: auth.middlewares.requireAdmin,
     });
-    const ordering = registerOrderingModule({ app, db });
+    const ordering = registerOrderingModule({
+        app,
+        db,
+        cartOrderReader: cartAdapters?.internal?.orderReader,
+        requireAuthMiddleware: auth.middlewares.requireAuth,
+        adminMiddleware: auth.middlewares.requireAdmin,
+    });
 
     return {
         account,

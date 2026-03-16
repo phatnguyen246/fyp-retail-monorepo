@@ -1,7 +1,9 @@
-export function createInventoryBaseRepository({ db } = {}) {
+import { toObjectId } from "../../utils/object-id.js";
+
+export function createOrderingBaseRepository({ db } = {}) {
     function getCollection(collectionName) {
         if (!db) {
-            throw new Error("Inventory persistence requires a database instance");
+            throw new Error("Ordering persistence requires a database instance");
         }
 
         return db.collection(collectionName);
@@ -33,56 +35,54 @@ export function createInventoryBaseRepository({ db } = {}) {
             });
         },
 
-        findOneByField({ collectionName, fieldName, value, projection }) {
+        findOneById({ collectionName, id, projection } = {}) {
             return getCollection(collectionName).findOne(
-                { [fieldName]: value },
+                { _id: toObjectId(id, "_id") },
                 projection ? { projection } : undefined
             );
         },
 
-        findManyByFieldValues({
+        findManyByFilter({
             collectionName,
-            fieldName,
-            values,
+            filter = {},
             projection,
-        }) {
-            if (!Array.isArray(values) || values.length === 0) {
-                return Promise.resolve([]);
+            sort,
+            limit,
+        } = {}) {
+            const cursor = getCollection(collectionName).find(
+                filter,
+                projection ? { projection } : undefined
+            );
+
+            if (sort && Object.keys(sort).length > 0) {
+                cursor.sort(sort);
             }
 
-            return getCollection(collectionName)
-                .find(
-                    { [fieldName]: { $in: values } },
-                    projection ? { projection } : undefined
-                )
-                .toArray();
+            if (Number.isInteger(limit) && limit > 0) {
+                cursor.limit(limit);
+            }
+
+            return cursor.toArray();
         },
 
         insertOne({ collectionName, document, options } = {}) {
             return getCollection(collectionName).insertOne(document, options);
         },
 
-        updateOneByField({
-            collectionName,
-            fieldName,
-            value,
-            set,
-            options,
-        } = {}) {
+        updateOneById({ collectionName, id, set, options } = {}) {
             return getCollection(collectionName).updateOne(
-                { [fieldName]: value },
+                { _id: toObjectId(id, "_id") },
                 { $set: set },
                 options
             );
         },
 
-        updateOneByFilterWithOperators({
-            collectionName,
-            filter = {},
-            update = {},
-            options,
-        } = {}) {
-            return getCollection(collectionName).updateOne(filter, update, options);
+        updateOneByIdWithOperators({ collectionName, id, update, options } = {}) {
+            return getCollection(collectionName).updateOne(
+                { _id: toObjectId(id, "_id") },
+                update,
+                options
+            );
         },
     };
 }

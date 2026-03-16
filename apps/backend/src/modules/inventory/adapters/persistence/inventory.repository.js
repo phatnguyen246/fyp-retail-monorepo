@@ -2,6 +2,16 @@ import { INVENTORY_COLLECTIONS } from "../../constants/index.js";
 import { toObjectId, toObjectIdArray } from "../../utils/object-id.js";
 import { createInventoryBaseRepository } from "./inventory-base.repository.js";
 
+function assertPositiveInteger(value, fieldName) {
+    if (!Number.isInteger(value) || value <= 0) {
+        throw new Error(
+            `Inventory persistence requires ${fieldName} to be a positive integer`
+        );
+    }
+
+    return value;
+}
+
 export function createInventoryRepository({
     db,
     baseRepository = createInventoryBaseRepository({ db }),
@@ -45,6 +55,51 @@ export function createInventoryRepository({
                 set: {
                     ...updates,
                     updatedAt,
+                },
+            });
+        },
+
+        decrementStockQuantityByVariantIdIfAvailable({
+            variantId,
+            quantity,
+            updatedAt = new Date(),
+        } = {}) {
+            return baseRepository.updateOneByFilterWithOperators({
+                collectionName: INVENTORY_COLLECTIONS.inventoryRecords,
+                filter: {
+                    variantId: toObjectId(variantId, "variantId"),
+                    stockQuantity: {
+                        $gte: assertPositiveInteger(quantity, "quantity"),
+                    },
+                },
+                update: {
+                    $inc: {
+                        stockQuantity: -quantity,
+                    },
+                    $set: {
+                        updatedAt,
+                    },
+                },
+            });
+        },
+
+        incrementStockQuantityByVariantId({
+            variantId,
+            quantity,
+            updatedAt = new Date(),
+        } = {}) {
+            return baseRepository.updateOneByFilterWithOperators({
+                collectionName: INVENTORY_COLLECTIONS.inventoryRecords,
+                filter: {
+                    variantId: toObjectId(variantId, "variantId"),
+                },
+                update: {
+                    $inc: {
+                        stockQuantity: assertPositiveInteger(quantity, "quantity"),
+                    },
+                    $set: {
+                        updatedAt,
+                    },
                 },
             });
         },
