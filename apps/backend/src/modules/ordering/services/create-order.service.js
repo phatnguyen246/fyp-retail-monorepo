@@ -15,6 +15,7 @@ export function createCreateOrderService({
     catalogAdapter,
     inventoryAdapter,
     orderRepository,
+    paymentCheckoutAdapter,
     validation,
     logger = console,
 } = {}) {
@@ -52,53 +53,64 @@ export function createCreateOrderService({
             catalogReads,
             inventoryReads,
         });
+        const shouldCommitStockOnCheckout = parsedInput.paymentMethod === "cod";
         const stockAdjustedItems = [];
+        let orderDocument = null;
 
         try {
-            for (const item of items) {
-                try {
-                    const updatedInventory =
-                        await inventoryAdapter.decrementStockQuantityByVariantIdIfAvailable({
-                            variantId: item.variantId,
-                            quantity: item.quantity,
-                        });
+            if (shouldCommitStockOnCheckout) {
+                for (const item of items) {
+                    try {
+                        const updatedInventory =
+                            await inventoryAdapter.decrementStockQuantityByVariantIdIfAvailable({
+                                variantId: item.variantId,
+                                quantity: item.quantity,
+                            });
 
-                    if (!updatedInventory) {
-                        throw createStockConflictError({
-                            variantId: item.variantId.toHexString(),
-                            quantity: item.quantity,
-                        });
-                    }
+                        if (!updatedInventory) {
+                            throw createStockConflictError({
+                                variantId: item.variantId.toHexString(),
+                                quantity: item.quantity,
+                            });
+                        }
 
-                    stockAdjustedItems.push({
-                        variantId: item.variantId.toHexString(),
-                        quantity: item.quantity,
-                    });
-                } catch (error) {
-                    if (error?.stockAdjusted === true) {
                         stockAdjustedItems.push({
                             variantId: item.variantId.toHexString(),
                             quantity: item.quantity,
                         });
-                    }
+                    } catch (error) {
+                        if (error?.stockAdjusted === true) {
+                            stockAdjustedItems.push({
+                                variantId: item.variantId.toHexString(),
+                                quantity: item.quantity,
+                            });
+                        }
 
-                    throw error;
+                        throw error;
+                    }
                 }
             }
 
             const timestamp = new Date();
-            const orderDocument = await createOrderWithRetry({
+            orderDocument = await createOrderWithRetry({
                 orderRepository,
                 baseDocument: createPendingOrderDocument({
                     accountId: normalizedRequester.accountId,
                     phoneNumber: parsedInput.phoneNumber,
                     shippingAddressLine: parsedInput.shippingAddressLine,
                     paymentMethod: parsedInput.paymentMethod,
+                    stockCommitStatus: shouldCommitStockOnCheckout
+                        ? "committed"
+                        : "not_committed",
                     items,
                     requester: normalizedRequester,
                     timestamp,
                 }),
                 timestamp,
+            });
+
+            await paymentCheckoutAdapter.createInitialPaymentForOrder({
+                order: orderDocument,
             });
 
             try {
@@ -119,6 +131,22 @@ export function createCreateOrderService({
 
             return createOrderDetailView(orderDocument);
         } catch (error) {
+            if (orderDocument?._id) {
+                try {
+                    await orderRepository.deleteOrderById({
+                        orderId: orderDocument._id,
+                    });
+                } catch (cleanupError) {
+                    logger.error?.("Failed to rollback order after checkout payment init error", {
+                        orderId: orderDocument._id.toHexString(),
+                        error: {
+                            message: cleanupError?.message ?? "Unknown error",
+                            code: cleanupError?.code ?? null,
+                        },
+                    });
+                }
+            }
+
             await rollbackDecrementedStock({
                 inventoryAdapter,
                 adjustedItems: stockAdjustedItems,

@@ -6,7 +6,7 @@ export const CREATE_ORDER_INPUT_SCHEMA = z
         cartVariantIds: z.array(objectIdStringSchema("cartVariantIds")).min(1),
         phoneNumber: requiredTextSchema("phoneNumber"),
         shippingAddressLine: requiredTextSchema("shippingAddressLine"),
-        paymentMethod: z.enum(["cod"]).optional().default("cod"),
+        paymentMethod: z.enum(["cod", "vnpay"]).optional().default("cod"),
     })
     .strict()
     .transform((value) => ({

@@ -17,6 +17,7 @@ export function registerOrderingModule({
     app,
     db,
     cartOrderReader,
+    paymentCheckoutAdapter,
     requireAuthMiddleware = passThroughMiddleware,
     adminMiddleware = passThroughMiddleware,
     logger = console,
@@ -24,6 +25,7 @@ export function registerOrderingModule({
     const adapters = createOrderingAdapters({
         db,
         cartOrderReader,
+        paymentCheckoutAdapter,
     });
     const services = createOrderingServices({
         adapters,

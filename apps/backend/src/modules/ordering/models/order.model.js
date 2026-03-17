@@ -1,6 +1,7 @@
 import {
     ORDER_PAYMENT_METHODS,
     ORDER_PAYMENT_STATUSES,
+    ORDER_STOCK_COMMIT_STATUSES,
     ORDER_STATUSES,
 } from "../constants/index.js";
 import {
@@ -34,6 +35,25 @@ function normalizeOptionalStatus(value, fieldName) {
     return normalizeEnumValue(value, fieldName, ORDER_STATUSES);
 }
 
+function normalizeStockCommitStatus(input = {}) {
+    if (
+        typeof input.stockCommitStatus === "string" &&
+        input.stockCommitStatus.length > 0
+    ) {
+        return normalizeEnumValue(
+            input.stockCommitStatus,
+            "stockCommitStatus",
+            ORDER_STOCK_COMMIT_STATUSES
+        );
+    }
+
+    if (input.paymentMethod === "cod") {
+        return "committed";
+    }
+
+    return "not_committed";
+}
+
 export const ORDER_ITEM_DOCUMENT_SHAPE = Object.freeze({
     productId: { type: "ObjectId", required: true },
     variantId: { type: "ObjectId", required: true },
@@ -62,6 +82,7 @@ export const ORDER_DOCUMENT_SHAPE = Object.freeze({
     paymentMethod: { type: "string", required: true },
     paymentStatus: { type: "string", required: true },
     orderStatus: { type: "string", required: true },
+    stockCommitStatus: { type: "string", required: true },
     items: { type: "array", required: true },
     subtotal: { type: "number", required: true },
     discountTotal: { type: "number", required: true },
@@ -118,6 +139,7 @@ export function createOrder(input = {}) {
             ORDER_PAYMENT_STATUSES
         ),
         orderStatus: normalizeEnumValue(input.orderStatus, "orderStatus", ORDER_STATUSES),
+        stockCommitStatus: normalizeStockCommitStatus(input),
         items: Array.isArray(input.items)
             ? input.items.map((item) => createOrderItem(item))
             : [],

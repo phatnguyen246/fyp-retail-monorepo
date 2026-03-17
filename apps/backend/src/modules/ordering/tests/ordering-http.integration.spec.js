@@ -10,6 +10,7 @@ import {
 import { createCart } from "../../cart/models/index.js";
 import { createInventoryRecord } from "../../inventory/models/index.js";
 import { createOrder } from "../models/index.js";
+import { createPayment } from "../../payment/models/index.js";
 
 const CUSTOMER_ACCOUNT_ID = "acc_customer_1";
 const OTHER_CUSTOMER_ACCOUNT_ID = "acc_customer_2";
@@ -120,6 +121,7 @@ function createBaseState() {
         ],
         carts: [],
         orders: [],
+        payments: [],
         accounts: [],
     };
 }
@@ -182,7 +184,10 @@ function createOrderFixture({
     orderId = new ObjectId(),
     accountId = CUSTOMER_ACCOUNT_ID,
     orderCode = "ORD-20260316-000001",
+    paymentMethod = "cod",
+    paymentStatus = "pending",
     orderStatus = "pending",
+    stockCommitStatus,
     items,
     createdAt = BASE_TIMESTAMP,
     updatedAt = BASE_TIMESTAMP,
@@ -211,9 +216,12 @@ function createOrderFixture({
         accountId,
         phoneNumber: "0900000000",
         shippingAddressLine: "123 Test Street",
-        paymentMethod: "cod",
-        paymentStatus: "pending",
+        paymentMethod,
+        paymentStatus,
         orderStatus,
+        stockCommitStatus:
+            stockCommitStatus ??
+            (paymentMethod === "cod" ? "committed" : "not_committed"),
         items: resolvedItems,
         subtotal,
         discountTotal: 0,
@@ -233,8 +241,9 @@ function createOrderFixture({
 }
 
 function createInMemoryDb(seedState) {
+    const { __options = {}, ...collectionsState } = seedState;
     const collections = new Map(
-        Object.entries(seedState).map(([name, documents]) => [name, [...documents]])
+        Object.entries(collectionsState).map(([name, documents]) => [name, [...documents]])
     );
 
     function getCollection(name) {
@@ -260,6 +269,10 @@ function createInMemoryDb(seedState) {
                     throw error;
                 }
 
+                if (name === "payments" && __options.failPaymentInsert === true) {
+                    throw new Error("Payment insert failed");
+                }
+
                 documents.push(document);
 
                 return {
@@ -270,6 +283,25 @@ function createInMemoryDb(seedState) {
             findOne: async (filter) =>
                 documents.find((document) => matchesFilter(document, filter)) ?? null,
             find: (filter = {}) => createCursor(documents, filter),
+            deleteOne: async (filter) => {
+                const index = documents.findIndex((document) =>
+                    matchesFilter(document, filter)
+                );
+
+                if (index === -1) {
+                    return {
+                        acknowledged: true,
+                        deletedCount: 0,
+                    };
+                }
+
+                documents.splice(index, 1);
+
+                return {
+                    acknowledged: true,
+                    deletedCount: 1,
+                };
+            },
             updateOne: async (filter, update, options = {}) => {
                 const index = documents.findIndex((document) =>
                     matchesFilter(document, filter)
@@ -588,6 +620,13 @@ describe("ordering http integration", () => {
             "65f000000000000000000703"
         );
         expect(inventoryRecords[0].stockQuantity).toBe(3);
+        expect(runningServer.db.getState().get("payments")).toHaveLength(1);
+        expect(runningServer.db.getState().get("payments")[0]).toMatchObject({
+            orderCode: body.data.orderCode,
+            paymentMethod: "cod",
+            provider: "internal",
+            status: "pending",
+        });
     });
 
     it("creates a guest order and lets the guest fetch detail by order id", async () => {
@@ -621,6 +660,46 @@ describe("ordering http integration", () => {
             accountId: null,
             orderStatus: "pending",
         });
+    });
+
+    it("creates a VNPAY order without deducting stock during checkout", async () => {
+        runningServer = await startServer(createCustomerCartState());
+
+        const response = await fetch(`${runningServer.url}/orders`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                cookie: CUSTOMER_AUTH_COOKIE,
+            },
+            body: JSON.stringify({
+                cartVariantIds: ["65f000000000000000000702"],
+                phoneNumber: "0900111222",
+                shippingAddressLine: "1 Customer Street",
+                paymentMethod: "vnpay",
+            }),
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(201);
+        expect(body.data).toMatchObject({
+            accountId: CUSTOMER_ACCOUNT_ID,
+            paymentMethod: "vnpay",
+            paymentStatus: "pending",
+            orderStatus: "pending",
+        });
+
+        const payments = runningServer.db.getState().get("payments");
+        const inventoryRecords = runningServer.db.getState().get("inventoryRecords");
+
+        expect(payments).toHaveLength(1);
+        expect(payments[0]).toMatchObject({
+            orderCode: body.data.orderCode,
+            paymentMethod: "vnpay",
+            provider: "vnpay",
+            status: "pending",
+            providerTxnRef: payments[0].paymentCode,
+        });
+        expect(inventoryRecords[0].stockQuantity).toBe(5);
     });
 
     it("fails order creation when a checkout item becomes invalid", async () => {
@@ -802,6 +881,60 @@ describe("ordering http integration", () => {
         expect(runningServer.db.getState().get("inventoryRecords")[0].stockQuantity).toBe(5);
     });
 
+    it("cancels an unpaid VNPAY order without restocking inventory", async () => {
+        const state = createBaseState();
+        const orderId = new ObjectId("65f000000000000000000721");
+        const orderCode = "ORD-20260316-141414";
+
+        state.orders = [
+            createOrderFixture({
+                orderId,
+                accountId: CUSTOMER_ACCOUNT_ID,
+                orderCode,
+                paymentMethod: "vnpay",
+                paymentStatus: "pending",
+                stockCommitStatus: "not_committed",
+            }),
+        ];
+        state.payments = [
+            createPayment({
+                _id: new ObjectId("65f000000000000000000723"),
+                paymentCode: "PAY-20260316-141414",
+                orderId,
+                orderCode,
+                paymentMethod: "vnpay",
+                provider: "vnpay",
+                amount: 39980000,
+                currency: "VND",
+                status: "pending",
+                providerTxnRef: "PAY-20260316-141414",
+                orderInfo: "Thanh toan don hang ORD 20260316 141414",
+                createdAt: BASE_TIMESTAMP,
+                updatedAt: BASE_TIMESTAMP,
+            }),
+        ];
+        runningServer = await startServer(state);
+
+        const response = await fetch(
+            `${runningServer.url}/orders/65f000000000000000000721/cancel`,
+            {
+                method: "POST",
+                headers: {
+                    cookie: CUSTOMER_AUTH_COOKIE,
+                },
+            }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toMatchObject({
+            orderStatus: "cancelled",
+            paymentStatus: "cancelled",
+        });
+        expect(runningServer.db.getState().get("inventoryRecords")[0].stockQuantity).toBe(5);
+        expect(runningServer.db.getState().get("payments")[0].status).toBe("cancelled");
+    });
+
     it("rejects cancellation for completed orders", async () => {
         const state = createBaseState();
 
@@ -933,6 +1066,72 @@ describe("ordering http integration", () => {
 
         expect(invalidResponse.status).toBe(409);
         expect(invalidBody.code).toBe("ORDER_STATUS_TRANSITION_INVALID");
+    });
+
+    it("rejects admin confirmation for unpaid VNPAY orders", async () => {
+        const state = createBaseState();
+
+        state.orders = [
+            createOrderFixture({
+                orderId: new ObjectId("65f000000000000000000722"),
+                accountId: CUSTOMER_ACCOUNT_ID,
+                orderCode: "ORD-20260316-151515",
+                paymentMethod: "vnpay",
+                paymentStatus: "pending",
+                stockCommitStatus: "not_committed",
+            }),
+        ];
+        runningServer = await startServer(state);
+
+        const response = await fetch(
+            `${runningServer.url}/admin/orders/65f000000000000000000722/status`,
+            {
+                method: "PATCH",
+                headers: {
+                    "content-type": "application/json",
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
+                body: JSON.stringify({
+                    orderStatus: "confirmed",
+                }),
+            }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(409);
+        expect(body.code).toBe("ORDER_STATUS_TRANSITION_INVALID");
+        expect(body.meta).toMatchObject({
+            paymentMethod: "vnpay",
+            paymentStatus: "pending",
+        });
+    });
+
+    it("rolls back order creation when initial payment persistence fails", async () => {
+        const state = createCustomerCartState();
+        state.__options = {
+            failPaymentInsert: true,
+        };
+        runningServer = await startServer(state);
+
+        const response = await fetch(`${runningServer.url}/orders`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                cookie: CUSTOMER_AUTH_COOKIE,
+            },
+            body: JSON.stringify({
+                cartVariantIds: ["65f000000000000000000702"],
+                phoneNumber: "0900111222",
+                shippingAddressLine: "1 Customer Street",
+            }),
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(body.code).toBe("INTERNAL_ERROR");
+        expect(runningServer.db.getState().get("orders")).toHaveLength(0);
+        expect(runningServer.db.getState().get("payments")).toHaveLength(0);
+        expect(runningServer.db.getState().get("inventoryRecords")[0].stockQuantity).toBe(5);
     });
 
     it("enforces ownership on customer order detail", async () => {

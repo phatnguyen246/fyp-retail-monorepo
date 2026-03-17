@@ -10,6 +10,7 @@
     "db:setup:catalog": "node src/modules/catalog/seeds/setup-catalog-indexes.js",
     "db:setup:cart": "node src/modules/cart/seeds/setup-cart-indexes.js",
     "db:setup:inventory": "node src/modules/inventory/seeds/setup-inventory-indexes.js",
+    "db:setup:payment": "node src/modules/payment/seeds/setup-payment-indexes.js",
     "db:setup:ordering": "node src/modules/ordering/seeds/setup-ordering-indexes.js",
     "seed:account:admin": "pnpm run db:setup:account && node src/modules/account/seeds/seed-admin-account.js",
     "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js"

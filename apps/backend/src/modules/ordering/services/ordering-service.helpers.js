@@ -179,6 +179,7 @@ export function createPendingOrderDocument({
     phoneNumber,
     shippingAddressLine,
     paymentMethod = "cod",
+    stockCommitStatus = paymentMethod === "cod" ? "committed" : "not_committed",
     items = [],
     requester,
     timestamp = new Date(),
@@ -197,6 +198,7 @@ export function createPendingOrderDocument({
         paymentMethod,
         paymentStatus: "pending",
         orderStatus: "pending",
+        stockCommitStatus,
         items,
         subtotal,
         discountTotal: 0,
@@ -382,6 +384,19 @@ export function assertOrderCancelable(order) {
 }
 
 export function assertAdminStatusTransition({ order, toStatus } = {}) {
+    if (order?.paymentMethod === "vnpay" && order?.paymentStatus !== "paid") {
+        throw createOrderStatusTransitionError(
+            `Cannot transition unpaid VNPAY order from ${order?.orderStatus ?? "unknown"} to ${toStatus}`,
+            {
+                orderId: toIdString(order?._id),
+                fromStatus: order?.orderStatus ?? null,
+                toStatus,
+                paymentStatus: order?.paymentStatus ?? null,
+                paymentMethod: order?.paymentMethod ?? null,
+            }
+        );
+    }
+
     if (order?.orderStatus === "pending" && toStatus === "confirmed") {
         return;
     }

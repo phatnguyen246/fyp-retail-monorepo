@@ -22,6 +22,15 @@ export function createOrderRepository({
             });
         },
 
+        findOrderByCode({ orderCode, projection } = {}) {
+            return baseRepository.findOneByField({
+                collectionName: ORDER_COLLECTIONS.orders,
+                fieldName: "orderCode",
+                value: orderCode,
+                projection,
+            });
+        },
+
         findOrdersByFilter({ filter = {}, projection, sort, limit } = {}) {
             return baseRepository.findManyByFilter({
                 collectionName: ORDER_COLLECTIONS.orders,
@@ -46,6 +55,14 @@ export function createOrderRepository({
                 collectionName: ORDER_COLLECTIONS.orders,
                 id: orderId,
                 update,
+                options,
+            });
+        },
+
+        deleteOrderById({ orderId, options } = {}) {
+            return baseRepository.deleteOneById({
+                collectionName: ORDER_COLLECTIONS.orders,
+                id: orderId,
                 options,
             });
         },

@@ -3,7 +3,11 @@ import { createOrderingCatalogAdapter } from "./catalog/index.js";
 import { createOrderingInventoryAdapter } from "./inventory/index.js";
 import { createOrderingPersistence } from "./persistence/index.js";
 
-export function createOrderingAdapters({ db, cartOrderReader } = {}) {
+export function createOrderingAdapters({
+    db,
+    cartOrderReader,
+    paymentCheckoutAdapter,
+} = {}) {
     const persistence = createOrderingPersistence({ db });
 
     return {
@@ -12,6 +16,7 @@ export function createOrderingAdapters({ db, cartOrderReader } = {}) {
         }),
         catalog: createOrderingCatalogAdapter({ db }),
         inventory: createOrderingInventoryAdapter({ db }),
+        payment: paymentCheckoutAdapter ?? null,
         persistence,
     };
 }

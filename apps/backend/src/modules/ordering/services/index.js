@@ -27,6 +27,14 @@ export function createOrderingServices({
     const cartAdapter = adapters?.cart;
     const catalogAdapter = adapters?.catalog;
     const inventoryAdapter = adapters?.inventory;
+    const paymentCheckoutAdapter = adapters?.payment ?? {
+        async createInitialPaymentForOrder() {
+            return null;
+        },
+        async markPendingPaymentCancelled() {
+            return null;
+        },
+    };
     const orderRepository = adapters?.persistence?.orderRepository;
 
     return {
@@ -38,6 +46,7 @@ export function createOrderingServices({
             catalogAdapter,
             inventoryAdapter,
             orderRepository,
+            paymentCheckoutAdapter,
             validation,
             logger,
         }),
@@ -51,6 +60,7 @@ export function createOrderingServices({
         cancelCustomerOrder: createCancelCustomerOrderService({
             inventoryAdapter,
             orderRepository,
+            paymentCheckoutAdapter,
             validation,
             logger,
         }),
@@ -68,6 +78,7 @@ export function createOrderingServices({
         cancelAdminOrder: createCancelAdminOrderService({
             inventoryAdapter,
             orderRepository,
+            paymentCheckoutAdapter,
             validation,
             logger,
         }),

@@ -10,6 +10,7 @@ import {
 export function createCancelAdminOrderService({
     inventoryAdapter,
     orderRepository,
+    paymentCheckoutAdapter,
     validation,
     logger = console,
 } = {}) {
@@ -25,37 +26,47 @@ export function createCancelAdminOrderService({
         assertOrderCancelable(assertOrderExists(order, parsedParams.orderId));
 
         const restockedItems = [];
+        const shouldRestock = order?.stockCommitStatus === "committed";
 
         try {
-            for (const item of order.items ?? []) {
-                try {
-                    await inventoryAdapter.incrementStockQuantityByVariantId({
-                        variantId: item.variantId,
-                        quantity: item.quantity,
-                    });
-                    restockedItems.push({
-                        variantId: item.variantId.toHexString(),
-                        quantity: item.quantity,
-                    });
-                } catch (error) {
-                    if (error?.stockAdjusted === true) {
+            if (shouldRestock) {
+                for (const item of order.items ?? []) {
+                    try {
+                        await inventoryAdapter.incrementStockQuantityByVariantId({
+                            variantId: item.variantId,
+                            quantity: item.quantity,
+                        });
                         restockedItems.push({
                             variantId: item.variantId.toHexString(),
                             quantity: item.quantity,
                         });
-                    }
+                    } catch (error) {
+                        if (error?.stockAdjusted === true) {
+                            restockedItems.push({
+                                variantId: item.variantId.toHexString(),
+                                quantity: item.quantity,
+                            });
+                        }
 
-                    throw error;
+                        throw error;
+                    }
                 }
             }
 
             const timestamp = new Date();
+            const nextPaymentStatus =
+                order.paymentStatus === "paid" ? "paid" : "cancelled";
+            const nextStockCommitStatus = shouldRestock
+                ? "released"
+                : order.stockCommitStatus ?? "not_committed";
 
             await orderRepository.updateOrderByIdWithOperators({
                 orderId: parsedParams.orderId,
                 update: {
                     $set: {
                         orderStatus: "cancelled",
+                        paymentStatus: nextPaymentStatus,
+                        stockCommitStatus: nextStockCommitStatus,
                         updatedAt: timestamp,
                     },
                     $push: {
@@ -80,6 +91,22 @@ export function createCancelAdminOrderService({
         const updatedOrder = await orderRepository.findOrderById({
             orderId: parsedParams.orderId,
         });
+
+        if (updatedOrder.paymentStatus === "cancelled") {
+            try {
+                await paymentCheckoutAdapter.markPendingPaymentCancelled({
+                    orderId: updatedOrder._id,
+                });
+            } catch (error) {
+                logger.error?.("Failed to cancel pending payment record after admin order cancellation", {
+                    orderId: updatedOrder._id.toHexString(),
+                    error: {
+                        message: error?.message ?? "Unknown error",
+                        code: error?.code ?? null,
+                    },
+                });
+            }
+        }
 
         return createOrderDetailView(updatedOrder);
     };

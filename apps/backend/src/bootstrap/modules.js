@@ -6,6 +6,7 @@ import { createCartServices } from "../modules/cart/services/index.js";
 import { registerCatalogModule } from "../modules/catalog/index.js";
 import { registerInventoryModule } from "../modules/inventory/index.js";
 import { registerOrderingModule } from "../modules/ordering/api/register.js";
+import { registerPaymentModule } from "../modules/payment/index.js";
 
 export function registerModules({ app, db, storage }) {
     const account = registerAccountModule({ db });
@@ -38,10 +39,15 @@ export function registerModules({ app, db, storage }) {
         db,
         adminMiddleware: auth.middlewares.requireAdmin,
     });
+    const payment = registerPaymentModule({
+        app,
+        db,
+    });
     const ordering = registerOrderingModule({
         app,
         db,
         cartOrderReader: cartAdapters?.internal?.orderReader,
+        paymentCheckoutAdapter: payment?.adapters?.checkout,
         requireAuthMiddleware: auth.middlewares.requireAuth,
         adminMiddleware: auth.middlewares.requireAdmin,
     });
@@ -52,6 +58,7 @@ export function registerModules({ app, db, storage }) {
         cart,
         catalog,
         inventory,
+        payment,
         ordering,
     };
 }

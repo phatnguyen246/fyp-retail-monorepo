@@ -1,9 +1,9 @@
 import { toObjectId } from "../../utils/object-id.js";
 
-export function createOrderingBaseRepository({ db } = {}) {
+export function createPaymentBaseRepository({ db } = {}) {
     function getCollection(collectionName) {
         if (!db) {
-            throw new Error("Ordering persistence requires a database instance");
+            throw new Error("Payment persistence requires a database instance");
         }
 
         return db.collection(collectionName);
@@ -88,13 +88,6 @@ export function createOrderingBaseRepository({ db } = {}) {
             return getCollection(collectionName).updateOne(
                 { _id: toObjectId(id, "_id") },
                 update,
-                options
-            );
-        },
-
-        deleteOneById({ collectionName, id, options } = {}) {
-            return getCollection(collectionName).deleteOne(
-                { _id: toObjectId(id, "_id") },
                 options
             );
         },
