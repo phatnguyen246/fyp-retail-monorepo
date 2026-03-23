@@ -401,7 +401,7 @@ GET /catalog/products?brand=APPLE&ram=12GB&rom=256GB&color=Blue
 
 Lưu ý nghiệp vụ:
 
-- storefront luôn chỉ trả product có `status = active`, `isDeleted != true`, `hasActiveVariants = true`
+- storefront listing luôn chỉ trả product có `status = active`, `isDeleted != true`, `hasActiveVariants = true`
 - `tags` dùng AND semantics, tức product phải có đủ tất cả tag được gửi lên
 - bộ lọc `ram`, `rom`, `color` dùng same-variant semantics, tức cùng một variant phải match đồng thời các điều kiện đó
 - nếu vừa truyền alias vừa truyền canonical name, giá trị phải giống nhau:
@@ -413,8 +413,8 @@ Lưu ý nghiệp vụ:
 Ghi chú implementation hiện tại:
 
 - schema vẫn chấp nhận `status` và `includeDeleted`,
-- nhưng service storefront hiện không dùng hai field này,
-- vì vậy kết quả vẫn luôn bị ép về `active + non-deleted + hasActiveVariants`.
+- nhưng service storefront hiện không cho caller override visibility thật sự,
+- `GET /catalog/products` luôn bị ép về `active + non-deleted + hasActiveVariants`.
 
 Success response mẫu:
 
@@ -426,6 +426,7 @@ Success response mẫu:
       "productId": "65f000000000000000000006",
       "title": "iPhone 16",
       "slug": "iphone-16",
+      "status": "active",
       "productType": "smartphone",
       "shortDescription": "Apple smartphone",
       "badges": ["new"],
@@ -497,6 +498,13 @@ Success response mẫu:
 
 Search storefront. Query schema giống `GET /catalog/products` nhưng bắt buộc phải có `q` hoặc `keyword`.
 
+Lưu ý visibility hiện tại:
+
+- search vẫn loại soft-deleted product
+- search chỉ trả product có `hasActiveVariants = true`
+- ngoài `active`, search cũng có thể trả product `discontinued`
+- đây là điểm khác với `GET /catalog/products`, vì listing storefront không trả `discontinued`
+
 Ví dụ:
 
 ```http
@@ -508,6 +516,21 @@ Nếu thiếu keyword:
 - trả `422 VALIDATION_ERROR`
 
 Response shape giống `GET /catalog/products`.
+
+Trong response item hiện tại có thêm:
+
+- `status`
+
+Ví dụ item search có thể là:
+
+```json
+{
+  "id": "65f0000000000000000000b1",
+  "title": "Điện thoại Samsung S24",
+  "slug": "dien-thoai-samsung-s24",
+  "status": "discontinued"
+}
+```
 
 ### 4. `GET /catalog/products/:productId`
 
@@ -537,6 +560,12 @@ Lưu ý:
 - dù slug sai vẫn có thể trả `200` nếu `productId` tồn tại và product visible,
 - `meta.canonicalSlug` luôn trả slug chuẩn để frontend tự redirect nếu muốn.
 
+Visibility detail hiện tại:
+
+- detail vẫn cho `active` như trước,
+- detail cũng cho `discontinued` nếu product không soft-deleted và vẫn còn `active` variants,
+- detail vẫn reject `draft`, `inactive`, soft-deleted, hoặc product không còn active variants.
+
 Success response mẫu:
 
 ```json
@@ -546,6 +575,7 @@ Success response mẫu:
     "productId": "65f000000000000000000006",
     "title": "iPhone 16",
     "slug": "iphone-16",
+    "status": "active",
     "productType": "smartphone",
     "shortDescription": "Apple smartphone",
     "longDescription": "Apple smartphone long description",
@@ -1151,17 +1181,43 @@ Response hiện tại là raw media metadata của record vừa bị xóa.
 
 ## Ghi chú nghiệp vụ quan trọng
 
-### 1. Storefront chỉ hiển thị product visible
+### 1. Storefront visibility không hoàn toàn giống nhau giữa list/search/detail
 
-Storefront `list`, `search`, `detail`, `compare` chỉ làm việc với product:
+#### Listing storefront
+
+`GET /catalog/products` chỉ làm việc với product:
 
 - `status = active`
 - `isDeleted != true`
 - `hasActiveVariants = true`
 
-Nên:
+#### Search storefront
 
-- product `draft`, `inactive`, `discontinued`, `soft deleted` sẽ không hiện ra ngoài storefront.
+`GET /catalog/search` làm việc với product:
+
+- `status = active` hoặc `status = discontinued`
+- `isDeleted != true`
+- `hasActiveVariants = true`
+
+#### Detail storefront
+
+`GET /catalog/products/:productId` và `GET /catalog/products/:productId/:slug` hiện cho phép:
+
+- `active`
+- `discontinued` nếu product vẫn còn `active` variants
+
+#### Compare storefront
+
+`POST /catalog/compare` vẫn giữ rule bảo thủ hơn:
+
+- chỉ chấp nhận product storefront-visible theo rule `active`
+
+Tóm lại:
+
+- `draft`, `inactive`, `soft deleted` vẫn không hiện ra ngoài storefront
+- `discontinued` không xuất hiện ở listing storefront thông thường
+- `discontinued` có thể xuất hiện qua search
+- product `discontinued` tìm thấy qua search vẫn có thể mở detail nếu còn active variants
 
 ### 2. Default variant của storefront là live decision
 
