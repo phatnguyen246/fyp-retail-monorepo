@@ -6,6 +6,7 @@ This note documents the MongoDB indexes that support the current catalog query p
 
 | Query pattern | Collection | Supporting index | Reason |
 | --- | --- | --- | --- |
+| Admin product list filtered by soft-delete, status, and sorted by `createdAt` | `products` | `products_admin_deleted_status_created_at` | Supports the admin product list default filter and stable newest-first ordering. |
 | Admin product detail, update, soft delete by `_id` | `products` | MongoDB default `_id` index | Primary key lookup for admin CRUD flows. |
 | Duplicate check or import-style lookup by `productGroupCode` | `products` | `products_product_group_code_unique` | Supports unique business-key reads and writes. |
 | Duplicate check or lookup by `sku` | `variants` | `variants_sku_unique` | Supports unique business-key reads and writes. |
