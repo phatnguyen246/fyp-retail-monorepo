@@ -9,6 +9,7 @@ export function createCatalogAdminRouter({
 }) {
     const router = express.Router();
 
+    router.get("/products", controller.listAdminProducts);
     router.post("/products", controller.createProduct);
     router.post("/products/import", importUploadMiddleware, controller.importProducts);
     router.post("/products/:productId/clone", controller.cloneProduct);

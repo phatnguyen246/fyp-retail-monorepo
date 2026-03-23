@@ -7,6 +7,17 @@ export function createCatalogAdminController({ services }) {
     return {
         ...legacyController,
 
+        async listAdminProducts(req, res) {
+            const result = await services.listAdminProducts({
+                query: req.query,
+            });
+
+            return sendCatalogSuccess(res, {
+                data: result.data,
+                meta: result.meta,
+            });
+        },
+
         async createProduct(req, res) {
             const product = await services.createProduct({
                 input: req.body,

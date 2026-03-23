@@ -3,6 +3,10 @@ import {
     parseCompareProductsInput,
 } from "./compare-products.schema.js";
 import {
+    ADMIN_LIST_PRODUCTS_QUERY_SCHEMA,
+    parseAdminListProductsQuery,
+} from "./admin-list-products.schema.js";
+import {
     ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
     parseAdminCreateVariantInput,
 } from "./admin-create-variant.schema.js";
@@ -90,6 +94,10 @@ export {
     COMPARE_PRODUCTS_INPUT_SCHEMA,
     parseCompareProductsInput,
 } from "./compare-products.schema.js";
+export {
+    ADMIN_LIST_PRODUCTS_QUERY_SCHEMA,
+    parseAdminListProductsQuery,
+} from "./admin-list-products.schema.js";
 export {
     ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
     parseAdminCreateVariantInput,
@@ -180,6 +188,7 @@ export function createCatalogValidation() {
             return { ok: true };
         },
         compareProductsSchema: COMPARE_PRODUCTS_INPUT_SCHEMA,
+        adminListProductsSchema: ADMIN_LIST_PRODUCTS_QUERY_SCHEMA,
         adminCreateVariantSchema: ADMIN_CREATE_VARIANT_INPUT_SCHEMA,
         cloneProductSchema: CLONE_PRODUCT_INPUT_SCHEMA,
         createProductSchema: CREATE_PRODUCT_INPUT_SCHEMA,
@@ -201,6 +210,7 @@ export function createCatalogValidation() {
         variantAttributesSchema: VARIANT_ATTRIBUTES_INPUT_SCHEMA,
         variantVideoSchema: VARIANT_VIDEO_INPUT_SCHEMA,
         parseCompareProductsInput,
+        parseAdminListProductsQuery,
         parseAdminCreateVariantInput,
         parseCloneProductInput,
         parseCreateProductInput,

@@ -52,6 +52,11 @@ const NON_UNIQUE_INDEX_DEFINITIONS = [
     },
     {
         collectionName: CATALOG_COLLECTIONS.products,
+        key: { isDeleted: 1, status: 1, createdAt: -1, _id: -1 },
+        indexName: "products_admin_deleted_status_created_at",
+    },
+    {
+        collectionName: CATALOG_COLLECTIONS.products,
         key: { isDeleted: 1, status: 1, hasActiveVariants: 1, createdAt: -1, _id: -1 },
         indexName: "products_storefront_visibility_created_at",
     },

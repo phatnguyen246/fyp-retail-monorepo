@@ -9,6 +9,7 @@ import { createCompareProductsService } from "./compare-products.service.js";
 import { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
 import { createGetProductDetailStorefrontService } from "./get-product-detail-storefront.service.js";
 import { createImportProductsService } from "./import-products.service.js";
+import { createListAdminProductsService } from "./list-admin-products.service.js";
 import { createListProductsService } from "./list-products.service.js";
 import { createListVariantImagesService } from "./list-variant-images.service.js";
 import { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
@@ -27,6 +28,7 @@ export { createCompareProductsService } from "./compare-products.service.js";
 export { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
 export { createGetProductDetailStorefrontService } from "./get-product-detail-storefront.service.js";
 export { createImportProductsService } from "./import-products.service.js";
+export { createListAdminProductsService } from "./list-admin-products.service.js";
 export { createListProductsService } from "./list-products.service.js";
 export { createListVariantImagesService } from "./list-variant-images.service.js";
 export { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
@@ -92,6 +94,11 @@ export function createCatalogServices({
             variantRepository,
             validation,
             logger,
+        }),
+        listAdminProducts: createListAdminProductsService({
+            productRepository,
+            referenceRepository,
+            validation,
         }),
         createProduct: createCreateProductService({
             productRepository,
