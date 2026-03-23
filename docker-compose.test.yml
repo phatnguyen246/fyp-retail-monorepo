@@ -1,0 +1,6 @@
+services:
+  backend:
+    env_file:
+      - ./apps/backend/.env.test.example
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/fyp-retail-system-test

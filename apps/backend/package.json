@@ -6,6 +6,8 @@
     "dev": "nodemon index.js",
     "test": "vitest run",
     "dev:test": "pnpm test && pnpm dev",
+    "e2e:vnpay:checkout": "node scripts/e2e-vnpay-checkout.js",
+    "storage:check": "node src/bootstrap/check-storage.js",
     "db:setup:account": "node src/modules/account/seeds/setup-account-indexes.js",
     "db:setup:catalog": "node src/modules/catalog/seeds/setup-catalog-indexes.js",
     "db:setup:cart": "node src/modules/cart/seeds/setup-cart-indexes.js",
@@ -13,7 +15,8 @@
     "db:setup:payment": "node src/modules/payment/seeds/setup-payment-indexes.js",
     "db:setup:ordering": "node src/modules/ordering/seeds/setup-ordering-indexes.js",
     "seed:account:admin": "pnpm run db:setup:account && node src/modules/account/seeds/seed-admin-account.js",
-    "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js"
+    "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js",
+    "seed:e2e:vnpay": "node src/modules/catalog/seeds/seed-e2e-vnpay.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.11",

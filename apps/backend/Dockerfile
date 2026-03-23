@@ -11,7 +11,7 @@ COPY apps/frontend/package.json apps/frontend/package.json
 
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+COPY apps/backend apps/backend
 
 EXPOSE 3000
 

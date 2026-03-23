@@ -7,7 +7,8 @@
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "backend:storage:check": "pnpm --filter @apps/backend run storage:check"
   },
   "keywords": [],
   "author": "",
