@@ -21,4 +21,4 @@ export const DEFAULT_PAYMENT_CURRENCY = "VND";
 export const DEFAULT_VNPAY_VERSION = "2.1.0";
 export const DEFAULT_VNPAY_LOCALE = "vn";
 export const DEFAULT_VNPAY_ORDER_TYPE = "other";
-export const DEFAULT_VNPAY_EXPIRE_MINUTES = 15;
+export const DEFAULT_VNPAY_EXPIRE_MINUTES = 60;

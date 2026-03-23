@@ -501,7 +501,8 @@ function signVnpayPayload(payload) {
             return result;
         }, {});
     const signData = qs.stringify(sorted, {
-        encode: false,
+        encode: true,
+        format: "RFC1738",
     });
     const secureHash = crypto
         .createHmac("sha512", PAYMENT_ENV.VNP_HASH_SECRET)

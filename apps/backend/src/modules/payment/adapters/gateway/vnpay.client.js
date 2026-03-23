@@ -1,6 +1,11 @@
 import crypto from "node:crypto";
 import qs from "qs";
 
+const VNPAY_QS_OPTIONS = Object.freeze({
+    encode: true,
+    format: "RFC1738",
+});
+
 function sortObject(input = {}) {
     const sorted = {};
     const keys = Object.keys(input).sort();
@@ -58,14 +63,12 @@ export function createVnpayPaymentUrl({
 
     params = sortObject(params);
 
-    const signData = qs.stringify(params, {
-        encode: false,
-    });
+    const signData = qs.stringify(params, VNPAY_QS_OPTIONS);
     const secureHash = hmacSha512(hashSecret, signData);
 
     params.vnp_SecureHash = secureHash;
 
-    return `${paymentUrl}?${qs.stringify(params, { encode: false })}`;
+    return `${paymentUrl}?${qs.stringify(params, VNPAY_QS_OPTIONS)}`;
 }
 
 export function verifyVnpayCallback(query = {}, hashSecret) {
@@ -76,9 +79,7 @@ export function verifyVnpayCallback(query = {}, hashSecret) {
     delete payload.vnp_SecureHashType;
 
     const sortedPayload = sortObject(payload);
-    const signData = qs.stringify(sortedPayload, {
-        encode: false,
-    });
+    const signData = qs.stringify(sortedPayload, VNPAY_QS_OPTIONS);
     const calculatedHash = hmacSha512(hashSecret, signData);
 
     return {
