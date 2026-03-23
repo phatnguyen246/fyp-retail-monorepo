@@ -689,5 +689,5 @@ docker compose exec backend pnpm --filter @apps/backend test -- --reporter=verbo
 
 ## Liên hệ tài liệu khác
 
-- [auth-api.md](./auth-api.md)
-- [ordering-api-guide.md](./ordering-api-guide.md)
+- [auth/docs/api.md](../../auth/docs/api.md)
+- [ordering/docs/api.md](../../ordering/docs/api.md)

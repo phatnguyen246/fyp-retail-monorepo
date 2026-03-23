@@ -180,7 +180,7 @@ Nếu dùng `vnpay`, hãy coi `payment module` là dependency bắt buộc trong
 
 Để flow `vnpay` hoạt động đầy đủ, backend còn cần cấu hình môi trường VNPAY ở `payment module`. Xem thêm:
 
-- [payment-api-guide.md](./payment-api-guide.md)
+- [payment/docs/api.md](../../payment/docs/api.md)
 
 ### 7. Điều kiện về trạng thái
 
@@ -901,7 +901,7 @@ Thực tế sử dụng:
 
 Chi tiết đầy đủ xem thêm:
 
-- [payment-api-guide.md](./payment-api-guide.md)
+- [payment/docs/api.md](../../payment/docs/api.md)
 
 ## Checklist nhanh khi API không chạy được
 
