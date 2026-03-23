@@ -2,6 +2,14 @@ import { filterActiveCatalogVariants } from "../utils/filter-active-catalog-vari
 import { resolveDefaultSelectedVariant } from "../utils/resolve-default-selected-variant.js";
 import { createCatalogNotFoundError } from "./catalog-service.errors.js";
 
+export const DEFAULT_STOREFRONT_VISIBLE_PRODUCT_STATUSES = Object.freeze([
+    "active",
+]);
+export const SEARCH_STOREFRONT_VISIBLE_PRODUCT_STATUSES = Object.freeze([
+    "active",
+    "discontinued",
+]);
+
 function toIdString(value) {
     if (value && typeof value.toHexString === "function") {
         return value.toHexString();
@@ -180,10 +188,33 @@ function mapVariantSummary(variant, mediaByVariantId = new Map()) {
     };
 }
 
-export function assertStorefrontProductVisible(product, { productId } = {}) {
+export function createStorefrontProductVisibilityFilter({
+    allowedStatuses = DEFAULT_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
+} = {}) {
+    return {
+        status:
+            allowedStatuses.length === 1
+                ? allowedStatuses[0]
+                : {
+                      $in: allowedStatuses,
+                  },
+        isDeleted: {
+            $ne: true,
+        },
+        hasActiveVariants: true,
+    };
+}
+
+export function assertStorefrontProductVisible(
+    product,
+    {
+        productId,
+        allowedStatuses = DEFAULT_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
+    } = {}
+) {
     if (
         !product ||
-        product.status !== "active" ||
+        !allowedStatuses.includes(product.status) ||
         product.isDeleted === true ||
         product.hasActiveVariants !== true
     ) {
@@ -270,6 +301,7 @@ export function buildStorefrontListItem({
     variants = [],
     mediaByVariantId = new Map(),
     hasInStockVariants = product?.hasInStockVariants === true,
+    includeStatus = true,
 } = {}) {
     const activeVariants = [...filterActiveCatalogVariants(variants)].sort(
         sortVariantsForStorefront
@@ -281,6 +313,7 @@ export function buildStorefrontListItem({
         productId: toIdString(product._id),
         title: product.title,
         slug: product.slug,
+        ...(includeStatus ? { status: product.status } : {}),
         productType: product.productType,
         shortDescription: product.shortDescription,
         badges: product.badges,
@@ -326,6 +359,7 @@ export function buildStorefrontProductDetail({
             variants: activeVariants,
             mediaByVariantId,
             hasInStockVariants,
+            includeStatus: true,
         }),
         longDescription: product.longDescription,
         specs: product.specs,
@@ -357,6 +391,7 @@ export function buildStorefrontCompareItem({
                 references,
                 variants: activeVariants,
                 hasInStockVariants,
+                includeStatus: false,
             }),
             specs: product.specs,
             defaultSelectedVariantId: toIdString(defaultVariant?._id),

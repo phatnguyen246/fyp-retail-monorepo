@@ -1,4 +1,5 @@
 import { createCatalogValidation } from "../validation/index.js";
+import { SEARCH_STOREFRONT_VISIBLE_PRODUCT_STATUSES } from "./catalog-storefront.service-helpers.js";
 import { createStorefrontProductDiscoveryExecutor } from "./list-products.service.js";
 
 export function createSearchProductsService({
@@ -26,6 +27,7 @@ export function createSearchProductsService({
 
         return executeStorefrontProductDiscovery({
             parsedQuery,
+            allowedStatuses: SEARCH_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
         });
     };
 }

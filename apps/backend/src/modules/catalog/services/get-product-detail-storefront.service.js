@@ -4,6 +4,7 @@ import {
     buildStorefrontProductDetail,
     groupMediaByVariantId,
     hydrateStorefrontReferences,
+    SEARCH_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
 } from "./catalog-storefront.service-helpers.js";
 import { hydrateCatalogProductsWithLiveInventory } from "./catalog-live-inventory.helpers.js";
 
@@ -26,6 +27,7 @@ export function createGetProductDetailStorefrontService({
 
         assertStorefrontProductVisible(product, {
             productId: parsedParams.productId,
+            allowedStatuses: SEARCH_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
         });
 
         const [variants, references] = await Promise.all([

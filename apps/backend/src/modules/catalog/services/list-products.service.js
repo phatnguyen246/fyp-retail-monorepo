@@ -3,6 +3,8 @@ import { normalizeSearchTitle } from "../utils/catalog-field-normalizers.js";
 import {
     buildPaginationMeta,
     buildStorefrontListItem,
+    createStorefrontProductVisibilityFilter,
+    DEFAULT_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
     groupMediaByVariantId,
     hydrateStorefrontReferences,
 } from "./catalog-storefront.service-helpers.js";
@@ -16,12 +18,16 @@ export function createStorefrontProductDiscoveryExecutor({
     variantRepository,
     logger = console,
 } = {}) {
-    return async function executeStorefrontProductDiscovery({ parsedQuery } = {}) {
+    return async function executeStorefrontProductDiscovery({
+        parsedQuery,
+        allowedStatuses = DEFAULT_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
+    } = {}) {
         const resolvedFilter = await resolveStorefrontDiscoveryFilter({
             query: parsedQuery,
             productRepository,
             referenceRepository,
             variantRepository,
+            allowedStatuses,
         });
 
         if (resolvedFilter.noMatches) {
@@ -132,14 +138,11 @@ export async function resolveStorefrontDiscoveryFilter({
     productRepository,
     referenceRepository,
     variantRepository,
+    allowedStatuses = DEFAULT_STOREFRONT_VISIBLE_PRODUCT_STATUSES,
 } = {}) {
-    const baseFilter = {
-        status: "active",
-        isDeleted: {
-            $ne: true,
-        },
-        hasActiveVariants: true,
-    };
+    const baseFilter = createStorefrontProductVisibilityFilter({
+        allowedStatuses,
+    });
 
     if (query.productType) {
         baseFilter.productType = query.productType;
