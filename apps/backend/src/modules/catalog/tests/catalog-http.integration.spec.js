@@ -187,6 +187,26 @@ function createCatalogStateWithCompareLiveMismatch() {
     return state;
 }
 
+function createCatalogStateForAdminList() {
+    const state = createCatalogState();
+    const deletedProduct = createProductReadModelFixture({
+        _id: new ObjectId("65f0000000000000000000b0"),
+        productGroupCode: "APPLE_IPHONE_15",
+        title: "iPhone 15",
+        brandId: state.brands[0]._id,
+        categoryId: state.categories[0]._id,
+        status: "inactive",
+        isDeleted: true,
+        deletedAt: new Date("2026-03-12T08:00:00.000Z"),
+        createdAt: new Date("2026-03-12T08:00:00.000Z"),
+        updatedAt: new Date("2026-03-12T08:00:00.000Z"),
+    });
+
+    state.products = [...state.products, deletedProduct];
+
+    return state;
+}
+
 function createCatalogStateForDiscoveryQueries() {
     const state = createCatalogState();
     const category = state.categories[0];
@@ -719,6 +739,106 @@ describe("catalog http integration", () => {
             title: "iPhone 16 Ultra",
             searchTitle: "iphone 16 ultra",
         });
+    });
+
+    it("lists admin products with wrapped responses and status or deleted filters", async () => {
+        runningServer = await startServer(createCatalogStateForAdminList());
+
+        const defaultResponse = await fetch(
+            `${runningServer.url}/admin/catalog/products`,
+            {
+                headers: {
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
+            }
+        );
+        const defaultBody = await defaultResponse.json();
+
+        expect(defaultResponse.status).toBe(200);
+        expect(defaultBody.meta).toMatchObject({
+            page: 1,
+            limit: 20,
+            total: 3,
+            totalPages: 1,
+        });
+        expect(defaultBody.data).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    productGroupCode: "APPLE_IPHONE_16",
+                    status: "active",
+                    isDeleted: false,
+                    brand: expect.objectContaining({
+                        code: "APPLE",
+                    }),
+                    category: expect.objectContaining({
+                        code: "SMARTPHONE",
+                    }),
+                }),
+                expect.objectContaining({
+                    productGroupCode: "APPLE_IPHONE_DRAFT",
+                    status: "draft",
+                    isDeleted: false,
+                }),
+            ])
+        );
+        expect(defaultBody.data).not.toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    productGroupCode: "APPLE_IPHONE_15",
+                }),
+            ])
+        );
+
+        const draftResponse = await fetch(
+            `${runningServer.url}/admin/catalog/products?status=draft`,
+            {
+                headers: {
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
+            }
+        );
+        const draftBody = await draftResponse.json();
+
+        expect(draftResponse.status).toBe(200);
+        expect(draftBody.data).toHaveLength(1);
+        expect(draftBody.data[0]).toMatchObject({
+            productGroupCode: "APPLE_IPHONE_DRAFT",
+            status: "draft",
+            isDeleted: false,
+        });
+
+        const deletedResponse = await fetch(
+            `${runningServer.url}/admin/catalog/products?deleted=true`,
+            {
+                headers: {
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
+            }
+        );
+        const deletedBody = await deletedResponse.json();
+
+        expect(deletedResponse.status).toBe(200);
+        expect(deletedBody.data).toEqual([
+            expect.objectContaining({
+                productGroupCode: "APPLE_IPHONE_15",
+                status: "inactive",
+                isDeleted: true,
+            }),
+        ]);
+
+        const allResponse = await fetch(
+            `${runningServer.url}/admin/catalog/products?deleted=all&sortBy=createdAt&sortOrder=asc`,
+            {
+                headers: {
+                    cookie: ADMIN_AUTH_COOKIE,
+                },
+            }
+        );
+        const allBody = await allResponse.json();
+
+        expect(allResponse.status).toBe(200);
+        expect(allBody.meta.total).toBe(4);
+        expect(allBody.data).toHaveLength(4);
     });
 
     it("returns validation and not-found errors for admin story routes", async () => {

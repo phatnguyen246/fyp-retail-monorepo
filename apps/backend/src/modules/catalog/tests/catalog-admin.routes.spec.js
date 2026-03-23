@@ -27,6 +27,25 @@ async function startServer(controller) {
     };
 }
 
+function createController(overrides = {}) {
+    return {
+        listAdminProducts: vi.fn(),
+        createProduct: vi.fn(),
+        importProducts: vi.fn(),
+        cloneProduct: vi.fn(),
+        getProductDetailAdmin: vi.fn(),
+        updateProduct: vi.fn(),
+        softDeleteProduct: vi.fn(),
+        createVariant: vi.fn(),
+        updateVariant: vi.fn(),
+        softDeleteVariant: vi.fn(),
+        listVariantImages: vi.fn(),
+        deleteVariantImage: vi.fn(),
+        uploadVariantImage: vi.fn(),
+        ...overrides,
+    };
+}
+
 describe("catalog admin routes", () => {
     let runningServer;
 
@@ -49,19 +68,33 @@ describe("catalog admin routes", () => {
         runningServer = null;
     });
 
+    it("routes admin product list requests to the list controller", async () => {
+        const controller = createController({
+            listAdminProducts: vi.fn((req, res) =>
+                res.status(200).json({
+                    status: req.query.status,
+                    deleted: req.query.deleted,
+                })
+            ),
+        });
+
+        runningServer = await startServer(controller);
+
+        const response = await fetch(
+            `${runningServer.url}/products?status=active&deleted=all`
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body).toEqual({
+            status: "active",
+            deleted: "all",
+        });
+        expect(controller.listAdminProducts).toHaveBeenCalledTimes(1);
+    });
+
     it("parses a single multipart image file for the upload route", async () => {
-        const controller = {
-            createProduct: vi.fn(),
-            importProducts: vi.fn(),
-            cloneProduct: vi.fn(),
-            getProductDetailAdmin: vi.fn(),
-            updateProduct: vi.fn(),
-            softDeleteProduct: vi.fn(),
-            createVariant: vi.fn(),
-            updateVariant: vi.fn(),
-            softDeleteVariant: vi.fn(),
-            listVariantImages: vi.fn(),
-            deleteVariantImage: vi.fn(),
+        const controller = createController({
             uploadVariantImage: vi.fn((req, res) => {
                 return res.status(201).json({
                     fieldname: req.file.fieldname,
@@ -70,7 +103,7 @@ describe("catalog admin routes", () => {
                     size: req.file.size,
                 });
             }),
-        };
+        });
         const formData = new FormData();
 
         formData.set(
@@ -103,20 +136,7 @@ describe("catalog admin routes", () => {
     });
 
     it("rejects unsupported image formats with HTTP 422 before reaching the controller", async () => {
-        const controller = {
-            createProduct: vi.fn(),
-            importProducts: vi.fn(),
-            cloneProduct: vi.fn(),
-            getProductDetailAdmin: vi.fn(),
-            updateProduct: vi.fn(),
-            softDeleteProduct: vi.fn(),
-            createVariant: vi.fn(),
-            updateVariant: vi.fn(),
-            softDeleteVariant: vi.fn(),
-            listVariantImages: vi.fn(),
-            deleteVariantImage: vi.fn(),
-            uploadVariantImage: vi.fn(),
-        };
+        const controller = createController();
         const formData = new FormData();
 
         formData.set(
@@ -144,20 +164,7 @@ describe("catalog admin routes", () => {
     });
 
     it("maps multer file-size errors to HTTP 422", async () => {
-        const controller = {
-            createProduct: vi.fn(),
-            importProducts: vi.fn(),
-            cloneProduct: vi.fn(),
-            getProductDetailAdmin: vi.fn(),
-            updateProduct: vi.fn(),
-            softDeleteProduct: vi.fn(),
-            createVariant: vi.fn(),
-            updateVariant: vi.fn(),
-            softDeleteVariant: vi.fn(),
-            listVariantImages: vi.fn(),
-            deleteVariantImage: vi.fn(),
-            uploadVariantImage: vi.fn(),
-        };
+        const controller = createController();
         const formData = new FormData();
 
         formData.set(
@@ -185,20 +192,7 @@ describe("catalog admin routes", () => {
     });
 
     it("rejects multipart requests without an image file", async () => {
-        const controller = {
-            createProduct: vi.fn(),
-            importProducts: vi.fn(),
-            cloneProduct: vi.fn(),
-            getProductDetailAdmin: vi.fn(),
-            updateProduct: vi.fn(),
-            softDeleteProduct: vi.fn(),
-            createVariant: vi.fn(),
-            updateVariant: vi.fn(),
-            softDeleteVariant: vi.fn(),
-            listVariantImages: vi.fn(),
-            deleteVariantImage: vi.fn(),
-            uploadVariantImage: vi.fn(),
-        };
+        const controller = createController();
         const formData = new FormData();
 
         runningServer = await startServer(controller);
@@ -221,20 +215,7 @@ describe("catalog admin routes", () => {
     });
 
     it("rejects malformed upload requests with an unexpected file field", async () => {
-        const controller = {
-            createProduct: vi.fn(),
-            importProducts: vi.fn(),
-            cloneProduct: vi.fn(),
-            getProductDetailAdmin: vi.fn(),
-            updateProduct: vi.fn(),
-            softDeleteProduct: vi.fn(),
-            createVariant: vi.fn(),
-            updateVariant: vi.fn(),
-            softDeleteVariant: vi.fn(),
-            listVariantImages: vi.fn(),
-            deleteVariantImage: vi.fn(),
-            uploadVariantImage: vi.fn(),
-        };
+        const controller = createController();
         const formData = new FormData();
 
         formData.set(
@@ -263,25 +244,14 @@ describe("catalog admin routes", () => {
     });
 
     it("routes variant image deletion requests to the delete controller", async () => {
-        const controller = {
-            createProduct: vi.fn(),
-            importProducts: vi.fn(),
-            cloneProduct: vi.fn(),
-            getProductDetailAdmin: vi.fn(),
-            updateProduct: vi.fn(),
-            softDeleteProduct: vi.fn(),
-            createVariant: vi.fn(),
-            updateVariant: vi.fn(),
-            softDeleteVariant: vi.fn(),
-            listVariantImages: vi.fn(),
-            uploadVariantImage: vi.fn(),
+        const controller = createController({
             deleteVariantImage: vi.fn((req, res) => {
                 return res.status(200).json({
                     variantId: req.params.variantId,
                     mediaId: req.params.mediaId,
                 });
             }),
-        };
+        });
 
         runningServer = await startServer(controller);
 

@@ -651,6 +651,54 @@ describe("auth HTTP integration", () => {
         });
     });
 
+    it("blocks customer access and allows admin access on the admin catalog list route", async () => {
+        runningServer = await startServer(createCatalogAdminState());
+
+        const registerResponse = await fetch(`${runningServer.url}/auth/register`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                email: "customer-list@example.com",
+                password: PASSWORD,
+                confirmPassword: PASSWORD,
+            }),
+        });
+        const customerCookie = extractCookie(
+            registerResponse.headers.get("set-cookie"),
+            "auth_access_token"
+        );
+        const customerResponse = await fetch(
+            `${runningServer.url}/admin/catalog/products`,
+            {
+                headers: {
+                    cookie: customerCookie,
+                },
+            }
+        );
+        const customerBody = await customerResponse.json();
+        const adminResponse = await fetch(`${runningServer.url}/admin/catalog/products`, {
+            headers: {
+                cookie: createAuthTestCookie(),
+            },
+        });
+        const adminBody = await adminResponse.json();
+
+        expect(customerResponse.status).toBe(403);
+        expect(customerBody.code).toBe("AUTH_FORBIDDEN");
+
+        expect(adminResponse.status).toBe(200);
+        expect(adminBody.data).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    productGroupCode: "AUTH_PHONE_1",
+                    isDeleted: false,
+                }),
+            ])
+        );
+    });
+
     it("reassigns guest cart to the new customer on register", async () => {
         runningServer = await startServer(createGuestCartState());
 
@@ -776,6 +824,16 @@ describe("auth HTTP integration", () => {
                 },
             }),
         });
+        const body = await response.json();
+
+        expect(response.status).toBe(401);
+        expect(body.code).toBe("AUTH_UNAUTHORIZED");
+    });
+
+    it("returns 401 for the admin catalog list route without authentication", async () => {
+        runningServer = await startServer(createCatalogAdminState());
+
+        const response = await fetch(`${runningServer.url}/admin/catalog/products`);
         const body = await response.json();
 
         expect(response.status).toBe(401);

@@ -14,6 +14,7 @@ describe("catalog module", () => {
         expect(typeof services.searchProducts).toBe("function");
         expect(typeof services.getProductDetailStorefront).toBe("function");
         expect(typeof services.compareProducts).toBe("function");
+        expect(typeof services.listAdminProducts).toBe("function");
         expect(typeof services.createProduct).toBe("function");
         expect(typeof services.updateProduct).toBe("function");
         expect(typeof services.getProductDetailAdmin).toBe("function");

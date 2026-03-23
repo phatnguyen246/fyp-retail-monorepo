@@ -4,6 +4,7 @@ import {
     parseCloneProductInput,
     parseCompareProductsInput,
     createCatalogValidation,
+    parseAdminListProductsQuery,
     parseImportProductsFile,
     parseMediaIdParams,
     parseAdminCreateVariantInput,
@@ -240,6 +241,58 @@ describe("catalog validation", () => {
                 productId: "invalid-object-id",
             })
         ).toThrow(/productId/);
+    });
+
+    it("parses admin product list queries with status, deleted, and sorting", () => {
+        expect(
+            parseAdminListProductsQuery({
+                status: "active",
+                deleted: "all",
+                page: "2",
+                limit: "50",
+                sortBy: "updatedAt",
+                sortOrder: "asc",
+            })
+        ).toEqual({
+            status: "active",
+            deleted: "all",
+            page: 2,
+            limit: 50,
+            sortBy: "updatedAt",
+            sortOrder: "asc",
+        });
+        expect(
+            parseAdminListProductsQuery({
+                deleted: true,
+            })
+        ).toEqual({
+            deleted: "true",
+            page: 1,
+            limit: 20,
+            sortBy: "createdAt",
+            sortOrder: "desc",
+        });
+
+        expect(() =>
+            parseAdminListProductsQuery({
+                status: "archived",
+            })
+        ).toThrow();
+        expect(() =>
+            parseAdminListProductsQuery({
+                deleted: "maybe",
+            })
+        ).toThrow();
+        expect(() =>
+            parseAdminListProductsQuery({
+                sortBy: "brand",
+            })
+        ).toThrow();
+        expect(() =>
+            parseAdminListProductsQuery({
+                page: "1.5",
+            })
+        ).toThrow();
     });
 
     it("parses import rows, discovery queries, and search/list compatibility parsers", () => {

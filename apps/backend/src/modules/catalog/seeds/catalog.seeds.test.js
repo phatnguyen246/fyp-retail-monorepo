@@ -118,7 +118,7 @@ describe("catalog seeds", () => {
         await ensureCatalogIndexes({ repository });
 
         expect(repository.ensureUniqueIndex).toHaveBeenCalledTimes(7);
-        expect(repository.ensureIndex).toHaveBeenCalledTimes(12);
+        expect(repository.ensureIndex).toHaveBeenCalledTimes(13);
         expect(repository.ensureUniqueIndex).toHaveBeenNthCalledWith(1, {
             collectionName: "brands",
             key: { code: 1 },
@@ -153,6 +153,11 @@ describe("catalog seeds", () => {
             collectionName: "products",
             key: { createdAt: -1 },
             indexName: "products_created_at_desc",
+        });
+        expect(repository.ensureIndex).toHaveBeenCalledWith({
+            collectionName: "products",
+            key: { isDeleted: 1, status: 1, createdAt: -1, _id: -1 },
+            indexName: "products_admin_deleted_status_created_at",
         });
         expect(repository.ensureIndex).toHaveBeenCalledWith({
             collectionName: "products",

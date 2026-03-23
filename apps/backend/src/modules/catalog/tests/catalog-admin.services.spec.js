@@ -4,6 +4,7 @@ import { createCatalogValidation } from "../validation/index.js";
 import { createCreateProductService } from "../services/create-product.service.js";
 import { createCreateVariantService } from "../services/create-variant.service.js";
 import { createGetProductDetailAdminService } from "../services/get-product-detail-admin.service.js";
+import { createListAdminProductsService } from "../services/list-admin-products.service.js";
 import { createSoftDeleteProductService } from "../services/soft-delete-product.service.js";
 import { createSoftDeleteVariantService } from "../services/soft-delete-variant.service.js";
 import { createUpdateProductService } from "../services/update-product.service.js";
@@ -12,6 +13,7 @@ import {
     createBrandFixture,
     createCategoryFixture,
     createProductFixture,
+    createProductReadModelFixture,
     createTagFixture,
     createVariantFixture,
 } from "./fixtures/index.js";
@@ -98,6 +100,131 @@ describe("catalog admin services", () => {
             httpStatus: 409,
         });
         expect(productRepository.createProduct).not.toHaveBeenCalled();
+    });
+
+    it("lists admin products with status and deleted filters plus hydrated references", async () => {
+        const brand = createBrandFixture();
+        const category = createCategoryFixture();
+        const activeProduct = createProductReadModelFixture({
+            _id: new ObjectId("65f0000000000000000000b1"),
+            brandId: brand._id,
+            categoryId: category._id,
+            productGroupCode: "APPLE_IPHONE_16",
+            title: "iPhone 16",
+            status: "active",
+            isDeleted: false,
+            deletedAt: null,
+        });
+        const deletedProduct = createProductReadModelFixture({
+            _id: new ObjectId("65f0000000000000000000b2"),
+            brandId: brand._id,
+            categoryId: category._id,
+            productGroupCode: "APPLE_IPHONE_16_OLD",
+            title: "iPhone 16 Old",
+            status: "inactive",
+            isDeleted: true,
+            deletedAt: new Date("2026-03-13T00:00:00.000Z"),
+        });
+        const productRepository = {
+            findProductsByFilter: vi.fn().mockResolvedValue([deletedProduct]),
+            countProductsByFilter: vi.fn().mockResolvedValue(1),
+        };
+        const referenceRepository = {
+            findBrandsByIds: vi.fn().mockResolvedValue([brand]),
+            findCategoriesByIds: vi.fn().mockResolvedValue([category]),
+        };
+        const listAdminProductsService = createListAdminProductsService({
+            productRepository,
+            referenceRepository,
+            validation: createCatalogValidation(),
+        });
+
+        const result = await listAdminProductsService({
+            query: {
+                status: "inactive",
+                deleted: "true",
+                page: "2",
+                limit: "1",
+                sortBy: "updatedAt",
+                sortOrder: "asc",
+            },
+        });
+
+        expect(productRepository.findProductsByFilter).toHaveBeenCalledWith({
+            filter: {
+                status: "inactive",
+                isDeleted: true,
+            },
+            projection: expect.objectContaining({
+                title: 1,
+                listingVariantSnapshot: 1,
+                hasActiveVariants: 1,
+            }),
+            sort: {
+                updatedAt: 1,
+                _id: 1,
+            },
+            skip: 1,
+            limit: 1,
+        });
+        expect(productRepository.countProductsByFilter).toHaveBeenCalledWith({
+            filter: {
+                status: "inactive",
+                isDeleted: true,
+            },
+        });
+        expect(result).toEqual({
+            data: [
+                expect.objectContaining({
+                    _id: deletedProduct._id,
+                    productGroupCode: "APPLE_IPHONE_16_OLD",
+                    status: "inactive",
+                    isDeleted: true,
+                    deletedAt: deletedProduct.deletedAt,
+                    brand: {
+                        _id: brand._id,
+                        code: brand.code,
+                        name: brand.name,
+                    },
+                    category: {
+                        _id: category._id,
+                        code: category.code,
+                        name: category.name,
+                    },
+                }),
+            ],
+            meta: {
+                page: 2,
+                limit: 1,
+                total: 1,
+                totalPages: 1,
+            },
+        });
+
+        productRepository.findProductsByFilter.mockResolvedValueOnce([
+            activeProduct,
+            deletedProduct,
+        ]);
+        productRepository.countProductsByFilter.mockResolvedValueOnce(2);
+
+        const allProductsResult = await listAdminProductsService({
+            query: {
+                deleted: "all",
+            },
+        });
+
+        expect(productRepository.findProductsByFilter).toHaveBeenLastCalledWith({
+            filter: {},
+            projection: expect.any(Object),
+            sort: {
+                createdAt: -1,
+                _id: -1,
+            },
+            skip: 0,
+            limit: 20,
+        });
+        expect(allProductsResult.meta.total).toBe(2);
+        expect(allProductsResult.data).toHaveLength(2);
     });
 
     it("updates product core fields, refreshes searchTitle, and rebuilds derived fields on title change", async () => {
