@@ -321,6 +321,110 @@ function createCatalogStateForDiscoveryQueries() {
     return state;
 }
 
+function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
+    const state = createCatalogState();
+    const samsungBrand = state.brands[1];
+    const category = state.categories[0];
+    const cameraTag = state.tags[0];
+    const searchVisibleDiscontinuedProduct = createProductReadModelFixture({
+        _id: new ObjectId("65f0000000000000000000b1"),
+        productGroupCode: "SAMSUNG_GALAXY_S24",
+        title: "Điện thoại Samsung S24",
+        slug: "dien-thoai-samsung-s24",
+        searchTitle: "dien thoai samsung s24",
+        brandId: samsungBrand._id,
+        categoryId: category._id,
+        tagIds: [cameraTag._id],
+        status: "discontinued",
+        defaultSelectedVariantId: new ObjectId("65f0000000000000000000b2"),
+        listingVariantSnapshot: {
+            variantId: new ObjectId("65f0000000000000000000b2"),
+            sku: "S24-GRY-256",
+            color: "Gray",
+            ram: "12GB",
+            rom: "256GB",
+            salePrice: 26990000,
+            originalPrice: 28990000,
+            currency: "VND",
+        },
+        minSalePrice: 26990000,
+        minOriginalPrice: 28990000,
+    });
+    const hiddenDiscontinuedProduct = createProductReadModelFixture({
+        _id: new ObjectId("65f0000000000000000000b3"),
+        productGroupCode: "SAMSUNG_GALAXY_NOTE_EOL",
+        title: "Điện thoại Samsung Note EOL",
+        slug: "dien-thoai-samsung-note-eol",
+        searchTitle: "dien thoai samsung note eol",
+        brandId: samsungBrand._id,
+        categoryId: category._id,
+        tagIds: [cameraTag._id],
+        status: "discontinued",
+        hasActiveVariants: false,
+        hasInStockVariants: false,
+    });
+    const searchVisibleDiscontinuedVariant = createVariantFixture({
+        _id: new ObjectId("65f0000000000000000000b2"),
+        productId: searchVisibleDiscontinuedProduct._id,
+        sku: "S24-GRY-256",
+        variantAttributes: {
+            ram: "12GB",
+            rom: "256GB",
+            color: "Gray",
+        },
+        originalPrice: 28990000,
+        salePrice: 26990000,
+        isInStock: false,
+    });
+    const hiddenDiscontinuedVariant = createVariantFixture({
+        _id: new ObjectId("65f0000000000000000000b4"),
+        productId: hiddenDiscontinuedProduct._id,
+        sku: "NOTE-EOL-256",
+        variantAttributes: {
+            ram: "12GB",
+            rom: "256GB",
+            color: "Black",
+        },
+        originalPrice: 19990000,
+        salePrice: 17990000,
+        status: "inactive",
+        isInStock: false,
+    });
+    const discontinuedMedia = createProductMediaFixture({
+        _id: new ObjectId("65f0000000000000000000b5"),
+        productId: searchVisibleDiscontinuedProduct._id,
+        variantId: searchVisibleDiscontinuedVariant._id,
+        url: "https://storage.googleapis.com/catalog-assets/catalog/products/p124/variants/v124/front.webp",
+        storagePath: "catalog/products/p124/variants/v124/front.webp",
+        fileName: "front.webp",
+    });
+
+    state.products = [
+        ...state.products,
+        searchVisibleDiscontinuedProduct,
+        hiddenDiscontinuedProduct,
+    ];
+    state.variants = [
+        ...state.variants,
+        searchVisibleDiscontinuedVariant,
+        hiddenDiscontinuedVariant,
+    ];
+    state.productMediaMetadata = [...state.productMediaMetadata, discontinuedMedia];
+    state.inventoryRecords = [
+        ...state.inventoryRecords,
+        createInventoryRecord({
+            _id: new ObjectId("65f0000000000000000000b6"),
+            variantId: searchVisibleDiscontinuedVariant._id,
+            stockQuantity: 0,
+            lowStockThreshold: 3,
+            createdAt: new Date("2026-03-12T00:00:00.000Z"),
+            updatedAt: new Date("2026-03-12T00:00:00.000Z"),
+        }),
+    ];
+
+    return state;
+}
+
 function createInMemoryDb(seedState = createCatalogState(), options = {}) {
     const collections = new Map(
         Object.entries(seedState).map(([name, documents]) => [name, [...documents]])
@@ -1051,6 +1155,67 @@ describe("catalog http integration", () => {
         expect(invalidSearchBody.code).toBe("VALIDATION_ERROR");
     });
 
+    it("surfaces discontinued products only through search and allows their storefront detail", async () => {
+        runningServer = await startServer(
+            createCatalogStateWithSearchVisibleDiscontinuedProduct()
+        );
+
+        const listResponse = await fetch(
+            `${runningServer.url}/catalog/products?brand=SAMSUNG`
+        );
+        const listBody = await listResponse.json();
+        const searchResponse = await fetch(
+            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+        );
+        const searchBody = await searchResponse.json();
+        const discontinuedDetailResponse = await fetch(
+            `${runningServer.url}/catalog/products/65f0000000000000000000b1/dien-thoai-samsung-s24`
+        );
+        const discontinuedDetailBody = await discontinuedDetailResponse.json();
+        const hiddenDiscontinuedDetailResponse = await fetch(
+            `${runningServer.url}/catalog/products/65f0000000000000000000b3/dien-thoai-samsung-note-eol`
+        );
+        const hiddenDiscontinuedDetailBody =
+            await hiddenDiscontinuedDetailResponse.json();
+
+        expect(listResponse.status).toBe(200);
+        expect(listBody.data).toHaveLength(1);
+        expect(listBody.data[0]).toMatchObject({
+            id: "65f000000000000000000008",
+            status: "active",
+        });
+
+        expect(searchResponse.status).toBe(200);
+        expect(searchBody.data).toHaveLength(2);
+        expect(searchBody.data.map((item) => item.id)).toEqual([
+            "65f0000000000000000000b1",
+            "65f000000000000000000008",
+        ]);
+        expect(searchBody.data[0]).toMatchObject({
+            id: "65f0000000000000000000b1",
+            status: "discontinued",
+            slug: "dien-thoai-samsung-s24",
+        });
+        expect(
+            searchBody.data.some((item) => item.id === "65f0000000000000000000b3")
+        ).toBe(false);
+
+        expect(discontinuedDetailResponse.status).toBe(200);
+        expect(discontinuedDetailBody.data).toMatchObject({
+            id: "65f0000000000000000000b1",
+            status: "discontinued",
+            title: "Điện thoại Samsung S24",
+            variants: [
+                expect.objectContaining({
+                    sku: "S24-GRY-256",
+                }),
+            ],
+        });
+
+        expect(hiddenDiscontinuedDetailResponse.status).toBe(404);
+        expect(hiddenDiscontinuedDetailBody.code).toBe("CATALOG_NOT_FOUND");
+    });
+
     it("derives storefront list and search stock live from inventory instead of catalog denormalized fields", async () => {
         runningServer = await startServer(createCatalogStateWithZeroInventory());
 
@@ -1191,6 +1356,7 @@ describe("catalog http integration", () => {
         expect(detailBody.data).toMatchObject({
             id: "65f000000000000000000006",
             title: "iPhone 16",
+            status: "active",
             defaultSelectedVariantId: "65f000000000000000000007",
         });
         expect(detailBody.data.defaultVariant).toMatchObject({
