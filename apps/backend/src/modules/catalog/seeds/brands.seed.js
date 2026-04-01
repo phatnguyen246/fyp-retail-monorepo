@@ -10,7 +10,11 @@ const brandSeedSchema = z.object({
 const BRAND_SEED_DATA = z.array(brandSeedSchema).parse([
     { code: "APPLE", name: "Apple" },
     { code: "SAMSUNG", name: "Samsung" },
+    { code: "GOOGLE", name: "Google" },
+    { code: "ONEPLUS", name: "OnePlus" },
     { code: "XIAOMI", name: "Xiaomi" },
+    { code: "REDMI", name: "Redmi" },
+    { code: "POCO", name: "POCO" },
     { code: "OPPO", name: "OPPO" },
     { code: "VIVO", name: "Vivo" },
 ]);

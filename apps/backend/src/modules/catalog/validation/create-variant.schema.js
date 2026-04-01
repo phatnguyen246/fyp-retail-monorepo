@@ -35,6 +35,7 @@ export const VARIANT_ATTRIBUTES_INPUT_SCHEMA = z
         ram: trimmedStringSchema,
         rom: trimmedStringSchema,
         color: trimmedStringSchema,
+        colorFullName: optionalTrimmedStringSchema,
     })
     .strict();
 

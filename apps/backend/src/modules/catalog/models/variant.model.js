@@ -33,6 +33,13 @@ export const VARIANT_ATTRIBUTES_SHAPE = Object.freeze({
         required: true,
         description: "Variant-level color option. Must not be stored in product specs.",
     },
+    colorFullName: {
+        type: "string",
+        required: false,
+        default: null,
+        description:
+            "Optional marketing/full color name preserved for richer display contexts such as tooltips.",
+    },
 });
 
 export const VARIANT_VIDEO_SHAPE = Object.freeze({
@@ -232,10 +239,16 @@ export function createVariantAttributes(input = {}) {
         throw new Error("Catalog requires variantAttributes to be a plain object");
     }
 
+    const colorFullName = normalizeOptionalString(
+        input.colorFullName,
+        "variantAttributes.colorFullName"
+    );
+
     return {
         ram: normalizeRequiredString(input.ram, "variantAttributes.ram"),
         rom: normalizeRequiredString(input.rom, "variantAttributes.rom"),
         color: normalizeRequiredString(input.color, "variantAttributes.color"),
+        ...(colorFullName ? { colorFullName } : {}),
     };
 }
 

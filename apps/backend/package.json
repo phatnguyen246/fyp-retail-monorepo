@@ -16,6 +16,7 @@
     "db:setup:ordering": "node src/modules/ordering/seeds/setup-ordering-indexes.js",
     "seed:account:admin": "pnpm run db:setup:account && node src/modules/account/seeds/seed-admin-account.js",
     "seed:catalog": "pnpm run db:setup:catalog && node src/modules/catalog/seeds/seed-catalog-base.js",
+    "seed:catalog:storefront": "pnpm run db:setup:catalog && pnpm run db:setup:inventory && node src/modules/catalog/seeds/seed-storefront-catalog.js",
     "seed:e2e:vnpay": "node src/modules/catalog/seeds/seed-e2e-vnpay.js"
   },
   "devDependencies": {

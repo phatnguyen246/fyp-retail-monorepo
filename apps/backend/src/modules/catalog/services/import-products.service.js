@@ -205,6 +205,7 @@ async function upsertImportedVariant({
             ram: parsedRow.ram,
             rom: parsedRow.rom,
             color: parsedRow.color,
+            colorFullName: parsedRow.colorFullName,
         },
         ramSort: parsedRow.ramSort,
         romSort: parsedRow.romSort,

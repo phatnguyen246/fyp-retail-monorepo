@@ -1344,6 +1344,96 @@ describe("catalog http integration", () => {
         ]);
     });
 
+    it("returns storefront discovery options aligned with active catalog data", async () => {
+        runningServer = await startServer(createCatalogStateForDiscoveryQueries());
+
+        const response = await fetch(
+            `${runningServer.url}/catalog/discovery-options?categoryCode=SMARTPHONE&productType=smartphone`
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toMatchObject({
+            brands: [
+                {
+                    label: "Apple",
+                    value: "APPLE",
+                },
+                {
+                    label: "Oppo",
+                    value: "OPPO",
+                },
+                {
+                    label: "Samsung",
+                    value: "SAMSUNG",
+                },
+            ],
+            tags: [
+                {
+                    label: "Battery Phone",
+                    value: "battery-phone",
+                },
+                {
+                    label: "Camera Phone",
+                    value: "camera-phone",
+                },
+            ],
+            ram: [
+                {
+                    label: "8 GB",
+                    value: "8GB",
+                },
+                {
+                    label: "12 GB",
+                    value: "12GB",
+                },
+            ],
+            rom: [
+                {
+                    label: "128 GB",
+                    value: "128GB",
+                },
+                {
+                    label: "256 GB",
+                    value: "256GB",
+                },
+            ],
+            colors: [
+                {
+                    label: "Black",
+                    value: "Black",
+                },
+                {
+                    label: "Blue",
+                    value: "Blue",
+                },
+                {
+                    label: "Green",
+                    value: "Green",
+                },
+            ],
+            sortModes: [
+                {
+                    label: "Mới nhất",
+                    value: "newest",
+                },
+                {
+                    label: "Giá tăng dần",
+                    value: "price_asc",
+                },
+                {
+                    label: "Giá giảm dần",
+                    value: "price_desc",
+                },
+            ],
+            priceBounds: {
+                min: 0,
+                max: 29000000,
+                step: 500000,
+            },
+        });
+    });
+
     it("returns storefront product detail and compare responses with canonical slug meta", async () => {
         runningServer = await startServer(createCatalogState());
 

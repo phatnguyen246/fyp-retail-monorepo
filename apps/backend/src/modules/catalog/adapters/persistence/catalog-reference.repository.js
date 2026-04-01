@@ -69,5 +69,23 @@ export function createCatalogReferenceRepository({
                 projection,
             });
         },
+
+        listBrands({ filter = {}, projection, sort } = {}) {
+            return baseRepository.findManyByFilter({
+                collectionName: CATALOG_COLLECTIONS.brands,
+                filter,
+                projection,
+                sort,
+            });
+        },
+
+        listTags({ filter = {}, projection, sort } = {}) {
+            return baseRepository.findManyByFilter({
+                collectionName: CATALOG_COLLECTIONS.tags,
+                filter,
+                projection,
+                sort,
+            });
+        },
     };
 }

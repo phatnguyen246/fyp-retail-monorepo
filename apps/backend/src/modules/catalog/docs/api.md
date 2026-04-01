@@ -17,6 +17,7 @@ Tài liệu này mô tả cách dùng HTTP API của `catalog` module trong back
 ### Storefront / public
 
 - `GET /catalog/health`
+- `GET /catalog/discovery-options`
 - `GET /catalog/products`
 - `GET /catalog/search`
 - `GET /catalog/products/:productId`

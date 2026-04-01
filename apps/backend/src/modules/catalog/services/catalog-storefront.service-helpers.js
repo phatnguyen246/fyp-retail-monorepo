@@ -129,6 +129,9 @@ function mapListingVariantSnapshot(snapshot) {
         variantId: toIdString(snapshot.variantId),
         sku: snapshot.sku,
         color: snapshot.color,
+        ...(snapshot.colorFullName
+            ? { colorFullName: snapshot.colorFullName }
+            : {}),
         ram: snapshot.ram,
         rom: snapshot.rom,
         salePrice: snapshot.salePrice,
@@ -181,6 +184,9 @@ function mapVariantSummary(variant, mediaByVariantId = new Map()) {
         ram: variant?.variantAttributes?.ram ?? null,
         rom: variant?.variantAttributes?.rom ?? null,
         color: variant?.variantAttributes?.color ?? null,
+        ...(variant?.variantAttributes?.colorFullName
+            ? { colorFullName: variant.variantAttributes.colorFullName }
+            : {}),
         salePrice: variant?.salePrice ?? null,
         originalPrice: variant?.originalPrice ?? null,
         thumbnail: resolveVariantThumbnail(mediaByVariantId, variantId),

@@ -13,6 +13,11 @@ const TAG_SEED_DATA = z.array(tagSeedSchema).parse([
     { code: "battery-phone", name: "Battery Phone" },
     { code: "flagship", name: "Flagship" },
     { code: "budget", name: "Budget" },
+    { code: "ai-phone", name: "AI Phone" },
+    { code: "compact", name: "Compact" },
+    { code: "fast-charging", name: "Fast Charging" },
+    { code: "creator-phone", name: "Creator Phone" },
+    { code: "all-rounder", name: "All-Rounder" },
 ]);
 
 export async function seedTags({

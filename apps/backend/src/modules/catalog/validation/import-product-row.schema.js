@@ -92,6 +92,7 @@ export const IMPORT_PRODUCT_ROW_SCHEMA = z
         ram: trimmedStringSchema,
         rom: trimmedStringSchema,
         color: trimmedStringSchema,
+        colorFullName: optionalTrimmedStringSchema,
         ramSort: nonNegativeIntegerSchema.default(0),
         romSort: nonNegativeIntegerSchema.default(0),
         colorPriority: nonNegativeIntegerSchema.default(0),

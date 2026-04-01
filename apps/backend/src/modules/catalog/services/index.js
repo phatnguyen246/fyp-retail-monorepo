@@ -7,6 +7,7 @@ import { createDeleteVariantImageService } from "./delete-variant-image.service.
 import { createCloneProductService } from "./clone-product.service.js";
 import { createCompareProductsService } from "./compare-products.service.js";
 import { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
+import { createGetProductDiscoveryOptionsService } from "./get-product-discovery-options.service.js";
 import { createGetProductDetailStorefrontService } from "./get-product-detail-storefront.service.js";
 import { createImportProductsService } from "./import-products.service.js";
 import { createListAdminProductsService } from "./list-admin-products.service.js";
@@ -26,6 +27,7 @@ export { createDeleteVariantImageService } from "./delete-variant-image.service.
 export { createCloneProductService } from "./clone-product.service.js";
 export { createCompareProductsService } from "./compare-products.service.js";
 export { createGetProductDetailAdminService } from "./get-product-detail-admin.service.js";
+export { createGetProductDiscoveryOptionsService } from "./get-product-discovery-options.service.js";
 export { createGetProductDetailStorefrontService } from "./get-product-detail-storefront.service.js";
 export { createImportProductsService } from "./import-products.service.js";
 export { createListAdminProductsService } from "./list-admin-products.service.js";
@@ -60,6 +62,12 @@ export function createCatalogServices({
             return createCatalogHealthPayload();
         },
         rebuildProductDerivedFields,
+        getProductDiscoveryOptions: createGetProductDiscoveryOptionsService({
+            productRepository,
+            referenceRepository,
+            validation,
+            variantRepository,
+        }),
         listProducts: createListProductsService({
             inventoryAdapter,
             mediaRepository,

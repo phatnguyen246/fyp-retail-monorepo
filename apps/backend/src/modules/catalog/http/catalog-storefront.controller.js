@@ -6,6 +6,16 @@ export function createCatalogStorefrontController({ services }) {
             return res.status(200).json(services.getHealth());
         },
 
+        async getProductDiscoveryOptions(req, res) {
+            const result = await services.getProductDiscoveryOptions({
+                query: req.query,
+            });
+
+            return sendCatalogSuccess(res, {
+                data: result.data,
+            });
+        },
+
         async listProducts(req, res) {
             const result = await services.listProducts({
                 query: req.query,

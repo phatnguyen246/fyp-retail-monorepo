@@ -587,6 +587,14 @@ function normalizeListingVariantSnapshot(value) {
             snapshot.color,
             "listingVariantSnapshot.color"
         ),
+        ...(() => {
+            const colorFullName = normalizeOptionalString(
+                snapshot.colorFullName,
+                "listingVariantSnapshot.colorFullName"
+            );
+
+            return colorFullName ? { colorFullName } : {};
+        })(),
         ram: normalizeRequiredString(snapshot.ram, "listingVariantSnapshot.ram"),
         rom: normalizeRequiredString(snapshot.rom, "listingVariantSnapshot.rom"),
         salePrice: normalizeNonNegativeNumber(

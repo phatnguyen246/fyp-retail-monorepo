@@ -25,6 +25,7 @@ export const UPDATE_VARIANT_INPUT_SCHEMA = z
                 ram: trimmedStringSchema.optional(),
                 rom: trimmedStringSchema.optional(),
                 color: trimmedStringSchema.optional(),
+                colorFullName: trimmedStringSchema.optional().nullable(),
             })
             .strict()
             .optional(),
