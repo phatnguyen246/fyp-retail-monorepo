@@ -90,6 +90,11 @@ Chạy local bằng Docker Compose:
 docker compose up -d mongo backend frontend
 ```
 
+Docker Compose sẽ đọc biến môi trường từ:
+
+- `apps/backend/.env.dev`
+- `apps/frontend/.env.dev`
+
 URL mặc định:
 
 - backend: `http://localhost:3000`
@@ -117,4 +122,3 @@ Chi tiết hơn xem:
 
 - [docs/project-overview.md](./docs/project-overview.md)
 - [payment/docs/api.md](./apps/backend/src/modules/payment/docs/api.md)
-

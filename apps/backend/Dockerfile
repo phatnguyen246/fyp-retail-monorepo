@@ -4,14 +4,13 @@ WORKDIR /app
 
 RUN corepack enable
 
-# Copy workspace manifests first to maximize dependency cache reuse.
+# Copy the same workspace files that were previously mounted by docker compose.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/backend/package.json apps/backend/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
-
-RUN pnpm install --frozen-lockfile
-
 COPY apps/backend apps/backend
+
+RUN pnpm install --filter @apps/backend --frozen-lockfile
 
 EXPOSE 3000
 

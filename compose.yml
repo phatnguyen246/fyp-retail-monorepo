@@ -1,7 +1,8 @@
+name: fyp-retail-system
+
 services:
   mongo:
     image: mongo:8
-    container_name: mongo
     ports:
       - "27017:27017"
     volumes:
@@ -10,25 +11,15 @@ services:
 
   backend:
     image: node:24-bookworm-slim
-    container_name: backend
     env_file:
-      - ./apps/backend/.env
-    environment:
-      MONGODB_URI: mongodb://mongo:27017/fyp-retail-system
-      NODE_ENV: development
-      PNPM_STORE_DIR: /app/.pnpm-store
-      CI: "true"
-      TZ: Asia/Ho_Chi_Minh
+      - ./apps/backend/.env.dev
     depends_on:
       - mongo
     ports:
       - "3000:3000"
     working_dir: /app
     volumes:
-      - ./package.json:/app/package.json
-      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
-      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml
-      - ./apps/backend:/app/apps/backend
+      - .:/app
       - pnpm_store:/app/.pnpm-store
       - root_node_modules:/app/node_modules
       - backend_node_modules:/app/apps/backend/node_modules
@@ -40,21 +31,15 @@ services:
 
   frontend:
     image: node:24-bookworm-slim
-    container_name: frontend
-    environment:
-      NODE_ENV: development
-      PNPM_STORE_DIR: /app/.pnpm-store
-      CI: "true"
+    env_file:
+      - ./apps/frontend/.env.dev
     depends_on:
       - backend
     ports:
       - "5173:5173"
     working_dir: /app
     volumes:
-      - ./package.json:/app/package.json
-      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
-      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml
-      - ./apps/frontend:/app/apps/frontend
+      - .:/app
       - pnpm_store:/app/.pnpm-store
       - root_node_modules:/app/node_modules
       - frontend_node_modules:/app/apps/frontend/node_modules

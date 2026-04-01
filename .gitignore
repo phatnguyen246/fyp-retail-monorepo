@@ -26,6 +26,8 @@ lerna-debug.log*
 .env.*
 !.env.example
 !.env.*.example
+!apps/backend/.env.dev
+!apps/frontend/.env.dev
 
 # Testing
 .nyc_output/
@@ -48,3 +50,4 @@ tmp/
 temp/
 
 apps/backend/credentials/
+.codex
