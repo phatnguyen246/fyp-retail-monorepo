@@ -9,7 +9,18 @@ import {
 } from "../utils/index.js";
 
 function resolveVerifiedToken({ req, cookieService, jwtService } = {}) {
-    const accessToken = cookieService.readAccessTokenFromRequest(req);
+    const authScopeHeader = req.get("x-auth-scope");
+    let scope = "auto";
+
+    if (authScopeHeader === "admin" || authScopeHeader === "customer") {
+        scope = authScopeHeader;
+    } else if (typeof req?.originalUrl === "string" && req.originalUrl.startsWith("/admin")) {
+        scope = "admin";
+    }
+
+    const accessToken = cookieService.readAccessTokenFromRequest(req, {
+        scope,
+    });
 
     if (!accessToken) {
         return null;
@@ -103,4 +114,3 @@ export function createAuthMiddleware({
         requireAdmin,
     };
 }
-

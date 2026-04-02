@@ -125,8 +125,21 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+  const authScope =
+    to.meta.requiresAdmin || String(to.name || '').startsWith('admin-')
+      ? 'admin'
+      : to.name === 'login' &&
+          typeof to.query.redirect === 'string' &&
+          to.query.redirect.startsWith('/admin')
+        ? 'admin'
+        : 'auto'
+
+  if (to.meta.requiresAuth || to.meta.requiresAdmin || to.name === 'login' || to.name === 'register') {
+    await authStore.initialize(authScope)
+  }
+
   const isAuthenticated = Boolean(authStore.isAuthenticated)
   const isAdmin = authStore.user?.role === 'admin'
 
@@ -135,7 +148,7 @@ router.beforeEach((to, from, next) => {
   } else if (to.meta.requiresAdmin && !isAdmin) {
     next({ name: 'login', query: { redirect: to.fullPath } })
   } else if (isAuthenticated && (to.name === 'login' || to.name === 'register')) {
-    next({ name: 'catalog-products' })
+    next(isAdmin ? { name: 'admin-overview' } : { name: 'catalog-products' })
   } else {
     next()
   }

@@ -1,5 +1,15 @@
 import { CART_GUEST_COOKIE_NAME } from "../../cart/constants/index.js";
 
+function resolveAuthScope(req) {
+    const scopeHeader = req.get("x-auth-scope");
+
+    if (scopeHeader === "admin" || scopeHeader === "customer") {
+        return scopeHeader;
+    }
+
+    return "all";
+}
+
 export function createAuthController({
     services,
     cookieService,
@@ -18,7 +28,9 @@ export function createAuthController({
                         : null,
             });
 
-            cookieService.setAccessTokenCookie(res, result.accessToken);
+            cookieService.setAccessTokenCookie(res, result.accessToken, {
+                scope: result.currentUser?.role === "admin" ? "admin" : "customer",
+            });
 
             return res.status(201).json({
                 data: result.currentUser,
@@ -30,7 +42,9 @@ export function createAuthController({
                 input: req.body,
             });
 
-            cookieService.setAccessTokenCookie(res, result.accessToken);
+            cookieService.setAccessTokenCookie(res, result.accessToken, {
+                scope: result.currentUser?.role === "admin" ? "admin" : "customer",
+            });
 
             return res.status(200).json({
                 data: result.currentUser,
@@ -39,7 +53,9 @@ export function createAuthController({
 
         async logout(_req, res) {
             await services.logout();
-            cookieService.clearAccessTokenCookie(res);
+            cookieService.clearAccessTokenCookie(res, {
+                scope: resolveAuthScope(_req),
+            });
 
             return res.status(200).json({
                 data: {
@@ -59,4 +75,3 @@ export function createAuthController({
         },
     };
 }
-
