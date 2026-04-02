@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import CatalogProductPage from '../pages/CatalogProductPage.vue'
+import CatalogProductDetailPage from '../pages/CatalogProductDetailPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import RegisterPage from '../pages/RegisterPage.vue'
 import CartPage from '../pages/CartPage.vue'
@@ -9,12 +10,16 @@ import CheckoutPage from '../pages/CheckoutPage.vue'
 import OrderHistoryPage from '../pages/OrderHistoryPage.vue'
 import ComparePage from '../pages/ComparePage.vue'
 import OrderDetailPage from '../pages/OrderDetailPage.vue'
+import OrderLookupPage from '../pages/OrderLookupPage.vue'
+import VnpayCheckoutPage from '../pages/VnpayCheckoutPage.vue'
 import VnpayReturnPage from '../pages/VnpayReturnPage.vue'
 
 import AdminLayout from '../components/admin/AdminLayout.vue'
+import AdminOverviewPage from '../pages/admin/AdminOverviewPage.vue'
 import AdminProductListPage from '../pages/admin/AdminProductListPage.vue'
 import AdminProductCreatePage from '../pages/admin/AdminProductCreatePage.vue'
 import AdminProductDetailPage from '../pages/admin/AdminProductDetailPage.vue'
+import AdminInventoryPage from '../pages/admin/AdminInventoryPage.vue'
 import AdminOrderListPage from '../pages/admin/AdminOrderListPage.vue'
 import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage.vue'
 
@@ -34,9 +39,8 @@ const router = createRouter({
     },
     {
       path: '/products/:productId/:slug?',
-      redirect: {
-        name: 'catalog-products',
-      },
+      name: 'catalog-product-detail',
+      component: CatalogProductDetailPage,
     },
     {
       path: '/login',
@@ -65,6 +69,11 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/orders/lookup',
+      name: 'order-lookup',
+      component: OrderLookupPage,
+    },
+    {
       path: '/orders/:orderId',
       name: 'order-detail',
       component: OrderDetailPage,
@@ -74,6 +83,12 @@ const router = createRouter({
       path: '/compare',
       name: 'compare',
       component: ComparePage,
+    },
+    {
+      path: '/payment/vnpay/:orderId',
+      name: 'vnpay-checkout',
+      component: VnpayCheckoutPage,
+      props: true,
     },
     {
       path: '/payment/vnpay/return',
@@ -87,7 +102,8 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: { name: 'admin-products' },
+          name: 'admin-overview',
+          component: AdminOverviewPage,
         },
         {
           path: 'products',
@@ -103,6 +119,11 @@ const router = createRouter({
           path: 'products/:productId',
           name: 'admin-product-detail',
           component: AdminProductDetailPage,
+        },
+        {
+          path: 'inventory',
+          name: 'admin-inventory',
+          component: AdminInventoryPage,
         },
         {
           path: 'orders',

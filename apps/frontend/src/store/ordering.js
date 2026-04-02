@@ -9,17 +9,35 @@ export const useOrderingStore = defineStore('ordering', () => {
   const error = ref(null)
   const cartStore = useCartStore()
 
+  function unwrapPayload(response) {
+    return response?.data?.data ?? null
+  }
+
+  function extractErrorPayload(e, fallbackMessage) {
+    const payload = e?.response?.data ?? null
+
+    return {
+      message: payload?.message || fallbackMessage,
+      code: payload?.code ?? null,
+      meta: payload?.meta ?? null,
+      status: e?.response?.status ?? null,
+      payload,
+    }
+  }
+
   async function createOrder(orderDetails) {
     loading.value = true
     error.value = null
     try {
       const response = await http.post('/orders', orderDetails)
-      order.value = response.data
-      cartStore.fetchCart() // Refresh cart after successful order
-      return { success: true, order: response.data }
+      const payload = unwrapPayload(response)
+      order.value = payload
+      await cartStore.fetchCart()
+      return { success: true, order: payload }
     } catch (e) {
-      error.value = e.response?.data?.message || 'Could not create order.'
-      return { success: false, error: error.value }
+      const errorPayload = extractErrorPayload(e, 'Could not create order.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload }
     } finally {
       loading.value = false
     }
@@ -30,10 +48,12 @@ export const useOrderingStore = defineStore('ordering', () => {
     error.value = null
     try {
       const response = await http.post('/payments/vnpay/create-url', { orderId })
-      return { success: true, paymentUrl: response.data.paymentUrl }
+      const payload = unwrapPayload(response)
+      return { success: true, ...payload }
     } catch (e) {
-      error.value = e.response?.data?.message || 'Could not create VNPAY payment URL.'
-      return { success: false, error: error.value }
+      const errorPayload = extractErrorPayload(e, 'Could not create VNPAY payment URL.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload }
     } finally {
       loading.value = false
     }
@@ -46,8 +66,9 @@ export const useOrderingStore = defineStore('ordering', () => {
       const response = await http.get('/payment/vnpay/return', { params: query })
       return { success: true, data: response.data }
     } catch (e) {
-      error.value = e.response?.data?.message || 'VNPAY return handling failed.'
-      return { success: false, error: error.value }
+      const errorPayload = extractErrorPayload(e, 'VNPAY return handling failed.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload }
     } finally {
       loading.value = false
     }
@@ -58,10 +79,30 @@ export const useOrderingStore = defineStore('ordering', () => {
     error.value = null
     try {
       const response = await http.get(`/orders/${orderId}`)
-      return { success: true, data: response.data }
+      const payload = unwrapPayload(response)
+      order.value = payload
+      return { success: true, data: payload }
     } catch (e) {
-      error.value = e.response?.data?.message || 'Could not fetch order.'
-      return { success: false, error: error.value }
+      const errorPayload = extractErrorPayload(e, 'Could not fetch order.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function lookupGuestOrder(criteria) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await http.post('/orders/lookup', criteria)
+      const payload = unwrapPayload(response)
+      order.value = payload
+      return { success: true, data: payload }
+    } catch (e) {
+      const errorPayload = extractErrorPayload(e, 'Could not find guest order.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload }
     } finally {
       loading.value = false
     }
@@ -72,11 +113,13 @@ export const useOrderingStore = defineStore('ordering', () => {
     error.value = null
     try {
       const response = await http.get(`/orders/${orderId}`);
-      order.value = response.data;
-      return { success: true, data: response.data };
+      const payload = unwrapPayload(response)
+      order.value = payload
+      return { success: true, data: payload };
     } catch (e) {
-      error.value = e.response?.data?.message || 'Could not fetch order.';
-      return { success: false, error: error.value };
+      const errorPayload = extractErrorPayload(e, 'Could not fetch order.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload };
     } finally {
       loading.value = false
     }
@@ -87,10 +130,11 @@ export const useOrderingStore = defineStore('ordering', () => {
     error.value = null;
     try {
       const response = await http.get('/orders');
-      return { success: true, data: response.data };
+      return { success: true, data: unwrapPayload(response) ?? [] };
     } catch (e) {
-      error.value = e.response?.data?.message || 'Could not fetch orders.';
-      return { success: false, error: error.value };
+      const errorPayload = extractErrorPayload(e, 'Could not fetch orders.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload };
     } finally {
       loading.value = false;
     }
@@ -104,6 +148,7 @@ export const useOrderingStore = defineStore('ordering', () => {
     createVnPayUrl,
     handleVnpayReturn,
     fetchOrder,
+    lookupGuestOrder,
     getOrderById,
     fetchOrders,
   }

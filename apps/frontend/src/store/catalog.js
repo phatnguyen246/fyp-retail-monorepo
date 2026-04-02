@@ -83,6 +83,18 @@ function createSidebarStateSignature(filterState) {
   })
 }
 
+function hasSelectedSidebarFilters(filterState, options) {
+  return (
+    Boolean(filterState.brand) ||
+    Boolean(filterState.tag) ||
+    filterState.ram.length > 0 ||
+    filterState.rom.length > 0 ||
+    filterState.color.length > 0 ||
+    filterState.minPrice > options.priceBounds.min ||
+    filterState.maxPrice < options.priceBounds.max
+  )
+}
+
 export const useCatalogStore = defineStore('catalog', () => {
   const products = ref([])
   const loading = ref(false)
@@ -203,8 +215,12 @@ export const useCatalogStore = defineStore('catalog', () => {
   })
 
   const hasActiveFilters = computed(() => activeFilterChips.value.length > 0)
+  const hasSelectedSidebarFilterOptions = computed(() => hasSelectedSidebarFilters(filters, options))
   const hasPendingSidebarFilterChanges = computed(
     () => createSidebarStateSignature(filters) !== createSidebarStateSignature(appliedSidebarFilters),
+  )
+  const canApplySidebarFilters = computed(
+    () => hasPendingSidebarFilterChanges.value && hasSelectedSidebarFilterOptions.value,
   )
 
   function resetPagination() {
@@ -445,7 +461,9 @@ export const useCatalogStore = defineStore('catalog', () => {
     requestSignature,
     activeFilterChips,
     hasActiveFilters,
+    hasSelectedSidebarFilterOptions,
     hasPendingSidebarFilterChanges,
+    canApplySidebarFilters,
     setSearch,
     setTag,
     setBrand,

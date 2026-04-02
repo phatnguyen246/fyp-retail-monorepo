@@ -230,6 +230,16 @@ export async function fetchCatalogProducts(filters) {
   }
 }
 
+export async function fetchCatalogProductDetail(productId, slug) {
+  const response = await http.get(`/catalog/products/${productId}/${slug ?? ''}`)
+  const payload = response?.data ?? {}
+
+  return {
+    item: payload.data ?? null,
+    meta: payload.meta ?? {},
+  }
+}
+
 export function getCatalogErrorMessage(error) {
   if (axios.isAxiosError(error)) {
     return (

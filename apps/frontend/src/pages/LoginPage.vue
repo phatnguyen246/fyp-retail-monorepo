@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -16,7 +17,19 @@ async function handleLogin() {
   })
 
   if (success) {
-    await router.push('/')
+    const redirectTarget = typeof route.query.redirect === 'string' ? route.query.redirect : null
+
+    if (redirectTarget) {
+      await router.push(redirectTarget)
+      return
+    }
+
+    if (authStore.user?.role === 'admin') {
+      await router.push({ name: 'admin-overview' })
+      return
+    }
+
+    await router.push({ name: 'catalog-products' })
   }
 }
 </script>

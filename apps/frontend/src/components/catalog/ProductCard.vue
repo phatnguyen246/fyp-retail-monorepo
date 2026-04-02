@@ -61,6 +61,16 @@ function hasMatchingVariant({ memoryKey, color }) {
   })
 }
 
+function resolvePreferredVariant(candidates, preferredPredicate) {
+  return (
+    candidates.find((variant) => preferredPredicate(variant) && variant.inStock) ||
+    candidates.find((variant) => preferredPredicate(variant)) ||
+    candidates.find((variant) => variant.inStock) ||
+    candidates[0] ||
+    null
+  )
+}
+
 function resolveInitialVariantId(variants) {
   return (
     props.product.defaultSelectedVariant?.variantId ||
@@ -214,13 +224,15 @@ const memoryOptions = computed(() => {
       inStock: variantOptions.value.some(
         (candidate) => getMemoryKey(candidate) === label && candidate.inStock,
       ),
-      selectable:
-        heroVariant.value?.color == null ||
-        heroVariant.value?.color === variant.color ||
+      selectable: hasMatchingVariant({ memoryKey: label }),
+      pairingState:
+        !heroVariant.value?.color ||
         hasMatchingVariant({
           memoryKey: label,
           color: heroVariant.value.color,
-        }),
+        })
+          ? 'stable'
+          : 'changes-color',
       active:
         heroVariant.value?.ram === variant.ram &&
         heroVariant.value?.rom === variant.rom,
@@ -249,13 +261,15 @@ const colorOptions = computed(() => {
       inStock: variantOptions.value.some(
         (candidate) => candidate.color === label && candidate.inStock,
       ),
-      selectable:
+      selectable: hasMatchingVariant({ color: label }),
+      pairingState:
         !getMemoryKey(heroVariant.value) ||
-        getMemoryKey(heroVariant.value) === getMemoryKey(variant) ||
         hasMatchingVariant({
           memoryKey: getMemoryKey(heroVariant.value),
           color: label,
-        }),
+        })
+          ? 'stable'
+          : 'changes-memory',
       active: heroVariant.value?.color === variant.color,
     })
   })
@@ -277,38 +291,32 @@ function selectVariant(variant) {
 
 function handleMemorySelect(memoryKey) {
   const selectedColor = heroVariant.value?.color
-  const candidates = variantOptions.value.filter(
-    (variant) =>
-      getMemoryKey(variant) === memoryKey &&
-      (!selectedColor || variant.color === selectedColor),
-  )
+  const candidates = variantOptions.value.filter((variant) => getMemoryKey(variant) === memoryKey)
 
   if (candidates.length === 0) {
     return
   }
 
-  const nextVariant =
-    candidates.find((variant) => variant.inStock) ||
-    candidates[0]
+  const nextVariant = resolvePreferredVariant(
+    candidates,
+    (variant) => !selectedColor || variant.color === selectedColor,
+  )
 
   selectVariant(nextVariant)
 }
 
 function handleColorSelect(color) {
   const activeMemoryKey = getMemoryKey(heroVariant.value)
-  const candidates = variantOptions.value.filter(
-    (variant) =>
-      variant.color === color &&
-      (!activeMemoryKey || getMemoryKey(variant) === activeMemoryKey),
-  )
+  const candidates = variantOptions.value.filter((variant) => variant.color === color)
 
   if (candidates.length === 0) {
     return
   }
 
-  const nextVariant =
-    candidates.find((variant) => variant.inStock) ||
-    candidates[0]
+  const nextVariant = resolvePreferredVariant(
+    candidates,
+    (variant) => !activeMemoryKey || getMemoryKey(variant) === activeMemoryKey,
+  )
 
   selectVariant(nextVariant)
 }
@@ -322,6 +330,18 @@ function getVariantOptionClasses(option) {
     return option.inStock
       ? 'catalog-variant-option--active'
       : 'catalog-variant-option--active-out'
+  }
+
+  if (option.pairingState === 'changes-color') {
+    return option.inStock
+      ? 'catalog-variant-option--switch-color'
+      : 'catalog-variant-option--switch-color-out'
+  }
+
+  if (option.pairingState === 'changes-memory') {
+    return option.inStock
+      ? 'catalog-variant-option--switch-memory'
+      : 'catalog-variant-option--switch-memory-out'
   }
 
   return option.inStock
@@ -356,7 +376,7 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
 </script>
 
 <template>
-  <article class="flex self-start flex-col">
+  <article class="flex h-full self-stretch flex-col">
     <div class="catalog-card-media group mb-6">
       <div class="catalog-card-media-frame">
         <img
@@ -416,7 +436,7 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
       </div>
     </div>
 
-    <div class="flex flex-col">
+    <div class="flex flex-1 flex-col">
       <div class="mb-4">
         <div class="mb-2 flex flex-wrap gap-2">
           <span
@@ -454,6 +474,8 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
             :title="
               !option.selectable && !option.active
                 ? `${option.label} • Không có với màu đang chọn`
+                : option.pairingState === 'changes-color'
+                  ? `${option.label} • Chọn cấu hình này sẽ đổi sang màu khả dụng khác`
                 : option.inStock
                   ? option.label
                   : `${option.label} • Tạm hết hàng`
@@ -476,6 +498,8 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
             :title="
               !option.selectable && !option.active
                 ? `${option.fullName} • Không có với cấu hình đang chọn`
+                : option.pairingState === 'changes-memory'
+                  ? `${option.fullName} • Chọn màu này sẽ đổi sang cấu hình khả dụng khác`
                 : option.inStock
                   ? option.fullName
                   : `${option.fullName} • Tạm hết hàng`
@@ -488,7 +512,7 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
         </div>
       </div>
 
-      <div class="flex flex-col">
+      <div class="mt-auto flex flex-col">
         <span
           v-if="Number(originalPrice) > Number(salePrice)"
           class="text-xs text-[var(--catalog-text-soft)] line-through"
@@ -561,5 +585,85 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
   border: 1px solid var(--catalog-outline);
   color: var(--catalog-text-soft);
   opacity: 0.6;
+}
+
+.catalog-variant-option--switch-color {
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--catalog-text);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(112, 120, 128, 0.1) 0,
+      rgba(112, 120, 128, 0.1) 2px,
+      rgba(112, 120, 128, 0.03) 2px,
+      rgba(112, 120, 128, 0.03) 8px
+    );
+}
+
+.catalog-variant-option--switch-color:hover {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(112, 120, 128, 0.14) 0,
+      rgba(112, 120, 128, 0.14) 2px,
+      rgba(112, 120, 128, 0.06) 2px,
+      rgba(112, 120, 128, 0.06) 8px
+    );
+}
+
+.catalog-variant-option--switch-color-out {
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--catalog-text-soft);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(112, 120, 128, 0.08) 0,
+      rgba(112, 120, 128, 0.08) 2px,
+      rgba(112, 120, 128, 0.02) 2px,
+      rgba(112, 120, 128, 0.02) 8px
+    );
+  opacity: 0.72;
+}
+
+.catalog-variant-option--switch-memory {
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--catalog-text);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(112, 120, 128, 0.1) 0,
+      rgba(112, 120, 128, 0.1) 2px,
+      rgba(112, 120, 128, 0.03) 2px,
+      rgba(112, 120, 128, 0.03) 8px
+    );
+}
+
+.catalog-variant-option--switch-memory:hover {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(112, 120, 128, 0.14) 0,
+      rgba(112, 120, 128, 0.14) 2px,
+      rgba(112, 120, 128, 0.06) 2px,
+      rgba(112, 120, 128, 0.06) 8px
+    );
+}
+
+.catalog-variant-option--switch-memory-out {
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--catalog-text-soft);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(112, 120, 128, 0.08) 0,
+      rgba(112, 120, 128, 0.08) 2px,
+      rgba(112, 120, 128, 0.02) 2px,
+      rgba(112, 120, 128, 0.02) 8px
+    );
+  opacity: 0.72;
 }
 </style>

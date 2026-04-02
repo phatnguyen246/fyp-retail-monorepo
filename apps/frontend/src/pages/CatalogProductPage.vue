@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import CatalogTopNav from '../components/catalog/CatalogTopNav.vue'
 import CatalogFiltersPanel from '../components/catalog/CatalogFiltersPanel.vue'
 import CatalogToolbar from '../components/catalog/CatalogToolbar.vue'
@@ -10,9 +10,7 @@ import { useCatalogStore } from '../store/catalog'
 import { formatNumber } from '../services/formatters'
 
 const catalogStore = useCatalogStore()
-const searchDraft = ref(catalogStore.filters.search)
 const catalogContentRef = ref(null)
-let searchTimerId = null
 
 const pageTitle = computed(() => {
   return catalogStore.filters.search
@@ -61,23 +59,6 @@ function handlePageChange(page) {
   })
 }
 
-watch(searchDraft, (value) => {
-  window.clearTimeout(searchTimerId)
-
-  searchTimerId = window.setTimeout(() => {
-    catalogStore.setSearch(value)
-  }, 300)
-})
-
-watch(
-  () => catalogStore.filters.search,
-  (value) => {
-    if (value !== searchDraft.value) {
-      searchDraft.value = value
-    }
-  },
-)
-
 watch(
   () => catalogStore.requestSignature,
   () => {
@@ -87,24 +68,17 @@ watch(
 )
 
 catalogStore.fetchOptions()
-
-onBeforeUnmount(() => {
-  window.clearTimeout(searchTimerId)
-})
 </script>
 
 <template>
   <div class="bg-[var(--catalog-background)] text-[var(--catalog-text)]">
     <div class="catalog-shell">
-      <CatalogTopNav
-        :search-value="searchDraft"
-        @update:search="searchDraft = $event"
-      />
+      <CatalogTopNav />
 
       <div class="grid min-h-[calc(100vh-5rem)] xl:grid-cols-[var(--catalog-sidebar-width)_minmax(0,1fr)]">
         <CatalogFiltersPanel
           :filters="catalogStore.filters"
-          :has-pending-changes="catalogStore.hasPendingSidebarFilterChanges"
+          :has-pending-changes="catalogStore.canApplySidebarFilters"
           :options="catalogStore.options"
           @apply-filters="catalogStore.applySidebarFilters"
           @clear-filters="catalogStore.clearFilters"

@@ -1,6 +1,10 @@
+<script setup>
+import { RouterLink } from 'vue-router'
+</script>
+
 <template>
   <footer
-    class="flex flex-col items-center justify-between gap-4 border-t border-[var(--catalog-border-soft)] bg-white px-6 py-10 md:flex-row lg:px-10 2xl:px-20"
+    class="mt-auto flex flex-col items-center justify-between gap-4 border-t border-[var(--catalog-border-soft)] bg-white px-6 py-10 md:flex-row lg:px-10 2xl:px-20"
   >
     <div class="flex flex-col gap-2 text-center md:text-left">
       <div class="catalog-footer-brand">The Editorial Catalog</div>
@@ -14,6 +18,7 @@
       <button class="catalog-footer-link" type="button">Terms of Service</button>
       <button class="catalog-footer-link" type="button">Shipping</button>
       <button class="catalog-footer-link" type="button">Returns</button>
+      <RouterLink class="catalog-footer-link" :to="{ name: 'order-lookup' }">Tìm đơn hàng</RouterLink>
     </div>
   </footer>
 </template>
