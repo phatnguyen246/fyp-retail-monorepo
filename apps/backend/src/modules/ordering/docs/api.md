@@ -10,6 +10,7 @@ Phạm vi hiện tại của module:
 - Hỗ trợ cả `guest` và `customer` tạo order.
 - Hỗ trợ `customer` xem danh sách order của chính mình.
 - Hỗ trợ `guest` xem lại order detail bằng `orderId` của guest order.
+- Hỗ trợ `guest` tra cứu lại order bằng `orderCode`.
 - Hỗ trợ `admin` xem toàn bộ order, cập nhật trạng thái, và hủy order.
 - Hỗ trợ `paymentMethod = "cod"` và `paymentMethod = "vnpay"` theo implementation hiện tại.
 
@@ -17,7 +18,6 @@ Module này hiện chưa có API để:
 
 - sửa item của order sau khi tạo,
 - xóa order,
-- tra cứu guest order theo `phoneNumber`,
 - liệt kê order cho guest,
 - quản lý shipment,
 - refund hoặc đổi trả.
@@ -36,6 +36,7 @@ http://localhost:3000
 
 - `GET /orders/health`
 - `POST /orders`
+- `POST /orders/lookup`
 - `GET /orders`
 - `GET /orders/:orderId`
 - `POST /orders/:orderId/cancel`
@@ -122,16 +123,18 @@ cart_guest_id
 #### Guest
 
 - Có thể tạo order nếu đã có guest cart hợp lệ.
+- Có thể tra cứu lại guest order qua `POST /orders/lookup` bằng `orderCode`.
 - Có thể xem lại `GET /orders/:orderId` nếu đó là guest order.
 - Không có API list order.
 - Không có quyền cancel order.
 
 Lưu ý:
 
-- guest detail hiện tra cứu trực tiếp bằng `orderId`,
+- guest có thể tra cứu bằng `orderCode`,
+- guest detail hiện vẫn có thể tra cứu trực tiếp bằng `orderId`,
 - route này không yêu cầu auth cookie,
-- route này cũng không kiểm tra `cart_guest_id`,
-- vì vậy `orderId` của guest order nên được coi là dữ liệu nhạy cảm.
+- route lookup cũng không kiểm tra `cart_guest_id`,
+- vì vậy `orderId` và `orderCode` của guest order đều nên được coi là dữ liệu nhạy cảm.
 
 #### Customer
 
@@ -230,7 +233,7 @@ Behavior hiện tại phụ thuộc vào `paymentMethod`:
 4. Backend validate lại với catalog và inventory.
 5. Backend tạo order.
 6. Backend trả về order detail, trong đó có `data.id` và `data.orderCode`.
-7. Guest có thể gọi lại `GET /orders/:orderId`.
+7. Guest có thể gọi lại `GET /orders/:orderId` hoặc `POST /orders/lookup`.
 
 ### Flow customer checkout
 

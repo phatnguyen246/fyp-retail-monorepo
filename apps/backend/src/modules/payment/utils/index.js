@@ -73,6 +73,7 @@ export function resolveVnpayConfig({ env = process.env } = {}) {
         tmnCode: env.VNP_TMNCODE ?? null,
         hashSecret: env.VNP_HASH_SECRET ?? null,
         paymentUrl: env.VNP_PAYMENT_URL ?? null,
+        apiUrl: env.VNP_API_URL ?? null,
         returnUrl: env.VNP_RETURN_URL ?? null,
         ipnUrl: env.VNP_IPN_URL ?? null,
         locale: env.VNP_LOCALE ?? DEFAULT_VNPAY_LOCALE,

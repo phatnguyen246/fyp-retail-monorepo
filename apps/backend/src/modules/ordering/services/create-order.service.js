@@ -96,7 +96,15 @@ export function createCreateOrderService({
                 orderRepository,
                 baseDocument: createPendingOrderDocument({
                     accountId: normalizedRequester.accountId,
+                    recipientName: parsedInput.recipientName,
                     phoneNumber: parsedInput.phoneNumber,
+                    street: parsedInput.street ?? null,
+                    provinceCode: parsedInput.provinceCode ?? null,
+                    provinceName: parsedInput.provinceName ?? null,
+                    districtCode: parsedInput.districtCode ?? null,
+                    districtName: parsedInput.districtName ?? null,
+                    wardCode: parsedInput.wardCode ?? null,
+                    wardName: parsedInput.wardName ?? null,
                     shippingAddressLine: parsedInput.shippingAddressLine,
                     paymentMethod: parsedInput.paymentMethod,
                     stockCommitStatus: shouldCommitStockOnCheckout

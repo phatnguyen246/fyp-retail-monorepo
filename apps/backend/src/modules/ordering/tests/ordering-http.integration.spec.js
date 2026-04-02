@@ -214,6 +214,7 @@ function createOrderFixture({
         _id: orderId,
         orderCode,
         accountId,
+        recipientName: "Order Fixture",
         phoneNumber: "0900000000",
         shippingAddressLine: "123 Test Street",
         paymentMethod,
@@ -587,8 +588,15 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 phoneNumber: "0900111222",
-                shippingAddressLine: "1 Customer Street",
+                street: "1 Customer Street",
+                provinceCode: 79,
+                provinceName: "Ho Chi Minh",
+                districtCode: 760,
+                districtName: "Quan 1",
+                wardCode: 26734,
+                wardName: "Ben Nghe",
             }),
         });
         const body = await response.json();
@@ -596,11 +604,17 @@ describe("ordering http integration", () => {
         expect(response.status).toBe(201);
         expect(body.data).toMatchObject({
             accountId: CUSTOMER_ACCOUNT_ID,
+            recipientName: "Nguyen Van A",
             paymentMethod: "cod",
             paymentStatus: "pending",
             orderStatus: "pending",
             subtotal: 39980000,
             grandTotal: 39980000,
+            street: "1 Customer Street",
+            provinceCode: 79,
+            districtCode: 760,
+            wardCode: 26734,
+            shippingAddressLine: "1 Customer Street, Ben Nghe, Quan 1, Ho Chi Minh",
             items: [
                 {
                     variantId: "65f000000000000000000702",
@@ -640,14 +654,24 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Tran Thi B",
                 phoneNumber: "0900222333",
-                shippingAddressLine: "2 Guest Street",
+                street: "2 Guest Street",
+                provinceCode: 48,
+                provinceName: "Da Nang",
+                districtCode: 490,
+                districtName: "Hai Chau",
+                wardCode: 20194,
+                wardName: "Phuoc Ninh",
             }),
         });
         const createBody = await createResponse.json();
 
         expect(createResponse.status).toBe(201);
         expect(createBody.data.accountId).toBeNull();
+        expect(createBody.data.shippingAddressLine).toBe(
+            "2 Guest Street, Phuoc Ninh, Hai Chau, Da Nang"
+        );
 
         const detailResponse = await fetch(
             `${runningServer.url}/orders/${createBody.data.id}`
@@ -662,6 +686,85 @@ describe("ordering http integration", () => {
         });
     });
 
+    it("lets guests find their order by order code and phone number", async () => {
+        const state = createBaseState();
+
+        state.orders = [
+            createOrderFixture({
+                orderId: new ObjectId("65f000000000000000000723"),
+                accountId: null,
+                orderCode: "ORD-20260316-161616",
+            }),
+        ];
+        runningServer = await startServer(state);
+
+        const response = await fetch(`${runningServer.url}/orders/lookup`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                orderCode: "ORD-20260316-161616",
+                phoneNumber: "0900000000",
+            }),
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toMatchObject({
+            id: "65f000000000000000000723",
+            accountId: null,
+            orderCode: "ORD-20260316-161616",
+            phoneNumber: "0900000000",
+        });
+    });
+
+    it("does not let guest lookup return customer orders", async () => {
+        const state = createBaseState();
+
+        state.orders = [
+            createOrderFixture({
+                orderId: new ObjectId("65f000000000000000000724"),
+                accountId: CUSTOMER_ACCOUNT_ID,
+                orderCode: "ORD-20260316-171717",
+            }),
+        ];
+        runningServer = await startServer(state);
+
+        const response = await fetch(`${runningServer.url}/orders/lookup`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                orderCode: "ORD-20260316-171717",
+                phoneNumber: "0900000000",
+            }),
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(404);
+        expect(body.code).toBe("ORDER_NOT_FOUND");
+    });
+
+    it("fails guest lookup when orderCode is missing", async () => {
+        runningServer = await startServer(createBaseState());
+
+        const response = await fetch(`${runningServer.url}/orders/lookup`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                phoneNumber: "0900000000",
+            }),
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(422);
+        expect(body.code).toBe("VALIDATION_ERROR");
+    });
+
     it("creates a VNPAY order without deducting stock during checkout", async () => {
         runningServer = await startServer(createCustomerCartState());
 
@@ -673,6 +776,7 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
                 paymentMethod: "vnpay",
@@ -723,6 +827,7 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
             }),
@@ -749,6 +854,7 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 shippingAddressLine: "1 Customer Street",
             }),
         });
@@ -769,6 +875,7 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 phoneNumber: "0900111222",
             }),
         });
@@ -984,6 +1091,7 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
             }),
@@ -1121,6 +1229,7 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
+                recipientName: "Nguyen Van A",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
             }),

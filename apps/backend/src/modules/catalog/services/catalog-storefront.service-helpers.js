@@ -162,6 +162,10 @@ function mapVariant(variant, mediaByVariantId = new Map()) {
         salePrice: variant.salePrice,
         currency: variant.currency,
         video: variant.video,
+        availableQuantity:
+            typeof variant?.availableQuantity === "number"
+                ? variant.availableQuantity
+                : 0,
         isInStock: variant.isInStock === true,
         media:
             mediaByVariantId.get(variantId)?.map(mapMediaItem) ?? [],

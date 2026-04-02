@@ -7,6 +7,7 @@
     "test": "vitest run",
     "dev:test": "pnpm test && pnpm dev",
     "e2e:vnpay:checkout": "node scripts/e2e-vnpay-checkout.js",
+    "job:vnpay:reconcile": "node scripts/reconcile-pending-vnpay-payments.js",
     "storage:check": "node src/bootstrap/check-storage.js",
     "db:setup:account": "node src/modules/account/seeds/setup-account-indexes.js",
     "db:setup:catalog": "node src/modules/catalog/seeds/setup-catalog-indexes.js",

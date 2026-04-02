@@ -12,6 +12,7 @@ describe("ordering module", () => {
         expect(typeof services.createOrder).toBe("function");
         expect(typeof services.listCustomerOrders).toBe("function");
         expect(typeof services.getOrderDetail).toBe("function");
+        expect(typeof services.lookupGuestOrder).toBe("function");
         expect(typeof services.cancelCustomerOrder).toBe("function");
         expect(typeof services.listAdminOrders).toBe("function");
         expect(typeof services.getAdminOrderDetail).toBe("function");

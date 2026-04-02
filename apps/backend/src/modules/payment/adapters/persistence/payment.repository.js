@@ -56,6 +56,16 @@ export function createPaymentRepository({
                 .then((payments) => payments[0] ?? null);
         },
 
+        findPayments({ filter = {}, projection, sort, limit } = {}) {
+            return baseRepository.findManyByFilter({
+                collectionName: PAYMENT_COLLECTIONS.payments,
+                filter,
+                projection,
+                sort,
+                limit,
+            });
+        },
+
         updatePaymentById({ paymentId, set, options } = {}) {
             return baseRepository.updateOneById({
                 collectionName: PAYMENT_COLLECTIONS.payments,

@@ -16,6 +16,7 @@ export function createOrderingRouter({
 
     router.get("/health", controller.getHealth);
     router.post("/", controller.createOrder);
+    router.post("/lookup", controller.lookupGuestOrder);
     router.get("/", requireAuthMiddleware, controller.listOrders);
     router.get("/:orderId", controller.getOrderDetail);
     router.post("/:orderId/cancel", requireAuthMiddleware, controller.cancelOrder);

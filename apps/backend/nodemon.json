@@ -1,0 +1,14 @@
+{
+  "watch": [
+    "index.js",
+    "src",
+    "scripts"
+  ],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    "../frontend/**",
+    "../../node_modules/**",
+    "../../.git/**",
+    "coverage/**"
+  ]
+}

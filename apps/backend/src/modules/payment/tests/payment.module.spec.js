@@ -12,5 +12,6 @@ describe("payment module", () => {
         expect(typeof services.createVnpayPaymentUrl).toBe("function");
         expect(typeof services.handleVnpayIpn).toBe("function");
         expect(typeof services.handleVnpayReturn).toBe("function");
+        expect(typeof services.reconcilePendingVnpayPayments).toBe("function");
     });
 });

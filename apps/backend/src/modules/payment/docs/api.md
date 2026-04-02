@@ -18,8 +18,9 @@ Module này chưa có API public để:
 
 - tra cứu danh sách payment,
 - refund,
-- query transaction từ VNPAY,
 - retry nhiều payment attempt cho cùng một order.
+
+Ngoài các API public ở trên, backend hiện có thêm một `reconcile job` nội bộ để quét lại các payment VNPAY đang `pending` và chủ động query trạng thái giao dịch từ VNPAY khi IPN bị lỡ.
 
 ## Base URL
 
@@ -59,6 +60,7 @@ VNP_VERSION=2.1.0
 VNP_TMNCODE=YOUR_TMN_CODE
 VNP_HASH_SECRET=YOUR_SECRET_KEY
 VNP_PAYMENT_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+VNP_API_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
 VNP_RETURN_URL=http://localhost:3000/payment/vnpay/return
 VNP_IPN_URL=http://localhost:3000/payment/vnpay/ipn
 VNP_LOCALE=vn
@@ -68,6 +70,7 @@ VNP_CURRENCY=VND
 Lưu ý:
 
 - `VNP_TMNCODE`, `VNP_HASH_SECRET`, `VNP_PAYMENT_URL`, `VNP_RETURN_URL` là bắt buộc khi gọi flow VNPAY.
+- `VNP_API_URL` là bắt buộc nếu muốn chạy reconcile job để hỏi ngược trạng thái giao dịch từ VNPAY.
 - Validation config là `lazy`, nghĩa là app vẫn boot được nếu env thiếu, nhưng request VNPAY sẽ lỗi `500 PAYMENT_CONFIGURATION_ERROR`.
 - `VNP_IPN_URL` hiện được dùng làm cấu hình merchant/callback, không nằm trong URL redirect trả cho client.
 
@@ -130,6 +133,27 @@ Quy tắc truy cập hiện tại:
    - `GET /payment/vnpay/return`
    - `GET /payment/vnpay/ipn`
 8. Chỉ `IPN` mới cập nhật DB chính thức.
+
+### Reconcile pending VNPAY payments
+
+Khi `IPN` bị lỡ do tunnel/downstream network issue, có thể chạy job nội bộ:
+
+```bash
+pnpm --filter @apps/backend run job:vnpay:reconcile
+```
+
+CLI options hỗ trợ:
+
+```bash
+pnpm --filter @apps/backend run job:vnpay:reconcile -- --limit=50 --min-age-minutes=2 --max-age-hours=48 --ip=127.0.0.1
+```
+
+Job này sẽ:
+
+- quét payment `provider = vnpay` và `status = pending`,
+- gọi `querydr` sang VNPAY bằng `providerTxnRef`,
+- nếu VNPAY xác nhận đã thanh toán thì cập nhật payment/order và commit stock bằng cùng logic với `IPN`,
+- nếu giao dịch vẫn chưa hoàn tất thì giữ nguyên `pending`.
 
 ## API hiện có
 
@@ -648,4 +672,3 @@ Lưu ý:
 - `POST /auth/register`
 - `POST /auth/login`
 - `POST /cart/items`
-

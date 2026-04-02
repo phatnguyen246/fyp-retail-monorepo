@@ -5,6 +5,7 @@ import {
 } from "./constants/index.js";
 import { createPaymentController } from "./http/payment.controller.js";
 import {
+    createPaymentAdminRouter,
     createPaymentCallbackRouter,
     createPaymentRouter,
 } from "./http/payment.routes.js";
@@ -12,6 +13,7 @@ import { createPaymentServices } from "./services/index.js";
 
 export function registerPaymentModule({
     app,
+    adminMiddleware,
     db,
     env = process.env,
     logger = console,
@@ -35,15 +37,22 @@ export function registerPaymentModule({
     const callbackRouter = createPaymentCallbackRouter({
         controller,
     });
+    const adminRouter = createPaymentAdminRouter({
+        controller,
+    });
 
     app.use(PAYMENTS_BASE_PATH, router);
     app.use(PAYMENT_CALLBACK_BASE_PATH, callbackRouter);
+    if (adminMiddleware) {
+        app.use(`/admin${PAYMENTS_BASE_PATH}`, adminMiddleware, adminRouter);
+    }
 
     return {
         adapters,
         services,
         controller,
         router,
+        adminRouter,
         callbackRouter,
     };
 }

@@ -129,5 +129,23 @@ export function createInventoryRepository({
 
             return cursor.toArray();
         },
+
+        countLowStockInventoryRecords() {
+            return baseRepository
+                .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)
+                .countDocuments({
+                    $expr: {
+                        $lte: ["$stockQuantity", "$lowStockThreshold"],
+                    },
+                });
+        },
+
+        countOutOfStockInventoryRecords() {
+            return baseRepository
+                .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)
+                .countDocuments({
+                    stockQuantity: 0,
+                });
+        },
     };
 }

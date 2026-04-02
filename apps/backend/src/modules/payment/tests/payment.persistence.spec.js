@@ -78,6 +78,16 @@ describe("payment persistence", () => {
         await repository.findLatestPaymentByOrderId({
             orderId,
         });
+        await repository.findPayments({
+            filter: {
+                provider: "vnpay",
+                status: "pending",
+            },
+            sort: {
+                createdAt: 1,
+            },
+            limit: 10,
+        });
 
         expect(collectionMock.findOne).toHaveBeenNthCalledWith(
             1,
@@ -98,9 +108,21 @@ describe("payment persistence", () => {
             { orderId },
             undefined
         );
+        expect(collectionMock.find).toHaveBeenNthCalledWith(
+            2,
+            {
+                provider: "vnpay",
+                status: "pending",
+            },
+            undefined
+        );
         expect(collectionMock.cursor.sort).toHaveBeenCalledWith({
             createdAt: -1,
         });
+        expect(collectionMock.cursor.sort).toHaveBeenNthCalledWith(2, {
+            createdAt: 1,
+        });
+        expect(collectionMock.cursor.limit).toHaveBeenNthCalledWith(2, 10);
     });
 
     it("exposes shared repository helpers through createPaymentBaseRepository", async () => {

@@ -41,6 +41,20 @@ export function createOrderRepository({
             });
         },
 
+        countOrdersByFilter({ filter = {} } = {}) {
+            return baseRepository
+                .getCollection(ORDER_COLLECTIONS.orders)
+                .countDocuments(filter);
+        },
+
+        findOrderByFilter({ filter = {}, projection } = {}) {
+            return baseRepository.findOneByFilter({
+                collectionName: ORDER_COLLECTIONS.orders,
+                filter,
+                projection,
+            });
+        },
+
         updateOrderById({ orderId, set, options } = {}) {
             return baseRepository.updateOneById({
                 collectionName: ORDER_COLLECTIONS.orders,

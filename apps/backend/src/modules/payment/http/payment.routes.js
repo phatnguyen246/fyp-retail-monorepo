@@ -9,6 +9,14 @@ export function createPaymentRouter({ controller } = {}) {
     return router;
 }
 
+export function createPaymentAdminRouter({ controller } = {}) {
+    const router = express.Router();
+
+    router.post("/vnpay/orders/:orderId/reconcile", controller.adminReconcileVnpayPayment);
+
+    return router;
+}
+
 export function createPaymentCallbackRouter({ controller } = {}) {
     const router = express.Router();
 

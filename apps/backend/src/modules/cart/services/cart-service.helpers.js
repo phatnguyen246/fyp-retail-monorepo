@@ -272,6 +272,10 @@ export function buildCartItemView(item, { catalogRead, inventoryRead } = {}) {
         variantLabel: composeVariantLabel(resolvedCatalogRead.variantAttributes),
         thumbnailUrl: resolvedCatalogRead.thumbnailUrl ?? null,
         quantity: item.quantity,
+        availableQuantity:
+            typeof resolvedInventoryRead.stockQuantity === "number"
+                ? resolvedInventoryRead.stockQuantity
+                : 0,
         unitPrice,
         lineTotal,
         currency: resolvedCatalogRead.currency ?? null,

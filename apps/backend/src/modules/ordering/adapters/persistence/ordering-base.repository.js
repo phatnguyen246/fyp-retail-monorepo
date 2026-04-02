@@ -49,6 +49,13 @@ export function createOrderingBaseRepository({ db } = {}) {
             );
         },
 
+        findOneByFilter({ collectionName, filter = {}, projection } = {}) {
+            return getCollection(collectionName).findOne(
+                filter,
+                projection ? { projection } : undefined
+            );
+        },
+
         findManyByFilter({
             collectionName,
             filter = {},

@@ -63,6 +63,18 @@ export function generateOrderCode({
     return `ORD-${dateCode}-${suffix}`;
 }
 
+export function composeShippingAddressLine({
+    street,
+    wardName,
+    districtName,
+    provinceName,
+} = {}) {
+    return [street, wardName, districtName, provinceName]
+        .filter((segment) => typeof segment === "string" && segment.trim().length > 0)
+        .map((segment) => segment.trim())
+        .join(", ");
+}
+
 function createOrderItemView(item) {
     return {
         productId: toIdString(item?.productId),
@@ -91,7 +103,15 @@ export function createOrderSummaryView(order) {
         id: toIdString(order?._id),
         orderCode: order?.orderCode ?? null,
         accountId: order?.accountId ?? null,
+        recipientName: order?.recipientName ?? null,
         phoneNumber: order?.phoneNumber ?? null,
+        street: order?.street ?? null,
+        provinceCode: order?.provinceCode ?? null,
+        provinceName: order?.provinceName ?? null,
+        districtCode: order?.districtCode ?? null,
+        districtName: order?.districtName ?? null,
+        wardCode: order?.wardCode ?? null,
+        wardName: order?.wardName ?? null,
         shippingAddressLine: order?.shippingAddressLine ?? null,
         paymentMethod: order?.paymentMethod ?? null,
         paymentStatus: order?.paymentStatus ?? null,

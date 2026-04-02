@@ -51,6 +51,14 @@ export function normalizePositiveInteger(value, fieldName) {
     return value;
 }
 
+export function normalizeOptionalPositiveInteger(value, fieldName) {
+    if (value === undefined || value === null) {
+        return null;
+    }
+
+    return normalizePositiveInteger(value, fieldName);
+}
+
 export function normalizeNonNegativeNumber(value, fieldName, defaultValue) {
     if (value === undefined) {
         if (defaultValue === undefined) {

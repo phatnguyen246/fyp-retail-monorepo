@@ -8,6 +8,7 @@ import { createGetAdminOrderDetailService } from "./get-admin-order-detail.servi
 import { createGetOrderDetailService } from "./get-order-detail.service.js";
 import { createListAdminOrdersService } from "./list-admin-orders.service.js";
 import { createListCustomerOrdersService } from "./list-customer-orders.service.js";
+import { createLookupGuestOrderService } from "./lookup-guest-order.service.js";
 import { createUpdateAdminOrderStatusService } from "./update-admin-order-status.service.js";
 
 export { createCancelAdminOrderService } from "./cancel-admin-order.service.js";
@@ -17,6 +18,7 @@ export { createGetAdminOrderDetailService } from "./get-admin-order-detail.servi
 export { createGetOrderDetailService } from "./get-order-detail.service.js";
 export { createListAdminOrdersService } from "./list-admin-orders.service.js";
 export { createListCustomerOrdersService } from "./list-customer-orders.service.js";
+export { createLookupGuestOrderService } from "./lookup-guest-order.service.js";
 export { createUpdateAdminOrderStatusService } from "./update-admin-order-status.service.js";
 
 export function createOrderingServices({
@@ -54,6 +56,10 @@ export function createOrderingServices({
             orderRepository,
         }),
         getOrderDetail: createGetOrderDetailService({
+            orderRepository,
+            validation,
+        }),
+        lookupGuestOrder: createLookupGuestOrderService({
             orderRepository,
             validation,
         }),

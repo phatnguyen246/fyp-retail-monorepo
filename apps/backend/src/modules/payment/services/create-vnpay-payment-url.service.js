@@ -100,13 +100,15 @@ export function createCreateVnpayPaymentUrlService({
 
         if (
             payment.orderInfo !== orderInfo ||
-            payment.providerTxnRef !== payment.paymentCode
+            payment.providerTxnRef !== payment.paymentCode ||
+            payment.providerTransactionDate !== createDate
         ) {
             await paymentRepository.updatePaymentById({
                 paymentId: payment._id,
                 set: {
                     orderInfo,
                     providerTxnRef: payment.paymentCode,
+                    providerTransactionDate: createDate,
                     updatedAt: now,
                 },
             });

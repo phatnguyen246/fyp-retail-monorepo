@@ -2,6 +2,7 @@ import {
     DEFAULT_PAYMENT_CURRENCY,
     PAYMENT_STATUSES,
 } from "../constants/index.js";
+import { isSuccessfulVnpayPayload, mapVnpayFailureStatus } from "../utils/index.js";
 import { createPaymentConfigurationError, createPaymentConflictError, createPaymentForbiddenError, createPaymentNotFoundError } from "./payment-service.errors.js";
 
 export function assertCreateUrlRequesterAllowed(requester = {}) {
@@ -104,6 +105,21 @@ export function ensureVnpayConfig(config) {
     );
 }
 
+export function ensureVnpayQueryConfig(config) {
+    const resolvedConfig = ensureVnpayConfig(config);
+
+    if (resolvedConfig?.apiUrl) {
+        return resolvedConfig;
+    }
+
+    throw createPaymentConfigurationError(
+        "Missing VNPAY transaction query configuration",
+        {
+            missingKeys: ["VNP_API_URL"],
+        }
+    );
+}
+
 export async function rollbackDecrementedStock({
     inventoryAdapter,
     adjustedItems = [],
@@ -128,6 +144,141 @@ export async function rollbackDecrementedStock({
     }
 }
 
+export async function reconcilePersistedVnpayResult({
+    inventoryAdapter,
+    logger = console,
+    order,
+    orderAdapter,
+    payment,
+    paymentRepository,
+    payload,
+} = {}) {
+    const now = new Date();
+
+    if (isSuccessfulVnpayPayload(payload)) {
+        await paymentRepository.updatePaymentByIdWithOperators({
+            paymentId: payment._id,
+            update: {
+                $set: {
+                    status: "paid",
+                    ...buildPaymentProviderFields(payload),
+                    failedAt: null,
+                    paidAt: now,
+                    updatedAt: now,
+                },
+            },
+        });
+
+        if (order.orderStatus === "cancelled") {
+            return {
+                paymentStatus: "paid",
+                orderPaymentStatus: order.paymentStatus ?? null,
+            };
+        }
+
+        if (
+            order.paymentStatus === "paid" &&
+            order.stockCommitStatus === "committed"
+        ) {
+            return {
+                paymentStatus: "paid",
+                orderPaymentStatus: "paid",
+            };
+        }
+
+        const adjustedItems = [];
+
+        try {
+            if (order.stockCommitStatus !== "committed") {
+                for (const item of order.items ?? []) {
+                    const updatedInventory =
+                        await inventoryAdapter.decrementStockQuantityByVariantIdIfAvailable(
+                            {
+                                variantId: item.variantId,
+                                quantity: item.quantity,
+                            }
+                        );
+
+                    if (!updatedInventory) {
+                        throw new Error(
+                            `Inventory changed after payment success for variant: ${item.variantId.toHexString()}`
+                        );
+                    }
+
+                    adjustedItems.push({
+                        variantId: item.variantId.toHexString(),
+                        quantity: item.quantity,
+                    });
+                }
+            }
+
+            await orderAdapter.updateOrderByIdWithOperators({
+                orderId: order._id,
+                update: {
+                    $set: {
+                        paymentStatus: "paid",
+                        stockCommitStatus: "committed",
+                        updatedAt: now,
+                    },
+                },
+            });
+        } catch (error) {
+            await rollbackDecrementedStock({
+                inventoryAdapter,
+                adjustedItems,
+                logger,
+            });
+            throw error;
+        }
+
+        return {
+            paymentStatus: "paid",
+            orderPaymentStatus: "paid",
+        };
+    }
+
+    const mappedStatus = mapVnpayFailureStatus(payload);
+
+    if (payment.status === "paid") {
+        return {
+            paymentStatus: "paid",
+            orderPaymentStatus: order.paymentStatus ?? null,
+        };
+    }
+
+    await paymentRepository.updatePaymentByIdWithOperators({
+        paymentId: payment._id,
+        update: {
+            $set: {
+                status: mappedStatus,
+                ...buildPaymentProviderFields(payload),
+                failedAt: now,
+                updatedAt: now,
+            },
+        },
+    });
+
+    if (order.orderStatus !== "cancelled" && order.paymentStatus !== "paid") {
+        await orderAdapter.updateOrderByIdWithOperators({
+            orderId: order._id,
+            update: {
+                $set: {
+                    paymentStatus: mappedStatus,
+                    updatedAt: now,
+                },
+            },
+        });
+    }
+
+    return {
+        paymentStatus: mappedStatus,
+        orderPaymentStatus:
+            order.orderStatus !== "cancelled" && order.paymentStatus !== "paid"
+                ? mappedStatus
+                : order.paymentStatus ?? null,
+    };
+}
+
 export function createPaymentSummaryView(payment) {
     return {
         id: payment?._id?.toHexString?.() ?? null,
@@ -143,6 +294,7 @@ export function createPaymentSummaryView(payment) {
                 ? payment.status
                 : null,
         providerTxnRef: payment?.providerTxnRef ?? null,
+        providerTransactionDate: payment?.providerTransactionDate ?? null,
         createdAt: payment?.createdAt ?? null,
         updatedAt: payment?.updatedAt ?? null,
     };

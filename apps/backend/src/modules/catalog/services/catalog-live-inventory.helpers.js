@@ -129,6 +129,7 @@ export async function hydrateCatalogProductsWithLiveInventory({
 
         return {
             ...variant,
+            availableQuantity: inventoryRead.stockQuantity,
             isInStock: inventoryRead.isInStock,
         };
     });

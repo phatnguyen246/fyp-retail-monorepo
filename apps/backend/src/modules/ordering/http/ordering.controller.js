@@ -48,6 +48,17 @@ export function createOrderingController({ services }) {
             });
         },
 
+        async lookupGuestOrder(req, res) {
+            const order = await services.lookupGuestOrder({
+                input: req.body,
+                requester: createRequester(req),
+            });
+
+            return sendOrderingSuccess(res, {
+                data: order,
+            });
+        },
+
         async cancelOrder(req, res) {
             const order = await services.cancelCustomerOrder({
                 orderId: req.params.orderId,

@@ -9,6 +9,7 @@ import {
     createTimestampPair,
     normalizeDate,
     normalizeNonNegativeNumber,
+    normalizeOptionalPositiveInteger,
     normalizeOptionalString,
     normalizePositiveInteger,
     normalizeRequiredObjectId,
@@ -77,7 +78,15 @@ export const ORDER_DOCUMENT_SHAPE = Object.freeze({
     _id: { type: "ObjectId", required: false },
     orderCode: { type: "string", required: true },
     accountId: { type: "string", required: false, default: null },
+    recipientName: { type: "string", required: true },
     phoneNumber: { type: "string", required: true },
+    street: { type: "string", required: false, default: null },
+    provinceCode: { type: "number", required: false, default: null },
+    provinceName: { type: "string", required: false, default: null },
+    districtCode: { type: "number", required: false, default: null },
+    districtName: { type: "string", required: false, default: null },
+    wardCode: { type: "number", required: false, default: null },
+    wardName: { type: "string", required: false, default: null },
     shippingAddressLine: { type: "string", required: true },
     paymentMethod: { type: "string", required: true },
     paymentStatus: { type: "string", required: true },
@@ -123,7 +132,21 @@ export function createOrder(input = {}) {
         _id: createDocumentId(input._id, "_id"),
         orderCode: normalizeRequiredString(input.orderCode, "orderCode"),
         accountId: normalizeOptionalString(input.accountId, "accountId"),
+        recipientName: normalizeRequiredString(input.recipientName, "recipientName"),
         phoneNumber: normalizeRequiredString(input.phoneNumber, "phoneNumber"),
+        street: normalizeOptionalString(input.street, "street"),
+        provinceCode: normalizeOptionalPositiveInteger(
+            input.provinceCode,
+            "provinceCode"
+        ),
+        provinceName: normalizeOptionalString(input.provinceName, "provinceName"),
+        districtCode: normalizeOptionalPositiveInteger(
+            input.districtCode,
+            "districtCode"
+        ),
+        districtName: normalizeOptionalString(input.districtName, "districtName"),
+        wardCode: normalizeOptionalPositiveInteger(input.wardCode, "wardCode"),
+        wardName: normalizeOptionalString(input.wardName, "wardName"),
         shippingAddressLine: normalizeRequiredString(
             input.shippingAddressLine,
             "shippingAddressLine"

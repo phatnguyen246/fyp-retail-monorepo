@@ -1,4 +1,5 @@
 import { registerAccountModule } from "../modules/account/index.js";
+import { registerAdminOverviewModule } from "../modules/admin-overview/index.js";
 import { registerAuthModule } from "../modules/auth/index.js";
 import { createCartAdapters } from "../modules/cart/adapters/index.js";
 import { registerCartModule } from "../modules/cart/index.js";
@@ -41,7 +42,13 @@ export function registerModules({ app, db, storage }) {
     });
     const payment = registerPaymentModule({
         app,
+        adminMiddleware: auth.middlewares.requireAdmin,
         db,
+    });
+    const adminOverview = registerAdminOverviewModule({
+        app,
+        db,
+        adminMiddleware: auth.middlewares.requireAdmin,
     });
     const ordering = registerOrderingModule({
         app,
@@ -58,6 +65,7 @@ export function registerModules({ app, db, storage }) {
         cart,
         catalog,
         inventory,
+        adminOverview,
         payment,
         ordering,
     };

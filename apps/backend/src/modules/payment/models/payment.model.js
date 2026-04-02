@@ -45,6 +45,7 @@ export const PAYMENT_DOCUMENT_SHAPE = Object.freeze({
     currency: { type: "string", required: true },
     status: { type: "string", required: true },
     providerTxnRef: { type: "string", required: false, default: null },
+    providerTransactionDate: { type: "string", required: false, default: null },
     providerTransactionNo: { type: "string", required: false, default: null },
     providerResponseCode: { type: "string", required: false, default: null },
     providerTransactionStatus: { type: "string", required: false, default: null },
@@ -78,6 +79,10 @@ export function createPayment(input = {}) {
         currency: normalizeRequiredString(input.currency, "currency"),
         status: normalizeEnumValue(input.status, "status", PAYMENT_STATUSES),
         providerTxnRef: normalizeOptionalString(input.providerTxnRef, "providerTxnRef"),
+        providerTransactionDate: normalizeOptionalString(
+            input.providerTransactionDate,
+            "providerTransactionDate"
+        ),
         providerTransactionNo: normalizeOptionalString(
             input.providerTransactionNo,
             "providerTransactionNo"

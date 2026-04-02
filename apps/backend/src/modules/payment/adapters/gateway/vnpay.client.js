@@ -24,6 +24,14 @@ function hmacSha512(secret, data) {
         .digest("hex");
 }
 
+function normalizeSignatureValue(value) {
+    if (value === undefined || value === null) {
+        return "";
+    }
+
+    return String(value);
+}
+
 export function createVnpayPaymentUrl({
     paymentUrl,
     tmnCode,
@@ -71,6 +79,74 @@ export function createVnpayPaymentUrl({
     return `${paymentUrl}?${qs.stringify(params, VNPAY_QS_OPTIONS)}`;
 }
 
+export function createVnpayQueryDrPayload({
+    requestId,
+    version,
+    tmnCode,
+    txnRef,
+    transactionDate,
+    createDate,
+    ipAddr,
+    orderInfo,
+    hashSecret,
+} = {}) {
+    const payload = {
+        vnp_RequestId: requestId,
+        vnp_Version: version,
+        vnp_Command: "querydr",
+        vnp_TmnCode: tmnCode,
+        vnp_TxnRef: txnRef,
+        vnp_OrderInfo: orderInfo,
+        vnp_TransactionDate: transactionDate,
+        vnp_CreateDate: createDate,
+        vnp_IpAddr: ipAddr,
+    };
+
+    const signData = [
+        payload.vnp_RequestId,
+        payload.vnp_Version,
+        payload.vnp_Command,
+        payload.vnp_TmnCode,
+        payload.vnp_TxnRef,
+        payload.vnp_TransactionDate,
+        payload.vnp_CreateDate,
+        payload.vnp_IpAddr,
+        payload.vnp_OrderInfo,
+    ]
+        .map(normalizeSignatureValue)
+        .join("|");
+
+    return {
+        ...payload,
+        vnp_SecureHash: hmacSha512(hashSecret, signData),
+    };
+}
+
+export async function executeVnpayQueryDr({
+    apiUrl,
+    payload,
+    fetchFn = globalThis.fetch,
+} = {}) {
+    if (typeof fetchFn !== "function") {
+        throw new Error("VNPAY query requires a fetch implementation");
+    }
+
+    const response = await fetchFn(apiUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        throw new Error(`VNPAY query failed with HTTP ${response.status}`);
+    }
+
+    return response.json();
+}
+
 export function verifyVnpayCallback(query = {}, hashSecret) {
     const payload = { ...query };
     const receivedHash = payload.vnp_SecureHash;
@@ -85,6 +161,40 @@ export function verifyVnpayCallback(query = {}, hashSecret) {
     return {
         isValid: receivedHash === calculatedHash,
         payload: sortedPayload,
+        receivedHash,
+        calculatedHash,
+    };
+}
+
+export function verifyVnpayQueryDrResponse(response = {}, hashSecret) {
+    const receivedHash = response?.vnp_SecureHash ?? null;
+    const payload = { ...response };
+    delete payload.vnp_SecureHash;
+    const signData = [
+        response?.vnp_ResponseId,
+        response?.vnp_Command,
+        response?.vnp_ResponseCode,
+        response?.vnp_Message,
+        response?.vnp_TmnCode,
+        response?.vnp_TxnRef,
+        response?.vnp_Amount,
+        response?.vnp_BankCode,
+        response?.vnp_PayDate,
+        response?.vnp_TransactionNo,
+        response?.vnp_TransactionType,
+        response?.vnp_TransactionStatus,
+        response?.vnp_OrderInfo,
+        response?.vnp_PromotionCode,
+        response?.vnp_PromotionAmount,
+    ]
+        .map(normalizeSignatureValue)
+        .join("|");
+
+    const calculatedHash = hmacSha512(hashSecret, signData);
+
+    return {
+        isValid: receivedHash === calculatedHash,
+        payload,
         receivedHash,
         calculatedHash,
     };

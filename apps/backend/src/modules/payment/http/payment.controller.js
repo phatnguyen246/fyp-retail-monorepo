@@ -34,6 +34,21 @@ export function createPaymentController({
             }
         },
 
+        async adminReconcileVnpayPayment(req, res, next) {
+            try {
+                const result = await services.adminReconcileVnpayPayment({
+                    orderId: req.params.orderId,
+                    ipAddr: getClientIp(req),
+                });
+
+                return sendPaymentSuccess(res, {
+                    data: result,
+                });
+            } catch (error) {
+                return next(error);
+            }
+        },
+
         async vnpayReturn(req, res, next) {
             try {
                 const result = await services.handleVnpayReturn({
