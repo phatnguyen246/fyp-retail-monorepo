@@ -1,6 +1,7 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import ConfirmDialog from '../common/ConfirmDialog.vue'
 import { fetchCatalogProducts } from '../../services/catalog.service'
 import { formatCurrency } from '../../services/formatters'
 import { useAuthStore } from '../../store/auth'
@@ -12,6 +13,8 @@ const compareStore = useCompareStore()
 const route = useRoute()
 const router = useRouter()
 const isUserMenuOpen = ref(false)
+const isAuthBootstrapPending = ref(true)
+const isLogoutConfirmOpen = ref(false)
 const searchQuery = ref('')
 const searchResults = ref([])
 const isSearchMenuOpen = ref(false)
@@ -165,9 +168,18 @@ async function handleSearchSubmit() {
   await selectSearchResult(searchResults.value[0])
 }
 
-async function handleLogout() {
-  await authStore.logout({ scope: 'customer' })
+function openLogoutConfirm() {
   isUserMenuOpen.value = false
+  isLogoutConfirmOpen.value = true
+}
+
+function closeLogoutConfirm() {
+  isLogoutConfirmOpen.value = false
+}
+
+async function handleLogout() {
+  await authStore.logout()
+  closeLogoutConfirm()
   await router.push({ name: 'login' })
 }
 
@@ -207,6 +219,14 @@ watch(
 
 onBeforeUnmount(() => {
   window.clearTimeout(searchTimerId)
+})
+
+onMounted(async () => {
+  try {
+    await authStore.initialize('auto')
+  } finally {
+    isAuthBootstrapPending.value = false
+  }
 })
 
 cartStore.fetchCart()
@@ -322,11 +342,12 @@ cartStore.fetchCart()
         </span>
       </RouterLink>
 
-      <div class="relative">
+      <div v-click-outside="() => (isUserMenuOpen = false)" class="relative">
         <button
-          v-if="!authStore.isAuthenticated"
+          v-if="isAuthBootstrapPending || !authStore.isAuthenticated"
           class="catalog-icon-button"
           type="button"
+          :disabled="isAuthBootstrapPending"
           @click="router.push({ name: 'login' })"
         >
           <span class="material-symbols-outlined text-[var(--catalog-primary)]">person</span>
@@ -341,7 +362,6 @@ cartStore.fetchCart()
         </button>
         <div
           v-if="isUserMenuOpen && authStore.isAuthenticated"
-          v-click-outside="() => (isUserMenuOpen = false)"
           class="user-menu"
         >
           <div class="border-b border-[var(--catalog-border-soft)] px-4 py-3">
@@ -351,11 +371,15 @@ cartStore.fetchCart()
             </p>
           </div>
           <div class="p-1">
+            <RouterLink :to="{ name: 'account' }" class="user-menu-item">
+              <span class="material-symbols-outlined">account_circle</span>
+              Thông tin tài khoản
+            </RouterLink>
             <RouterLink :to="{ name: 'order-history' }" class="user-menu-item">
               <span class="material-symbols-outlined">history</span>
               Lịch sử đơn hàng
             </RouterLink>
-            <button class="user-menu-item" @click="handleLogout">
+            <button class="user-menu-item" @click="openLogoutConfirm">
               <span class="material-symbols-outlined">logout</span>
               Đăng xuất
             </button>
@@ -364,6 +388,17 @@ cartStore.fetchCart()
       </div>
     </div>
   </nav>
+
+  <ConfirmDialog
+    :open="isLogoutConfirmOpen"
+    title="Xác nhận đăng xuất"
+    message="Bạn có chắc muốn đăng xuất khỏi phiên hiện tại không?"
+    confirm-label="Đăng xuất"
+    cancel-label="Ở lại"
+    :loading="authStore.loading"
+    @cancel="closeLogoutConfirm"
+    @confirm="handleLogout"
+  />
 </template>
 
 <style scoped>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 
@@ -9,6 +9,15 @@ const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
+const isAdminEntry = computed(() => route.name === 'admin-login')
+const title = computed(() => (isAdminEntry.value ? 'Đăng nhập quản trị' : 'Đăng nhập'))
+const subtitle = computed(() =>
+  isAdminEntry.value
+    ? 'Sử dụng tài khoản quản trị để truy cập khu điều hành.'
+    : 'Chào mừng trở lại. Vui lòng nhập thông tin của bạn.',
+)
+const registerTarget = computed(() => (isAdminEntry.value ? '/login' : '/register'))
+const registerLabel = computed(() => (isAdminEntry.value ? 'Đăng nhập khách hàng' : 'Đăng ký ngay'))
 
 async function handleLogin() {
   const success = await authStore.login({
@@ -37,8 +46,8 @@ async function handleLogin() {
 <template>
   <div class="auth-layout">
     <div class="auth-card">
-      <h1 class="auth-title">Đăng nhập</h1>
-      <p class="auth-subtitle">Chào mừng trở lại. Vui lòng nhập thông tin của bạn.</p>
+      <h1 class="auth-title">{{ title }}</h1>
+      <p class="auth-subtitle">{{ subtitle }}</p>
 
       <form @submit.prevent="handleLogin">
         <div class="auth-form-group">
@@ -61,8 +70,8 @@ async function handleLogin() {
       </form>
 
       <div class="auth-footer">
-        Chưa có tài khoản?
-        <RouterLink to="/register" class="auth-link">Đăng ký ngay</RouterLink>
+        {{ isAdminEntry ? 'Cần storefront customer flow?' : 'Chưa có tài khoản?' }}
+        <RouterLink :to="registerTarget" class="auth-link">{{ registerLabel }}</RouterLink>
       </div>
     </div>
   </div>

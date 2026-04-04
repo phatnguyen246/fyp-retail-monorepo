@@ -3,6 +3,7 @@ import CatalogProductPage from '../pages/CatalogProductPage.vue'
 import CatalogProductDetailPage from '../pages/CatalogProductDetailPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import RegisterPage from '../pages/RegisterPage.vue'
+import AccountPage from '../pages/AccountPage.vue'
 import CartPage from '../pages/CartPage.vue'
 import { useAuthStore } from '../store/auth'
 
@@ -25,6 +26,13 @@ import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/',
@@ -48,9 +56,20 @@ const router = createRouter({
       component: LoginPage,
     },
     {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: LoginPage,
+    },
+    {
       path: '/register',
       name: 'register',
       component: RegisterPage,
+    },
+    {
+      path: '/account',
+      name: 'account',
+      component: AccountPage,
+      meta: { requiresAuth: true },
     },
     {
       path: '/cart',
@@ -151,25 +170,38 @@ router.beforeEach(async (to, from, next) => {
   const authScope =
     to.meta.requiresAdmin || String(to.name || '').startsWith('admin-')
       ? 'admin'
-      : to.name === 'login' &&
+      : (to.name === 'login' || to.name === 'admin-login') &&
           typeof to.query.redirect === 'string' &&
           to.query.redirect.startsWith('/admin')
         ? 'admin'
+        : to.name === 'admin-login'
+          ? 'admin'
         : 'auto'
 
-  if (to.meta.requiresAuth || to.meta.requiresAdmin || to.name === 'login' || to.name === 'register') {
+  if (
+    to.meta.requiresAuth ||
+    to.meta.requiresAdmin ||
+    to.name === 'login' ||
+    to.name === 'admin-login' ||
+    to.name === 'register'
+  ) {
     await authStore.initialize(authScope)
   }
 
-  const isAuthenticated = Boolean(authStore.isAuthenticated)
+  const isAuthenticated = authStore.isAuthenticated
   const isAdmin = authStore.user?.role === 'admin'
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
+    next({
+      name: to.meta.requiresAdmin ? 'admin-login' : 'login',
+      query: { redirect: to.fullPath },
+    })
   } else if (to.meta.requiresAdmin && !isAdmin) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
+    next({ name: 'admin-login', query: { redirect: to.fullPath } })
   } else if (isAuthenticated && (to.name === 'login' || to.name === 'register')) {
     next(isAdmin ? { name: 'admin-overview' } : { name: 'catalog-products' })
+  } else if (isAdmin && to.name === 'admin-login') {
+    next({ name: 'admin-overview' })
   } else {
     next()
   }

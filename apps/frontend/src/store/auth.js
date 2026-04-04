@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, readonly } from 'vue'
+import { computed, ref, readonly } from 'vue'
 import { http } from '../services/http'
 
 function normalizeScope(scope = 'auto') {
@@ -17,6 +17,7 @@ export const useAuthStore = defineStore('auth', () => {
     admin: false,
     customer: false,
   })
+  const isAuthenticated = computed(() => Boolean(user.value))
   const initializePromises = new Map()
 
   function unwrapPayload(response, fallbackValue = null) {
@@ -78,10 +79,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout({ scope = currentScope.value } = {}) {
     const resolvedScope = normalizeScope(scope)
-    user.value = null
-    currentScope.value = resolvedScope
-    resetScopeInitialization()
-    markScopeInitialized(resolvedScope)
+    loading.value = true
+    error.value = null
 
     try {
       await http.post('/auth/logout', null, {
@@ -91,6 +90,12 @@ export const useAuthStore = defineStore('auth', () => {
       })
     } catch (e) {
       console.error('Logout failed', e)
+    } finally {
+      user.value = null
+      currentScope.value = resolvedScope
+      resetScopeInitialization()
+      markScopeInitialized(resolvedScope)
+      loading.value = false
     }
   }
 
@@ -154,6 +159,6 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     fetchUser,
     initialize,
-    isAuthenticated: user,
+    isAuthenticated,
   }
 })
