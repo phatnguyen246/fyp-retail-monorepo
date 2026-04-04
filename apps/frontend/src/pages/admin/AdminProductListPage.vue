@@ -160,6 +160,42 @@ onMounted(async () => {
       </article>
     </div>
 
+    <section class="admin-card">
+      <div class="admin-card-header">
+        <div>
+          <p class="admin-section-kicker">Bulk Import</p>
+          <h2 class="admin-card-title">Import CSV catalog</h2>
+        </div>
+      </div>
+
+      <form class="admin-form-grid" @submit.prevent="submitImport">
+        <label class="admin-field">
+          <span class="admin-label">File CSV</span>
+          <input class="admin-input" type="file" accept=".csv,text/csv" @change="handleImportSelection" />
+        </label>
+
+        <p class="admin-muted-text">
+          Backend yêu cầu đầy đủ cột product và variant. Import hoạt động theo cơ chế upsert qua `productGroupCode` và `sku`.
+        </p>
+
+        <div v-if="importError" class="admin-alert admin-alert-danger">
+          {{ importError }}
+        </div>
+
+        <div v-if="importSummary?.meta" class="admin-note-block">
+          <p>Row count: <strong>{{ formatNumber(importSummary.meta.rowCount) }}</strong></p>
+          <p>Product count: <strong>{{ formatNumber(importSummary.meta.productCount) }}</strong></p>
+          <p>Variant count: <strong>{{ formatNumber(importSummary.meta.variantCount) }}</strong></p>
+        </div>
+
+        <div class="admin-button-row">
+          <button type="submit" class="admin-button admin-button-primary" :disabled="importing">
+            {{ importing ? 'Đang import...' : 'Chạy import CSV' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
     <section class="admin-card admin-filter-bar">
       <div class="admin-card-header">
         <div>
@@ -344,42 +380,6 @@ onMounted(async () => {
           Trang sau
         </button>
       </div>
-    </section>
-
-    <section class="admin-card">
-      <div class="admin-card-header">
-        <div>
-          <p class="admin-section-kicker">Bulk Import</p>
-          <h2 class="admin-card-title">Import CSV catalog</h2>
-        </div>
-      </div>
-
-      <form class="admin-form-grid" @submit.prevent="submitImport">
-        <label class="admin-field">
-          <span class="admin-label">File CSV</span>
-          <input class="admin-input" type="file" accept=".csv,text/csv" @change="handleImportSelection" />
-        </label>
-
-        <p class="admin-muted-text">
-          Backend yêu cầu đầy đủ cột product và variant. Import hoạt động theo cơ chế upsert qua `productGroupCode` và `sku`.
-        </p>
-
-        <div v-if="importError" class="admin-alert admin-alert-danger">
-          {{ importError }}
-        </div>
-
-        <div v-if="importSummary?.meta" class="admin-note-block">
-          <p>Row count: <strong>{{ formatNumber(importSummary.meta.rowCount) }}</strong></p>
-          <p>Product count: <strong>{{ formatNumber(importSummary.meta.productCount) }}</strong></p>
-          <p>Variant count: <strong>{{ formatNumber(importSummary.meta.variantCount) }}</strong></p>
-        </div>
-
-        <div class="admin-button-row">
-          <button type="submit" class="admin-button admin-button-primary" :disabled="importing">
-            {{ importing ? 'Đang import...' : 'Chạy import CSV' }}
-          </button>
-        </div>
-      </form>
     </section>
   </section>
 </template>
