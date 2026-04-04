@@ -14,6 +14,84 @@ export function hasOwn(target, propertyName) {
     return hasOwnProperty(target, propertyName);
 }
 
+function toIdString(value) {
+    if (value && typeof value.toHexString === "function") {
+        return value.toHexString();
+    }
+
+    return typeof value === "string" ? value : null;
+}
+
+function createEntityMap(entities = []) {
+    const entityMap = new Map();
+
+    for (const entity of entities) {
+        const entityId = toIdString(entity?._id);
+
+        if (!entityId) {
+            continue;
+        }
+
+        entityMap.set(entityId, entity);
+    }
+
+    return entityMap;
+}
+
+function mapReferenceEntity(entity) {
+    if (!entity) {
+        return null;
+    }
+
+    return {
+        _id: entity._id,
+        code: entity.code,
+        name: entity.name,
+    };
+}
+
+function mapTagEntities(tagIds = [], tagMap = new Map()) {
+    return tagIds
+        .map((tagId) => tagMap.get(toIdString(tagId)))
+        .filter(Boolean)
+        .map(mapReferenceEntity);
+}
+
+async function hydrateAdminProductDetailReferences({
+    referenceRepository,
+    product,
+} = {}) {
+    const brandId = toIdString(product?.brandId);
+    const categoryId = toIdString(product?.categoryId);
+    const tagIds = Array.isArray(product?.tagIds)
+        ? product.tagIds.map((tagId) => toIdString(tagId)).filter(Boolean)
+        : [];
+
+    const [brands, categories, tags] = await Promise.all([
+        brandId
+            ? referenceRepository.findBrandsByIds({
+                  brandIds: [brandId],
+              })
+            : [],
+        categoryId
+            ? referenceRepository.findCategoriesByIds({
+                  categoryIds: [categoryId],
+              })
+            : [],
+        tagIds.length > 0
+            ? referenceRepository.findTagsByIds({
+                  tagIds,
+              })
+            : [],
+    ]);
+
+    return {
+        brandMap: createEntityMap(brands),
+        categoryMap: createEntityMap(categories),
+        tagMap: createEntityMap(tags),
+    };
+}
+
 export function normalizeActorId(actorId) {
     if (typeof actorId !== "string") {
         return null;
@@ -177,6 +255,7 @@ export async function loadVariantOrThrow({
 
 export async function buildProductAdminDetail({
     productRepository,
+    referenceRepository,
     variantRepository,
     productId,
 } = {}) {
@@ -187,9 +266,28 @@ export async function buildProductAdminDetail({
     const variants = await variantRepository.findVariantsByProductId({
         productId,
     });
+    const references = referenceRepository
+        ? await hydrateAdminProductDetailReferences({
+              referenceRepository,
+              product,
+          })
+        : {
+              brandMap: new Map(),
+              categoryMap: new Map(),
+              tagMap: new Map(),
+          };
 
     return {
-        product,
+        product: {
+            ...product,
+            brand: mapReferenceEntity(
+                references.brandMap.get(toIdString(product.brandId))
+            ),
+            category: mapReferenceEntity(
+                references.categoryMap.get(toIdString(product.categoryId))
+            ),
+            tags: mapTagEntities(product.tagIds, references.tagMap),
+        },
         variants,
     };
 }

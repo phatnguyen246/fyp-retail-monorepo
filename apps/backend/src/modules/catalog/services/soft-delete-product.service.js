@@ -7,6 +7,7 @@ import {
 
 export function createSoftDeleteProductService({
     productRepository,
+    referenceRepository,
     variantRepository,
     validation = createCatalogValidation(),
     rebuildProductDerivedFields,
@@ -45,6 +46,7 @@ export function createSoftDeleteProductService({
 
         return buildProductAdminDetail({
             productRepository,
+            referenceRepository,
             variantRepository,
             productId: parsedParams.productId,
         });

@@ -3,6 +3,7 @@ import { buildProductAdminDetail } from "./catalog-admin.service-helpers.js";
 
 export function createGetProductDetailAdminService({
     productRepository,
+    referenceRepository,
     variantRepository,
     validation = createCatalogValidation(),
 } = {}) {
@@ -11,6 +12,7 @@ export function createGetProductDetailAdminService({
 
         return buildProductAdminDetail({
             productRepository,
+            referenceRepository,
             variantRepository,
             productId: parsedParams.productId,
         });

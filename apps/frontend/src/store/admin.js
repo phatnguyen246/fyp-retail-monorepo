@@ -305,6 +305,9 @@ function normalizeProductDetail(payload) {
       brandId: normalizeId(product.brandId),
       categoryId: normalizeId(product.categoryId),
       tagIds: ensureArray(product.tagIds).map((tagId) => normalizeId(tagId)).filter(Boolean),
+      brand: normalizeReferenceEntity(product.brand),
+      category: normalizeReferenceEntity(product.category),
+      tags: ensureArray(product.tags).map((tag) => normalizeReferenceEntity(tag)).filter(Boolean),
       shortDescription: ensureString(product.shortDescription),
       longDescription: ensureString(product.longDescription),
       badges: ensureArray(product.badges).filter((badge) => typeof badge === 'string'),
@@ -652,9 +655,11 @@ export function createProductPatchDraft(product = {}) {
     badges: ensureArray(product.badges).filter((badge) => typeof badge === 'string'),
     specs: normalizeProductSpecs(product.specs),
     contactWhenOutOfStock: ensureBoolean(product.contactWhenOutOfStock, false),
-    brandCode: '',
-    categoryCode: '',
-    tagCodes: [],
+    brandCode: ensureString(product.brand?.code),
+    categoryCode: ensureString(product.category?.code),
+    tagCodes: ensureArray(product.tags)
+      .map((tag) => ensureString(tag?.code))
+      .filter(Boolean),
   }
 }
 

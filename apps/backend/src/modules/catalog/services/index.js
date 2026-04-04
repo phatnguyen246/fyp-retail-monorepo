@@ -121,6 +121,7 @@ export function createCatalogServices({
         }),
         getProductDetailAdmin: createGetProductDetailAdminService({
             productRepository,
+            referenceRepository,
             variantRepository,
             validation,
         }),
@@ -137,6 +138,7 @@ export function createCatalogServices({
         }),
         softDeleteProduct: createSoftDeleteProductService({
             productRepository,
+            referenceRepository,
             variantRepository,
             validation,
             rebuildProductDerivedFields,
