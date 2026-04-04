@@ -1097,6 +1097,196 @@ img {
   max-width: 58rem;
 }
 
+.admin-page-overview .admin-page-subtitle {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.admin-page-overview .admin-stat-card {
+  grid-template-rows: minmax(2.4rem, auto) auto auto;
+  gap: 0.75rem;
+}
+
+.admin-page-overview .admin-stat-eyebrow {
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.admin-page-overview .admin-stat-value {
+  align-self: start;
+}
+
+.admin-overview-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-overview-wide-card {
+  margin-top: 1rem;
+}
+
+.admin-overview-chart-card {
+  align-content: start;
+}
+
+.admin-overview-chart-card .admin-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.admin-overview-chart-card .admin-inline-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: start;
+  white-space: nowrap;
+}
+
+.admin-overview-chart-card .admin-empty-state,
+.admin-overview-chart-card .admin-empty-state-plain {
+  display: flex;
+  align-items: center;
+  min-height: 7rem;
+  text-align: left;
+}
+
+.admin-chart-caption {
+  margin: 0.35rem 0 0;
+  color: #607489;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.admin-chart-shell {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.admin-chart-shell-doughnut {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+}
+
+.admin-chart-detail-stack {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.admin-chart-canvas {
+  position: relative;
+  min-height: 18rem;
+}
+
+.admin-chart-canvas-wide {
+  min-height: 24rem;
+}
+
+.admin-chart-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-chart-highlight {
+  display: grid;
+  gap: 0.28rem;
+  border: 1px solid #e4ebf3;
+  border-radius: 0.9rem;
+  background: #f8fbfe;
+  padding: 0.85rem 0.95rem;
+}
+
+.admin-chart-highlight-label {
+  margin: 0;
+  color: #58708d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.admin-chart-highlight-value {
+  margin: 0;
+  color: #162333;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.admin-chart-highlight-note {
+  margin: 0;
+  color: #607489;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.admin-chart-breakdown {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-chart-breakdown-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #e4ebf3;
+  border-radius: 0.9rem;
+  background: #fbfdff;
+  padding: 0.85rem 0.95rem;
+}
+
+.admin-chart-breakdown-main {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.admin-chart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: #17293b;
+  font-weight: 700;
+}
+
+.admin-chart-swatch {
+  display: inline-flex;
+  flex: 0 0 0.78rem;
+  height: 0.78rem;
+  width: 0.78rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(226, 232, 240, 0.95);
+}
+
+.admin-chart-breakdown-note {
+  margin: 0;
+  color: #607489;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.admin-chart-breakdown-values {
+  display: grid;
+  justify-items: end;
+  gap: 0.18rem;
+  color: #607489;
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.admin-chart-breakdown-values strong {
+  color: #162333;
+  font-size: 1rem;
+}
+
 .admin-toolbar,
 .admin-button-row {
   flex-wrap: wrap;
@@ -1400,6 +1590,23 @@ img {
 .admin-ledger-subtitle {
   margin-top: 0.2rem;
   font-size: 0.84rem;
+}
+
+.admin-page-overview .admin-stat-note,
+.admin-page-overview .admin-ledger-subtitle,
+.admin-page-overview .admin-empty-state {
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.admin-page-overview .admin-stat-note {
+  margin: 0;
+  align-self: start;
+}
+
+.admin-page-overview .admin-empty-state.admin-empty-state-plain {
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .admin-table-actions-cell {

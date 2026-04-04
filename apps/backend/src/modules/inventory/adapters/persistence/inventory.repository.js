@@ -140,6 +140,12 @@ export function createInventoryRepository({
                 });
         },
 
+        countInventoryRecords({ filter = {} } = {}) {
+            return baseRepository
+                .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)
+                .countDocuments(filter);
+        },
+
         countOutOfStockInventoryRecords() {
             return baseRepository
                 .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)

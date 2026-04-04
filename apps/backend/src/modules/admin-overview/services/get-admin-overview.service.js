@@ -49,6 +49,201 @@ function composeVariantLabel(variantAttributes) {
     return segments.length > 0 ? segments.join(" / ") : null;
 }
 
+function toNonNegativeInteger(value) {
+    return Number.isInteger(value) && value >= 0 ? value : 0;
+}
+
+function createChartBreakdown(entries = []) {
+    return entries.map((entry) => ({
+        key: entry.key,
+        value: toNonNegativeInteger(entry.value),
+    }));
+}
+
+function createChartDataset({ key, label, data = [] } = {}) {
+    return {
+        key,
+        label,
+        data: data.map((value) =>
+            typeof value === "number" && Number.isFinite(value) && value >= 0
+                ? value
+                : 0
+        ),
+    };
+}
+
+function createSingleSeriesChart({ labels = [], datasetKey, datasetLabel, data = [] } = {}) {
+    return {
+        labels,
+        datasets: [
+            createChartDataset({
+                key: datasetKey,
+                label: datasetLabel,
+                data,
+            }),
+        ],
+    };
+}
+
+function composeLowStockChartLabel(record = {}) {
+    if (typeof record?.productName === "string" && record.productName.length > 0) {
+        if (typeof record?.variantLabel === "string" && record.variantLabel.length > 0) {
+            return `${record.productName} (${record.variantLabel})`;
+        }
+
+        return record.productName;
+    }
+
+    return `Variant ${record?.variantId ?? "unknown"}`;
+}
+
+function createProductStatusChart({
+    totalProducts,
+    draftProducts,
+    activeProducts,
+    inactiveProducts,
+    discontinuedProducts,
+} = {}) {
+    const breakdown = createChartBreakdown([
+        { key: "draft", value: draftProducts },
+        { key: "active", value: activeProducts },
+        { key: "inactive", value: inactiveProducts },
+        { key: "discontinued", value: discontinuedProducts },
+    ]);
+
+    return {
+        total: toNonNegativeInteger(totalProducts),
+        breakdown,
+        ...createSingleSeriesChart({
+            labels: breakdown.map((entry) => entry.key),
+            datasetKey: "productStatus",
+            datasetLabel: "productCount",
+            data: breakdown.map((entry) => entry.value),
+        }),
+    };
+}
+
+function createOrderStatusChart({
+    totalOrders,
+    pendingOrders,
+    confirmedOrders,
+    completedOrders,
+    cancelledOrders,
+} = {}) {
+    const breakdown = createChartBreakdown([
+        { key: "pending", value: pendingOrders },
+        { key: "confirmed", value: confirmedOrders },
+        { key: "completed", value: completedOrders },
+        { key: "cancelled", value: cancelledOrders },
+    ]);
+
+    return {
+        total: toNonNegativeInteger(totalOrders),
+        breakdown,
+        ...createSingleSeriesChart({
+            labels: breakdown.map((entry) => entry.key),
+            datasetKey: "orderStatus",
+            datasetLabel: "orderCount",
+            data: breakdown.map((entry) => entry.value),
+        }),
+    };
+}
+
+function createPaymentStatusChart({
+    totalOrders,
+    paymentPendingOrders,
+    paidOrders,
+    failedOrders,
+    cancelledPaymentOrders,
+    vnpayPendingOrders,
+} = {}) {
+    const breakdown = createChartBreakdown([
+        { key: "pending", value: paymentPendingOrders },
+        { key: "paid", value: paidOrders },
+        { key: "failed", value: failedOrders },
+        { key: "cancelled", value: cancelledPaymentOrders },
+    ]);
+
+    return {
+        total: toNonNegativeInteger(totalOrders),
+        highlighted: {
+            vnpayPending: toNonNegativeInteger(vnpayPendingOrders),
+        },
+        breakdown,
+        ...createSingleSeriesChart({
+            labels: breakdown.map((entry) => entry.key),
+            datasetKey: "paymentStatus",
+            datasetLabel: "orderCount",
+            data: breakdown.map((entry) => entry.value),
+        }),
+    };
+}
+
+function createInventoryRiskChart({
+    totalInventoryRecords,
+    lowStockCount,
+    outOfStockCount,
+} = {}) {
+    const total = toNonNegativeInteger(totalInventoryRecords);
+    const lowStockTotal = toNonNegativeInteger(lowStockCount);
+    const outOfStock = Math.min(toNonNegativeInteger(outOfStockCount), lowStockTotal);
+    const lowStockInStock = Math.max(lowStockTotal - outOfStock, 0);
+    const healthy = Math.max(total - lowStockTotal, 0);
+    const breakdown = createChartBreakdown([
+        { key: "healthy", value: healthy },
+        { key: "lowStock", value: lowStockInStock },
+        { key: "outOfStock", value: outOfStock },
+    ]);
+
+    return {
+        total,
+        breakdown,
+        ...createSingleSeriesChart({
+            labels: breakdown.map((entry) => entry.key),
+            datasetKey: "inventoryRisk",
+            datasetLabel: "inventoryRecordCount",
+            data: breakdown.map((entry) => entry.value),
+        }),
+    };
+}
+
+function createLowStockTopChart(lowStockRecords = []) {
+    const records = lowStockRecords.map((record) => {
+        const stockQuantity = toNonNegativeInteger(record?.stockQuantity);
+        const lowStockThreshold = toNonNegativeInteger(record?.lowStockThreshold);
+
+        return {
+            ...record,
+            chartLabel: composeLowStockChartLabel(record),
+            shortageQuantity: Math.max(lowStockThreshold - stockQuantity, 0),
+            stockQuantity,
+            lowStockThreshold,
+        };
+    });
+
+    return {
+        labels: records.map((record) => record.chartLabel),
+        datasets: [
+            createChartDataset({
+                key: "stockQuantity",
+                label: "stockQuantity",
+                data: records.map((record) => record.stockQuantity),
+            }),
+            createChartDataset({
+                key: "lowStockThreshold",
+                label: "lowStockThreshold",
+                data: records.map((record) => record.lowStockThreshold),
+            }),
+            createChartDataset({
+                key: "shortageQuantity",
+                label: "shortageQuantity",
+                data: records.map((record) => record.shortageQuantity),
+            }),
+        ],
+        records,
+    };
+}
+
 async function hydrateLowStockPreview({
     lowStockPreview = [],
     variantRepository,
@@ -115,8 +310,13 @@ export function createGetAdminOverviewService({
             confirmedOrders,
             completedOrders,
             cancelledOrders,
+            paymentPendingOrders,
+            paidOrders,
+            failedOrders,
+            cancelledPaymentOrders,
             vnpayPendingOrders,
             recentOrders,
+            totalInventoryRecords,
             lowStockCount,
             outOfStockCount,
             lowStockPreview,
@@ -183,6 +383,26 @@ export function createGetAdminOverviewService({
             }),
             orderRepository.countOrdersByFilter({
                 filter: {
+                    paymentStatus: "pending",
+                },
+            }),
+            orderRepository.countOrdersByFilter({
+                filter: {
+                    paymentStatus: "paid",
+                },
+            }),
+            orderRepository.countOrdersByFilter({
+                filter: {
+                    paymentStatus: "failed",
+                },
+            }),
+            orderRepository.countOrdersByFilter({
+                filter: {
+                    paymentStatus: "cancelled",
+                },
+            }),
+            orderRepository.countOrdersByFilter({
+                filter: {
                     paymentMethod: "vnpay",
                     paymentStatus: "pending",
                 },
@@ -193,6 +413,7 @@ export function createGetAdminOverviewService({
                 },
                 limit: 5,
             }),
+            inventoryRepository.countInventoryRecords(),
             inventoryRepository.countLowStockInventoryRecords(),
             inventoryRepository.countOutOfStockInventoryRecords(),
             inventoryRepository.findLowStockInventoryRecords({
@@ -223,6 +444,14 @@ export function createGetAdminOverviewService({
                 cancelled: cancelledOrders,
                 vnpayPending: vnpayPendingOrders,
             },
+            paymentMeta: {
+                total: totalOrders,
+                pending: paymentPendingOrders,
+                paid: paidOrders,
+                failed: failedOrders,
+                cancelled: cancelledPaymentOrders,
+                vnpayPending: vnpayPendingOrders,
+            },
             lowStockMeta: {
                 total: lowStockCount,
                 outOfStock: outOfStockCount,
@@ -231,6 +460,36 @@ export function createGetAdminOverviewService({
                 createOrderSummaryView(order)
             ),
             lowStockRecords,
+            charts: {
+                productStatus: createProductStatusChart({
+                    totalProducts,
+                    draftProducts,
+                    activeProducts,
+                    inactiveProducts,
+                    discontinuedProducts,
+                }),
+                orderStatus: createOrderStatusChart({
+                    totalOrders,
+                    pendingOrders,
+                    confirmedOrders,
+                    completedOrders,
+                    cancelledOrders,
+                }),
+                paymentStatus: createPaymentStatusChart({
+                    totalOrders,
+                    paymentPendingOrders,
+                    paidOrders,
+                    failedOrders,
+                    cancelledPaymentOrders,
+                    vnpayPendingOrders,
+                }),
+                inventoryRisk: createInventoryRiskChart({
+                    totalInventoryRecords,
+                    lowStockCount,
+                    outOfStockCount,
+                }),
+                lowStockTop: createLowStockTopChart(lowStockRecords),
+            },
         };
     };
 }

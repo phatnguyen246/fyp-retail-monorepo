@@ -449,13 +449,57 @@ function normalizePaymentResult(result) {
   }
 }
 
+function normalizeOverviewChartDataset(dataset) {
+  return {
+    key: ensureString(dataset?.key),
+    label: ensureString(dataset?.label),
+    data: ensureArray(dataset?.data).map((value) => ensureNumber(value, 0)),
+  }
+}
+
+function normalizeOverviewChartBreakdownItem(item) {
+  return {
+    key: ensureString(item?.key),
+    value: ensureInteger(item?.value, 0),
+  }
+}
+
+function normalizeOverviewChart(chart, { recordNormalizer = null } = {}) {
+  const source = chart && typeof chart === 'object' ? chart : {}
+
+  return {
+    total: ensureInteger(source.total, 0),
+    labels: ensureArray(source.labels).map((label) => ensureString(label)),
+    datasets: ensureArray(source.datasets).map((dataset) => normalizeOverviewChartDataset(dataset)),
+    breakdown: ensureArray(source.breakdown).map((item) => normalizeOverviewChartBreakdownItem(item)),
+    highlighted: {
+      vnpayPending: ensureInteger(source.highlighted?.vnpayPending, 0),
+    },
+    records:
+      typeof recordNormalizer === 'function'
+        ? ensureArray(source.records).map((item) => recordNormalizer(item))
+        : [],
+  }
+}
+
+function normalizeOverviewLowStockChartRecord(record) {
+  return {
+    ...normalizeOverviewLowStockRecord(record),
+    chartLabel: ensureString(record?.chartLabel),
+    shortageQuantity: ensureInteger(record?.shortageQuantity, 0),
+  }
+}
+
 function normalizeAdminOverview(payload) {
   const source = payload && typeof payload === 'object' ? payload : {}
   const productMeta =
     source.productMeta && typeof source.productMeta === 'object' ? source.productMeta : {}
   const orderMeta = source.orderMeta && typeof source.orderMeta === 'object' ? source.orderMeta : {}
+  const paymentMeta =
+    source.paymentMeta && typeof source.paymentMeta === 'object' ? source.paymentMeta : {}
   const lowStockMeta =
     source.lowStockMeta && typeof source.lowStockMeta === 'object' ? source.lowStockMeta : {}
+  const charts = source.charts && typeof source.charts === 'object' ? source.charts : {}
 
   return {
     productMeta: {
@@ -475,6 +519,14 @@ function normalizeAdminOverview(payload) {
       cancelled: ensureInteger(orderMeta.cancelled, 0),
       vnpayPending: ensureInteger(orderMeta.vnpayPending, 0),
     },
+    paymentMeta: {
+      total: ensureInteger(paymentMeta.total, 0),
+      pending: ensureInteger(paymentMeta.pending, 0),
+      paid: ensureInteger(paymentMeta.paid, 0),
+      failed: ensureInteger(paymentMeta.failed, 0),
+      cancelled: ensureInteger(paymentMeta.cancelled, 0),
+      vnpayPending: ensureInteger(paymentMeta.vnpayPending, 0),
+    },
     lowStockMeta: {
       total: ensureInteger(lowStockMeta.total, 0),
       outOfStock: ensureInteger(lowStockMeta.outOfStock, 0),
@@ -483,6 +535,15 @@ function normalizeAdminOverview(payload) {
     lowStockRecords: ensureArray(source.lowStockRecords).map((item) =>
       normalizeOverviewLowStockRecord(item),
     ),
+    charts: {
+      productStatus: normalizeOverviewChart(charts.productStatus),
+      orderStatus: normalizeOverviewChart(charts.orderStatus),
+      paymentStatus: normalizeOverviewChart(charts.paymentStatus),
+      inventoryRisk: normalizeOverviewChart(charts.inventoryRisk),
+      lowStockTop: normalizeOverviewChart(charts.lowStockTop, {
+        recordNormalizer: normalizeOverviewLowStockChartRecord,
+      }),
+    },
   }
 }
 
