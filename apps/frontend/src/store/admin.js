@@ -36,45 +36,45 @@ const fallbackReferenceOptions = Object.freeze({
     { label: 'Installment', value: 'installment' },
   ],
   productStatuses: [
-    { label: 'Bản nháp', value: 'draft' },
-    { label: 'Đang bán', value: 'active' },
-    { label: 'Tạm ngưng', value: 'inactive' },
-    { label: 'Ngừng kinh doanh', value: 'discontinued' },
+    { label: 'Draft', value: 'draft' },
+    { label: 'Active', value: 'active' },
+    { label: 'Inactive', value: 'inactive' },
+    { label: 'Discontinued', value: 'discontinued' },
   ],
   variantStatuses: [
-    { label: 'Hoạt động', value: 'active' },
-    { label: 'Ẩn bán', value: 'inactive' },
+    { label: 'Active', value: 'active' },
+    { label: 'Hidden', value: 'inactive' },
   ],
   listStatusFilters: [
-    { label: 'Tất cả trạng thái', value: 'all' },
-    { label: 'Bản nháp', value: 'draft' },
-    { label: 'Đang bán', value: 'active' },
-    { label: 'Tạm ngưng', value: 'inactive' },
-    { label: 'Ngừng kinh doanh', value: 'discontinued' },
+    { label: 'All statuses', value: 'all' },
+    { label: 'Draft', value: 'draft' },
+    { label: 'Active', value: 'active' },
+    { label: 'Inactive', value: 'inactive' },
+    { label: 'Discontinued', value: 'discontinued' },
   ],
   deletedFilters: [
-    { label: 'Đang hoạt động', value: 'false' },
-    { label: 'Đã xóa mềm', value: 'true' },
-    { label: 'Tất cả', value: 'all' },
+    { label: 'Active records', value: 'false' },
+    { label: 'Soft deleted', value: 'true' },
+    { label: 'All', value: 'all' },
   ],
   productSortOptions: [
-    { label: 'Mới cập nhật', value: 'updatedAt:desc' },
-    { label: 'Mới tạo', value: 'createdAt:desc' },
-    { label: 'Tên A-Z', value: 'title:asc' },
-    { label: 'Tên Z-A', value: 'title:desc' },
-    { label: 'Giá tăng', value: 'minSalePrice:asc' },
-    { label: 'Giá giảm', value: 'minSalePrice:desc' },
-    { label: 'Trạng thái A-Z', value: 'status:asc' },
+    { label: 'Recently updated', value: 'updatedAt:desc' },
+    { label: 'Recently created', value: 'createdAt:desc' },
+    { label: 'Name A-Z', value: 'title:asc' },
+    { label: 'Name Z-A', value: 'title:desc' },
+    { label: 'Price ascending', value: 'minSalePrice:asc' },
+    { label: 'Price descending', value: 'minSalePrice:desc' },
+    { label: 'Status A-Z', value: 'status:asc' },
   ],
   orderStatuses: [
-    { label: 'Chờ xử lý', value: 'pending' },
-    { label: 'Đã xác nhận', value: 'confirmed' },
-    { label: 'Hoàn thành', value: 'completed' },
-    { label: 'Đã hủy', value: 'cancelled' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Confirmed', value: 'confirmed' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Cancelled', value: 'cancelled' },
   ],
   orderTransitions: [
-    { label: 'Xác nhận đơn', value: 'confirmed' },
-    { label: 'Đánh dấu hoàn thành', value: 'completed' },
+    { label: 'Confirm order', value: 'confirmed' },
+    { label: 'Mark as completed', value: 'completed' },
   ],
 })
 
@@ -779,7 +779,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: referenceOptions.value,
       }
-    }, 'Không thể tải dữ liệu tham chiếu cho trang quản trị.')
+    }, 'Unable to load admin reference data.')
   }
 
   async function fetchAdminProducts(filters = {}) {
@@ -815,7 +815,7 @@ export const useAdminStore = defineStore('admin', () => {
           meta,
         },
       }
-    }, 'Không thể tải danh sách sản phẩm quản trị.')
+    }, 'Unable to load admin product list.')
   }
 
   async function createProduct(productData) {
@@ -825,7 +825,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeProductDetail(unwrapResponseData(response)).product,
       }
-    }, 'Không thể tạo sản phẩm.')
+    }, 'Unable to create product.')
   }
 
   async function importProducts(file) {
@@ -844,7 +844,7 @@ export const useAdminStore = defineStore('admin', () => {
         data: unwrapResponseData(response),
         meta: unwrapResponseMeta(response),
       }
-    }, 'Không thể import CSV sản phẩm.')
+    }, 'Unable to import product CSV.')
   }
 
   async function fetchProductDetail(productId) {
@@ -855,7 +855,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeProductDetail(unwrapResponseData(response)),
       }
-    }, 'Không thể tải hồ sơ sản phẩm.')
+    }, 'Unable to load product record.')
   }
 
   async function updateProduct(productId, patch) {
@@ -866,7 +866,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeProductDetail(unwrapResponseData(response)).product,
       }
-    }, 'Không thể cập nhật sản phẩm.')
+    }, 'Unable to update product.')
   }
 
   async function cloneProduct(productId, input) {
@@ -877,7 +877,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeProductDetail(unwrapResponseData(response)).product,
       }
-    }, 'Không thể clone sản phẩm.')
+    }, 'Unable to clone product.')
   }
 
   async function deleteProduct(productId) {
@@ -888,7 +888,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeProductDetail(unwrapResponseData(response)),
       }
-    }, 'Không thể xóa mềm sản phẩm.')
+    }, 'Unable to soft-delete product.')
   }
 
   async function createVariant(productId, input) {
@@ -899,7 +899,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeVariant(unwrapResponseData(response)),
       }
-    }, 'Không thể tạo biến thể.')
+    }, 'Unable to create variant.')
   }
 
   async function updateVariant(variantId, patch) {
@@ -910,7 +910,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeVariant(unwrapResponseData(response)),
       }
-    }, 'Không thể cập nhật biến thể.')
+    }, 'Unable to update variant.')
   }
 
   async function deleteVariant(variantId) {
@@ -921,7 +921,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeVariant(unwrapResponseData(response)),
       }
-    }, 'Không thể xóa mềm biến thể.')
+    }, 'Unable to soft-delete variant.')
   }
 
   async function fetchVariantImages(variantId) {
@@ -932,7 +932,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: ensureArray(unwrapResponseData(response)).map((media) => normalizeMedia(media)),
       }
-    }, 'Không thể tải thư viện ảnh biến thể.')
+    }, 'Unable to load variant media gallery.')
   }
 
   async function uploadVariantImage(variantId, file) {
@@ -950,7 +950,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeMedia(unwrapResponseData(response)),
       }
-    }, 'Không thể tải ảnh lên cho biến thể.')
+    }, 'Unable to upload image for variant.')
   }
 
   async function deleteVariantImage(variantId, mediaId) {
@@ -961,7 +961,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeMedia(unwrapResponseData(response)),
       }
-    }, 'Không thể xóa ảnh biến thể.')
+    }, 'Unable to delete variant image.')
   }
 
   async function fetchInventoryRecord(variantId) {
@@ -972,7 +972,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeInventoryRecord(unwrapResponseData(response)),
       }
-    }, 'Không thể tải hồ sơ tồn kho.')
+    }, 'Unable to load inventory record.')
   }
 
   async function createInventoryRecord(input) {
@@ -983,7 +983,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeInventoryRecord(unwrapResponseData(response)),
       }
-    }, 'Không thể tạo hồ sơ tồn kho.')
+    }, 'Unable to create inventory record.')
   }
 
   async function updateInventoryRecord(variantId, input) {
@@ -994,7 +994,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeInventoryRecord(unwrapResponseData(response)),
       }
-    }, 'Không thể cập nhật hồ sơ tồn kho.')
+    }, 'Unable to update inventory record.')
   }
 
   async function batchReadInventory(variantIds = []) {
@@ -1007,7 +1007,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: ensureArray(unwrapResponseData(response)).map((item) => normalizeInventoryReadItem(item)),
       }
-    }, 'Không thể đọc tồn kho hàng loạt.')
+    }, 'Unable to batch-read inventory.')
   }
 
   async function fetchLowStockInventory() {
@@ -1016,9 +1016,11 @@ export const useAdminStore = defineStore('admin', () => {
 
       return {
         success: true,
-        data: ensureArray(unwrapResponseData(response)).map((item) => normalizeInventoryRecord(item)),
+        data: ensureArray(unwrapResponseData(response)).map((item) =>
+          normalizeOverviewLowStockRecord(item),
+        ),
       }
-    }, 'Không thể tải danh sách tồn kho thấp.')
+    }, 'Unable to load low-stock list.')
   }
 
   async function fetchOrders() {
@@ -1029,7 +1031,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: ensureArray(unwrapResponseData(response)).map((order) => normalizeOrder(order)),
       }
-    }, 'Không thể tải danh sách đơn hàng.')
+    }, 'Unable to load order list.')
   }
 
   async function fetchOrderDetail(orderId) {
@@ -1040,7 +1042,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeOrder(unwrapResponseData(response)),
       }
-    }, 'Không thể tải chi tiết đơn hàng.')
+    }, 'Unable to load order details.')
   }
 
   async function updateOrderStatus(orderId, orderStatus) {
@@ -1053,7 +1055,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeOrder(unwrapResponseData(response)),
       }
-    }, 'Không thể cập nhật trạng thái đơn hàng.')
+    }, 'Unable to update order status.')
   }
 
   async function cancelOrder(orderId) {
@@ -1064,7 +1066,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeOrder(unwrapResponseData(response)),
       }
-    }, 'Không thể hủy đơn hàng.')
+    }, 'Unable to cancel order.')
   }
 
   async function reconcileVnpayPayment(orderId) {
@@ -1075,7 +1077,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizePaymentResult(unwrapResponseData(response)),
       }
-    }, 'Không thể đồng bộ thanh toán VNPAY.')
+    }, 'Unable to reconcile VNPAY payment.')
   }
 
   async function fetchAdminOverview() {
@@ -1086,7 +1088,7 @@ export const useAdminStore = defineStore('admin', () => {
         success: true,
         data: normalizeAdminOverview(unwrapResponseData(response)),
       }
-    }, 'Không thể tải tổng quan quản trị.')
+    }, 'Unable to load admin overview.')
   }
 
   return {

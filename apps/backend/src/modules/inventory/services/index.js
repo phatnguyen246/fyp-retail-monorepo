@@ -57,6 +57,8 @@ export function createInventoryServices({
         }),
         listLowStockInventory: createListLowStockInventoryService({
             inventoryRepository,
+            catalogAdapter,
+            logger,
         }),
     };
 }

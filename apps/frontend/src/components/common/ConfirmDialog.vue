@@ -6,7 +6,7 @@ defineProps({
   },
   title: {
     type: String,
-    default: 'Xác nhận thao tác',
+    default: 'Confirm action',
   },
   message: {
     type: String,
@@ -14,11 +14,11 @@ defineProps({
   },
   confirmLabel: {
     type: String,
-    default: 'Xác nhận',
+    default: 'Confirm',
   },
   cancelLabel: {
     type: String,
-    default: 'Hủy',
+    default: 'Cancel',
   },
   loading: {
     type: Boolean,
@@ -51,7 +51,7 @@ const emit = defineEmits(['confirm', 'cancel'])
             :disabled="loading"
             @click="emit('confirm')"
           >
-            {{ loading ? 'Đang xử lý...' : confirmLabel }}
+            {{ loading ? 'Processing...' : confirmLabel }}
           </button>
         </div>
       </div>

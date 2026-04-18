@@ -18,102 +18,102 @@ ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Legend, Too
 
 const PRODUCT_STATUS_META = Object.freeze({
   draft: {
-    label: 'Bản nháp',
+    label: 'Draft',
     color: '#94a3b8',
-    note: 'Cần hoàn thiện nội dung trước khi mở bán.',
+    note: 'Content must be completed before publication.',
   },
   active: {
-    label: 'Đang bán',
+    label: 'Active',
     color: '#2563eb',
-    note: 'Sẵn sàng cho luồng bán hàng và hiển thị sản phẩm.',
+    note: 'Available for sales flow and storefront visibility.',
   },
   inactive: {
-    label: 'Tạm ngưng',
+    label: 'Inactive',
     color: '#f59e0b',
-    note: 'Tạm dừng bán để rà soát hoặc chờ kích hoạt lại.',
+    note: 'Temporarily paused for review or reactivation.',
   },
   discontinued: {
-    label: 'Ngừng kinh doanh',
+    label: 'Discontinued',
     color: '#dc2626',
-    note: 'Không còn trong vòng đời kinh doanh hiện tại.',
+    note: 'No longer in the active business lifecycle.',
   },
 })
 
 const ORDER_STATUS_META = Object.freeze({
   pending: {
-    label: 'Chờ xử lý',
+    label: 'Pending',
     color: '#f59e0b',
-    note: 'Cần xác nhận hoặc thao tác tiếp theo từ admin.',
+    note: 'Needs confirmation or next admin action.',
   },
   confirmed: {
-    label: 'Đã xác nhận',
+    label: 'Confirmed',
     color: '#3b82f6',
-    note: 'Đã đi vào luồng xử lý và chờ hoàn tất.',
+    note: 'In processing flow and waiting for completion.',
   },
   completed: {
-    label: 'Hoàn tất',
+    label: 'Completed',
     color: '#16a34a',
-    note: 'Đơn đã kết thúc toàn bộ quy trình.',
+    note: 'Order has completed the full process.',
   },
   cancelled: {
-    label: 'Đã hủy',
+    label: 'Cancelled',
     color: '#ef4444',
-    note: 'Đơn đã rời khỏi pipeline xử lý.',
+    note: 'Order has exited the processing flow.',
   },
 })
 
 const PAYMENT_STATUS_META = Object.freeze({
   pending: {
-    label: 'Chờ thanh toán',
+    label: 'Pending payment',
     color: '#f59e0b',
-    note: 'Cần chờ callback/IPN hoặc đối soát thanh toán.',
+    note: 'Waiting for callback/IPN or payment reconciliation.',
   },
   paid: {
-    label: 'Đã thanh toán',
+    label: 'Paid',
     color: '#16a34a',
-    note: 'Đơn đã ghi nhận trạng thái thanh toán thành công.',
+    note: 'Successful payment has been recorded.',
   },
   failed: {
-    label: 'Thất bại',
+    label: 'Failed',
     color: '#dc2626',
-    note: 'Giao dịch thanh toán không hoàn tất.',
+    note: 'Payment transaction did not complete.',
   },
   cancelled: {
-    label: 'Đã hủy thanh toán',
+    label: 'Payment cancelled',
     color: '#64748b',
-    note: 'Thanh toán không còn tiếp tục xử lý.',
+    note: 'Payment flow is no longer active.',
   },
 })
 
 const INVENTORY_RISK_META = Object.freeze({
   healthy: {
-    label: 'Ổn định',
+    label: 'Stable',
     color: '#22c55e',
-    note: 'Tồn kho đang nằm trên ngưỡng cảnh báo.',
+    note: 'Stock level is above threshold.',
   },
   lowStock: {
-    label: 'Sát ngưỡng',
+    label: 'Low stock',
     color: '#f59e0b',
-    note: 'Vẫn còn hàng nhưng đã rơi vào vùng low stock.',
+    note: 'Still in stock but already in warning range.',
   },
   outOfStock: {
-    label: 'Hết hàng',
+    label: 'Out of stock',
     color: '#ef4444',
-    note: 'Stock đã về 0 và cần xử lý gấp.',
+    note: 'Stock has reached zero and needs urgent handling.',
   },
 })
 
 const LOW_STOCK_DATASET_META = Object.freeze({
   stockQuantity: {
-    label: 'Tồn hiện tại',
+    label: 'Current stock',
     color: '#2563eb',
   },
   lowStockThreshold: {
-    label: 'Ngưỡng cảnh báo',
+    label: 'Low-stock threshold',
     color: '#f59e0b',
   },
   shortageQuantity: {
-    label: 'Thiếu so với ngưỡng',
+    label: 'Threshold shortage',
     color: '#dc2626',
   },
 })
@@ -185,14 +185,14 @@ const overview = ref({
   },
 })
 
-const lowStockPreview = computed(() => overview.value.lowStockRecords.slice(0, 6))
+const lowStockPreview = computed(() => overview.value.lowStockRecords.slice(0, 5))
 const lowStockChartRecords = computed(() => overview.value.charts.lowStockTop.records || [])
 
 function getChartMeta(meta, key) {
   return meta[key] || {
     label: key,
     color: '#94a3b8',
-    note: 'Chưa có mô tả cho nhóm dữ liệu này.',
+    note: 'No description available for this data group.',
   }
 }
 
@@ -383,74 +383,74 @@ const inventoryRiskBreakdown = computed(() =>
 
 const productStatusHighlights = computed(() => [
   {
-    label: 'Đã xóa mềm',
+    label: 'Soft deleted',
     value: overview.value.productMeta.deleted,
-    note: 'Không nằm trong tổng sản phẩm đang quản lý mặc định.',
+    note: 'Excluded from default managed product totals.',
   },
   {
-    label: 'Active nhưng hết hàng',
+    label: 'Active but out of stock',
     value: overview.value.productMeta.outOfStock,
-    note: 'Có active variant nhưng không còn hàng để bán.',
+    note: 'Contains active variants but currently has no stock.',
   },
 ])
 
 const orderStatusHighlights = computed(() => [
   {
-    label: 'Tổng đơn hàng',
+    label: 'Total orders',
     value: overview.value.orderMeta.total,
-    note: 'Snapshot hiện tại trên toàn bộ hệ thống.',
+    note: 'Current aggregate across the whole system.',
   },
   {
-    label: 'VNPAY chờ đối soát',
+    label: 'VNPAY pending reconciliation',
     value: overview.value.orderMeta.vnpayPending,
-    note: 'Đơn online chưa hoàn tất trạng thái thanh toán.',
+    note: 'Online orders with incomplete payment status.',
   },
 ])
 
 const paymentStatusHighlights = computed(() => [
   {
-    label: 'Đã thanh toán',
+    label: 'Paid',
     value: overview.value.paymentMeta.paid,
-    note: 'Đã ghi nhận giao dịch thành công.',
+    note: 'Successful transactions have been recorded.',
   },
   {
-    label: 'VNPAY chờ đối soát',
+    label: 'VNPAY pending reconciliation',
     value: overview.value.paymentMeta.vnpayPending,
-    note: 'Nhóm thanh toán cần ưu tiên kiểm tra.',
+    note: 'Payment segment that should be prioritized for review.',
   },
 ])
 
 const inventoryRiskHighlights = computed(() => [
   {
-    label: 'Bản ghi inventory',
+    label: 'Inventory records',
     value: overview.value.charts.inventoryRisk.total,
-    note: 'Tổng số record tồn kho đang theo dõi.',
+    note: 'Total tracked inventory records.',
   },
   {
-    label: 'Hết hàng',
+    label: 'Out of stock',
     value: overview.value.lowStockMeta.outOfStock,
-    note: 'Record tồn kho đã chạm 0.',
+    note: 'Inventory records that reached zero stock.',
   },
 ])
 
 const lowStockHighlights = computed(() => [
   {
-    label: 'Mức low stock',
+    label: 'Low-stock alerts',
     value: overview.value.lowStockMeta.total,
-    note: 'Toàn bộ record đang nằm ở vùng rủi ro tồn kho.',
+    note: 'All records currently in inventory-risk range.',
   },
   {
-    label: 'Hết hàng',
+    label: 'Out of stock',
     value: overview.value.lowStockMeta.outOfStock,
-    note: 'Nhóm record cần ưu tiên nhập bổ sung ngay.',
+    note: 'Records that should be replenished with highest priority.',
   },
   {
-    label: 'Thiếu so với ngưỡng',
+    label: 'Threshold shortage',
     value: lowStockChartRecords.value.reduce(
       (total, record) => total + Number(record.shortageQuantity || 0),
       0,
     ),
-    note: 'Tổng đơn vị còn thiếu để đưa top record lên trên ngưỡng cảnh báo.',
+    note: 'Total units missing to bring top records above threshold.',
   },
 ])
 
@@ -588,15 +588,15 @@ const lowStockTopChartOptions = computed(() => ({
           return record?.chartLabel || items[0]?.label || ''
         },
         label(context) {
-          return `${context.dataset.label}: ${formatNumber(context.raw)} chiếc`
+          return `${context.dataset.label}: ${formatNumber(context.raw)} units`
         },
         afterBody(items) {
           const record = lowStockChartRecords.value[items[0]?.dataIndex ?? -1]
 
           return [
             record?.sku ? `SKU ${record.sku}` : '',
-            record?.variantLabel ? `Biến thể ${record.variantLabel}` : '',
-            record?.updatedAt ? `Cập nhật ${formatDate(record.updatedAt)}` : '',
+            record?.variantLabel ? `Variant ${record.variantLabel}` : '',
+            record?.updatedAt ? `Updated ${formatDate(record.updatedAt)}` : '',
           ].filter(Boolean)
         },
       },
@@ -671,19 +671,19 @@ onMounted(() => {
   <section class="admin-page admin-page-overview">
     <header class="admin-page-header">
       <div>
-        <p class="admin-page-kicker">Bảng điều hành</p>
-        <h1 class="admin-page-title">Tổng quan quản trị</h1>
+        <p class="admin-page-kicker">Operations Dashboard</p>
+        <h1 class="admin-page-title">Admin Overview</h1>
         <p class="admin-page-subtitle">
-          Snapshot hiện tại của danh mục, đơn hàng, thanh toán và tồn kho để ưu tiên xử lý nhanh.
+          Current view of catalog, orders, payments, and inventory to prioritize actions quickly.
         </p>
       </div>
 
       <div class="admin-toolbar">
         <RouterLink :to="{ name: 'admin-product-create' }" class="admin-button admin-button-primary">
-          Soạn sản phẩm mới
+          Create Product
         </RouterLink>
         <button type="button" class="admin-button admin-button-secondary" @click="loadOverview">
-          Làm mới số liệu
+          Refresh data
         </button>
       </div>
     </header>
@@ -694,74 +694,74 @@ onMounted(() => {
 
     <div class="admin-stat-grid">
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Sản phẩm</p>
+        <p class="admin-stat-eyebrow">Products</p>
         <p class="admin-stat-value">{{ formatNumber(overview.productMeta.total) }}</p>
-        <p class="admin-stat-note">Tổng số sản phẩm đang được quản lý trong hệ thống.</p>
+        <p class="admin-stat-note">Total products currently managed in the system.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Đang bán</p>
+        <p class="admin-stat-eyebrow">Active</p>
         <p class="admin-stat-value">{{ formatNumber(overview.productMeta.active) }}</p>
-        <p class="admin-stat-note">Các sản phẩm đang ở trạng thái active cho vận hành bán hàng.</p>
+        <p class="admin-stat-note">Products currently available for sale.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Chờ hoàn thiện</p>
+        <p class="admin-stat-eyebrow">Draft</p>
         <p class="admin-stat-value">{{ formatNumber(overview.productMeta.draft) }}</p>
-        <p class="admin-stat-note">Sản phẩm chưa sẵn sàng mở bán và cần rà soát nội dung.</p>
+        <p class="admin-stat-note">Products not ready for sale and still pending review.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Đơn chờ xử lý</p>
+        <p class="admin-stat-eyebrow">Pending orders</p>
         <p class="admin-stat-value">{{ formatNumber(overview.orderMeta.pending) }}</p>
-        <p class="admin-stat-note">Các đơn mới đang chờ xác nhận hoặc cập nhật trạng thái.</p>
+        <p class="admin-stat-note">New orders waiting for confirmation or status updates.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Thanh toán cần kiểm tra</p>
+        <p class="admin-stat-eyebrow">Payments to review</p>
         <p class="admin-stat-value">{{ formatNumber(overview.orderMeta.vnpayPending) }}</p>
-        <p class="admin-stat-note">Đơn thanh toán online chưa hoàn tất, cần đối chiếu thêm.</p>
+        <p class="admin-stat-note">Online payments not finalized and requiring reconciliation.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Đã hoàn tất</p>
+        <p class="admin-stat-eyebrow">Completed orders</p>
         <p class="admin-stat-value">{{ formatNumber(overview.orderMeta.completed) }}</p>
-        <p class="admin-stat-note">Số đơn đã xử lý xong và hoàn tất giao dịch.</p>
+        <p class="admin-stat-note">Orders fully processed and completed.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Đã thanh toán</p>
+        <p class="admin-stat-eyebrow">Paid orders</p>
         <p class="admin-stat-value">{{ formatNumber(overview.paymentMeta.paid) }}</p>
-        <p class="admin-stat-note">Những đơn đã ghi nhận trạng thái thanh toán thành công.</p>
+        <p class="admin-stat-note">Orders with successful payment status recorded.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Tồn kho thấp</p>
+        <p class="admin-stat-eyebrow">Low stock</p>
         <p class="admin-stat-value">{{ formatNumber(overview.lowStockMeta.total) }}</p>
-        <p class="admin-stat-note">Mặt hàng cần nhập thêm để tránh ảnh hưởng đơn mới.</p>
+        <p class="admin-stat-note">Items that need replenishment to avoid order impact.</p>
       </article>
     </div>
 
     <div class="admin-overview-chart-grid">
-      <section class="admin-card admin-overview-chart-card">
+      <section class="admin-card admin-overview-chart-card admin-overview-card-product-status">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Snapshot catalog</p>
-            <h2 class="admin-card-title">Phân bổ trạng thái sản phẩm</h2>
-            <p class="admin-chart-caption">Nhóm này phản ánh trạng thái vận hành của catalog hiện tại.</p>
+            <p class="admin-section-kicker">Catalog Snapshot</p>
+            <h2 class="admin-card-title">Product Status Distribution</h2>
+            <p class="admin-chart-caption">This view reflects current operational status across the catalog.</p>
           </div>
 
           <RouterLink :to="{ name: 'admin-products' }" class="admin-inline-link">
-            Mở danh sách
+            Open list
           </RouterLink>
         </div>
 
         <div v-if="loading" class="admin-empty-state admin-empty-state-plain">
-          Đang dựng dữ liệu trạng thái sản phẩm...
+          Building product status data...
         </div>
 
         <div v-else-if="!hasProductStatusChart" class="admin-empty-state admin-empty-state-plain">
-          Chưa có dữ liệu sản phẩm đủ để sơ đồ hóa.
+          Not enough product data to visualize.
         </div>
 
         <div v-else class="admin-chart-shell admin-chart-shell-doughnut">
@@ -806,25 +806,25 @@ onMounted(() => {
         </div>
       </section>
 
-      <section class="admin-card admin-overview-chart-card">
+      <section class="admin-card admin-overview-chart-card admin-overview-card-order-status">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Luồng đơn hàng</p>
-            <h2 class="admin-card-title">Phân bổ trạng thái đơn hàng</h2>
-            <p class="admin-chart-caption">Bám sát flow xử lý `pending → confirmed → completed` và nhánh hủy.</p>
+            <p class="admin-section-kicker">Order Workflow</p>
+            <h2 class="admin-card-title">Order Status Distribution</h2>
+            <p class="admin-chart-caption">Track progression from pending to confirmed, completed, and cancelled branch.</p>
           </div>
 
           <RouterLink :to="{ name: 'admin-orders' }" class="admin-inline-link">
-            Mở đơn hàng
+            Open orders
           </RouterLink>
         </div>
 
         <div v-if="loading" class="admin-empty-state admin-empty-state-plain">
-          Đang dựng pipeline đơn hàng...
+          Aggregating order workflow data...
         </div>
 
         <div v-else-if="!hasOrderStatusChart" class="admin-empty-state admin-empty-state-plain">
-          Chưa có dữ liệu đơn hàng đủ để sơ đồ hóa.
+          Not enough order data to visualize.
         </div>
 
         <div v-else class="admin-chart-shell">
@@ -867,27 +867,27 @@ onMounted(() => {
         </div>
       </section>
 
-      <section class="admin-card admin-overview-chart-card">
+      <section class="admin-card admin-overview-chart-card admin-overview-card-payment-status">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Snapshot thanh toán</p>
-            <h2 class="admin-card-title">Trạng thái thanh toán</h2>
+            <p class="admin-section-kicker">Payment Overview</p>
+            <h2 class="admin-card-title">Payment Status</h2>
             <p class="admin-chart-caption">
-              Tách riêng logic payment để phân biệt `paid` với `vnpayPending` và các ca thất bại.
+              Monitor paid, pending, and failed transactions separately for timely handling.
             </p>
           </div>
 
           <RouterLink :to="{ name: 'admin-orders' }" class="admin-inline-link">
-            Mở đơn hàng
+            Open orders
           </RouterLink>
         </div>
 
         <div v-if="loading" class="admin-empty-state admin-empty-state-plain">
-          Đang tổng hợp trạng thái thanh toán...
+          Aggregating payment status...
         </div>
 
         <div v-else-if="!hasPaymentStatusChart" class="admin-empty-state admin-empty-state-plain">
-          Chưa có dữ liệu thanh toán đủ để sơ đồ hóa.
+          Not enough payment data to visualize.
         </div>
 
         <div v-else class="admin-chart-shell admin-chart-shell-doughnut">
@@ -932,27 +932,27 @@ onMounted(() => {
         </div>
       </section>
 
-      <section class="admin-card admin-overview-chart-card">
+      <section class="admin-card admin-overview-chart-card admin-overview-card-inventory-risk">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Rủi ro inventory</p>
-            <h2 class="admin-card-title">Rủi ro tồn kho</h2>
+            <p class="admin-section-kicker">Inventory Risk</p>
+            <h2 class="admin-card-title">Inventory Risk</h2>
             <p class="admin-chart-caption">
-              Tách nhóm `healthy`, `lowStock` và `outOfStock` để nhìn độ căng tồn kho tức thời.
+              Track stable, low-stock, and out-of-stock groups to detect inventory bottlenecks over time.
             </p>
           </div>
 
           <RouterLink :to="{ name: 'admin-inventory' }" class="admin-inline-link">
-            Mở bàn tồn kho
+            Open inventory
           </RouterLink>
         </div>
 
         <div v-if="loading" class="admin-empty-state admin-empty-state-plain">
-          Đang đối chiếu risk inventory...
+          Aggregating inventory risk...
         </div>
 
         <div v-else-if="!hasInventoryRiskChart" class="admin-empty-state admin-empty-state-plain">
-          Chưa có inventory record đủ để sơ đồ hóa.
+          Not enough inventory data to visualize.
         </div>
 
         <div v-else class="admin-chart-shell admin-chart-shell-doughnut">
@@ -998,70 +998,24 @@ onMounted(() => {
       </section>
     </div>
 
-    <section class="admin-card admin-overview-wide-card">
-      <div class="admin-card-header">
-        <div>
-          <p class="admin-section-kicker">Ưu tiên bổ sung</p>
-          <h2 class="admin-card-title">Top cảnh báo tồn kho thấp</h2>
-          <p class="admin-chart-caption">
-            Backend đã trả về top record nguy cấp nhất để theo dõi trực tiếp bằng bar chart ngang.
-          </p>
-        </div>
-
-        <RouterLink :to="{ name: 'admin-inventory' }" class="admin-inline-link">
-          Mở bàn tồn kho
-        </RouterLink>
-      </div>
-
-      <div v-if="loading" class="admin-empty-state">
-        Đang dựng chart ưu tiên nhập bổ sung...
-      </div>
-
-      <div v-else-if="!hasLowStockTopChart" class="admin-empty-state">
-        Chưa có record low stock để sơ đồ hóa ưu tiên bổ sung.
-      </div>
-
-      <div v-else class="admin-chart-shell">
-        <div class="admin-chart-highlights">
-          <article
-            v-for="item in lowStockHighlights"
-            :key="item.label"
-            class="admin-chart-highlight"
-          >
-            <p class="admin-chart-highlight-label">{{ item.label }}</p>
-            <p class="admin-chart-highlight-value">{{ formatNumber(item.value) }}</p>
-            <p class="admin-chart-highlight-note">{{ item.note }}</p>
-          </article>
-        </div>
-
-        <div class="admin-chart-canvas admin-chart-canvas-wide">
-          <Bar :data="lowStockTopChartData" :options="lowStockTopChartOptions" />
-        </div>
-      </div>
-    </section>
-
     <div class="admin-content-grid">
       <section class="admin-card">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Nhật ký gần đây</p>
-            <h2 class="admin-card-title">Đơn hàng mới nhất</h2>
+            <p class="admin-section-kicker">Recent Activity</p>
+            <h2 class="admin-card-title">Latest Orders</h2>
           </div>
-
-          <RouterLink :to="{ name: 'admin-orders' }" class="admin-inline-link">
-            Xem toàn bộ
-          </RouterLink>
         </div>
 
         <div v-if="loading" class="admin-empty-state admin-empty-state-plain">
-          Đang tải tổng quan đơn hàng...
+          Loading order overview...
         </div>
 
         <div v-else-if="overview.recentOrders.length === 0" class="admin-empty-state admin-empty-state-plain">
-          Chưa có đơn hàng để hiển thị.
+          No orders to display.
         </div>
 
-        <div v-else class="admin-ledger-list">
+        <div v-else class="admin-ledger-list admin-recent-orders-preview">
           <article
             v-for="order in overview.recentOrders"
             :key="order.id"
@@ -1081,28 +1035,33 @@ onMounted(() => {
               <p class="admin-ledger-amount">{{ formatCurrency(order.grandTotal) }}</p>
             </div>
           </article>
+          <div class="admin-recent-orders-cta-wrap">
+            <div class="admin-recent-orders-cta-blur"></div>
+            <RouterLink
+              :to="{ name: 'admin-orders' }"
+              class="admin-button admin-button-secondary admin-recent-orders-cta"
+            >
+              Open orders page
+            </RouterLink>
+          </div>
         </div>
       </section>
 
       <section class="admin-card">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Theo dõi tồn kho</p>
-            <h2 class="admin-card-title">Cảnh báo tồn kho thấp</h2>
+            <p class="admin-section-kicker">Inventory Monitoring</p>
+            <h2 class="admin-card-title">Low-stock Alerts</h2>
           </div>
-
-          <RouterLink :to="{ name: 'admin-inventory' }" class="admin-inline-link">
-            Mở bàn tồn kho
-          </RouterLink>
         </div>
 
-        <div v-if="loading" class="admin-empty-state">Đang đối chiếu tồn kho thấp...</div>
+        <div v-if="loading" class="admin-empty-state">Checking low-stock records...</div>
 
         <div v-else-if="lowStockPreview.length === 0" class="admin-empty-state">
-          Chưa có mặt hàng nào cần cảnh báo tồn kho.
+          No items currently require low-stock alerts.
         </div>
 
-        <div v-else class="admin-ledger-list">
+        <div v-else class="admin-ledger-list admin-low-stock-preview">
           <article
             v-for="record in lowStockPreview"
             :key="record.id || record.variantId"
@@ -1114,22 +1073,123 @@ onMounted(() => {
                 {{ getLowStockSubtitle(record) || `Variant ${record.variantId}` }}
               </p>
               <p class="admin-ledger-subtitle">
-                Ngưỡng {{ formatNumber(record.lowStockThreshold ?? 0) }} • Cập nhật
+                Threshold {{ formatNumber(record.lowStockThreshold ?? 0) }} • Updated
                 {{ formatDate(record.updatedAt) }}
               </p>
               <p class="admin-ledger-subtitle">
-                Thiếu {{ formatNumber(getLowStockShortage(record)) }} chiếc để quay lại trên ngưỡng cảnh báo.
+                Short by {{ formatNumber(getLowStockShortage(record)) }} units to return above threshold.
               </p>
             </div>
 
             <div class="admin-ledger-trailing">
               <span class="admin-status-pill" :data-tone="record.isInStock ? 'warning' : 'danger'">
-                {{ formatNumber(record.stockQuantity) }} chiếc
+                {{ formatNumber(record.stockQuantity) }} units
               </span>
             </div>
           </article>
+          <div class="admin-low-stock-cta-wrap">
+            <div class="admin-low-stock-cta-blur"></div>
+            <RouterLink
+              :to="{ name: 'admin-inventory' }"
+              class="admin-button admin-button-secondary admin-low-stock-cta"
+            >
+              Open inventory page
+            </RouterLink>
+          </div>
         </div>
       </section>
     </div>
   </section>
 </template>
+
+<style scoped>
+.admin-overview-chart-grid {
+  align-items: start;
+}
+
+.admin-overview-chart-card :deep(.admin-chart-shell-doughnut) {
+  align-items: start;
+}
+
+.admin-overview-chart-card :deep(.admin-chart-canvas) {
+  align-self: start;
+}
+
+.admin-overview-card-product-status {
+  order: 1;
+}
+
+.admin-overview-card-inventory-risk {
+  order: 2;
+}
+
+.admin-overview-card-payment-status {
+  order: 3;
+}
+
+.admin-overview-card-order-status {
+  order: 4;
+}
+
+.admin-low-stock-preview {
+  position: relative;
+  padding-bottom: 3rem;
+}
+
+.admin-recent-orders-preview {
+  position: relative;
+  padding-bottom: 3rem;
+}
+
+.admin-low-stock-cta-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.admin-low-stock-cta-blur {
+  position: absolute;
+  inset: -0.3rem -0.8rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0) 70%);
+  filter: blur(7px);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.admin-low-stock-cta {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(1px);
+}
+
+.admin-recent-orders-cta-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.admin-recent-orders-cta-blur {
+  position: absolute;
+  inset: -0.3rem -0.8rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0) 70%);
+  filter: blur(7px);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.admin-recent-orders-cta {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(1px);
+}
+</style>

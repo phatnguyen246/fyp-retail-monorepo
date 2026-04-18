@@ -20,17 +20,17 @@ const workflowSteps = [
   {
     key: 'pending',
     title: 'Pending',
-    note: 'Đơn vừa tạo và đang chờ xác nhận.',
+    note: 'Order has been created and is awaiting confirmation.',
   },
   {
     key: 'confirmed',
     title: 'Confirmed',
-    note: 'Đơn đã được duyệt và đủ điều kiện xử lý tiếp.',
+    note: 'Order has been approved and is ready for the next step.',
   },
   {
     key: 'completed',
     title: 'Completed',
-    note: 'Đơn đã hoàn tất theo state machine hiện tại.',
+    note: 'Order has completed the current workflow.',
   },
 ]
 
@@ -82,6 +82,37 @@ function workflowStepState(stepKey) {
   return 'upcoming'
 }
 
+function getOrderStatusLabel(status) {
+  const labels = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  }
+
+  return labels[status] || status || 'Not available'
+}
+
+function getPaymentStatusLabel(status) {
+  const labels = {
+    pending: 'Pending payment',
+    paid: 'Paid',
+    cancelled: 'Cancelled',
+    failed: 'Failed',
+  }
+
+  return labels[status] || status || 'Not available'
+}
+
+function getPaymentMethodLabel(method) {
+  const labels = {
+    vnpay: 'VNPAY',
+    cod: 'Cash on Delivery',
+  }
+
+  return labels[method] || method || 'Not available'
+}
+
 async function loadOrderDetail() {
   loading.value = true
   errorMessage.value = ''
@@ -104,7 +135,7 @@ async function applyStatus(orderStatus) {
 
   if (result.success) {
     order.value = result.data
-    setActionMessage(`Đã chuyển order sang trạng thái \`${orderStatus}\`.`, 'success')
+    setActionMessage(`Order moved to ${getOrderStatusLabel(orderStatus)}.`, 'success')
   } else {
     setActionMessage(result.error, 'danger')
   }
@@ -113,7 +144,7 @@ async function applyStatus(orderStatus) {
 }
 
 async function cancelOrder() {
-  if (!window.confirm('Hủy đơn hàng này? Backend sẽ restock nếu nghiệp vụ cho phép.')) {
+  if (!window.confirm('Confirm cancellation for this order?')) {
     return
   }
 
@@ -123,7 +154,7 @@ async function cancelOrder() {
 
   if (result.success) {
     order.value = result.data
-    setActionMessage('Đã hủy đơn hàng theo luồng admin.', 'warning')
+    setActionMessage('Order cancelled from admin workflow.', 'warning')
   } else {
     setActionMessage(result.error, 'danger')
   }
@@ -139,10 +170,10 @@ async function reconcileVnpay() {
   if (result.success) {
     setActionMessage(
       result.data.status === 'paid'
-        ? 'Đã reconcile VNPAY thành công và cập nhật trạng thái thanh toán.'
+        ? 'VNPAY reconciliation succeeded and payment status was updated.'
         : result.data.status === 'noop'
-          ? 'Payment không còn ở trạng thái cần reconcile.'
-          : 'Đã gửi yêu cầu reconcile tới VNPAY.',
+          ? 'Payment is no longer in a reconcilable state.'
+          : 'Reconciliation request has been sent to VNPAY.',
       result.data.status === 'paid' ? 'success' : 'warning',
     )
     await loadOrderDetail()
@@ -162,19 +193,19 @@ onMounted(() => {
   <section class="admin-page">
     <header class="admin-page-header">
       <div>
-        <p class="admin-page-kicker">Order Detail</p>
-        <h1 class="admin-page-title">{{ order?.orderCode || 'Chi tiết đơn hàng' }}</h1>
+        <p class="admin-page-kicker">Order Details</p>
+        <h1 class="admin-page-title">{{ order?.orderCode || 'Order Details' }}</h1>
         <p class="admin-page-subtitle">
-          Trang detail tập trung vào workflow đơn hàng, thông tin khách, payment state và status log để thao tác nghiệp vụ không bị mơ hồ.
+          Review full order progress, recipient data, payment information, and change history for accurate handling.
         </p>
       </div>
 
       <div class="admin-toolbar">
         <button type="button" class="admin-button admin-button-secondary" @click="router.back()">
-          Quay lại
+          Back
         </button>
         <button type="button" class="admin-button admin-button-secondary" @click="loadOrderDetail">
-          Tải lại hồ sơ
+          Reload record
         </button>
       </div>
     </header>
@@ -195,22 +226,22 @@ onMounted(() => {
       {{ errorMessage }}
     </div>
 
-    <div v-if="loading" class="admin-empty-state">Đang tải hồ sơ đơn hàng...</div>
+    <div v-if="loading" class="admin-empty-state">Loading order record...</div>
 
     <template v-else-if="order">
       <section class="admin-card">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">State Machine</p>
-            <h2 class="admin-card-title">Workflow xử lý đơn</h2>
+            <p class="admin-section-kicker">Workflow Progress</p>
+            <h2 class="admin-card-title">Order Workflow</h2>
           </div>
 
           <div class="admin-status-stack">
             <span class="admin-status-pill" :data-tone="order.orderStatus">
-              {{ order.orderStatus }}
+              {{ getOrderStatusLabel(order.orderStatus) }}
             </span>
             <span class="admin-status-pill" :data-tone="paymentTone">
-              {{ order.paymentStatus || 'N/A' }}
+              {{ getPaymentStatusLabel(order.paymentStatus) }}
             </span>
           </div>
         </div>
@@ -235,33 +266,33 @@ onMounted(() => {
         </div>
 
         <div v-if="order.orderStatus === 'cancelled'" class="admin-note-block">
-          <p>Đơn hàng đã chuyển sang nhánh kết thúc `cancelled` và không còn tiếp tục trong luồng chính.</p>
+          <p>This order is in Cancelled status and no longer continues in the main workflow.</p>
         </div>
       </section>
 
       <div class="admin-stat-grid">
         <article class="admin-stat-card">
-          <p class="admin-stat-eyebrow">Order status</p>
-          <p class="admin-stat-value admin-stat-value-small">{{ order.orderStatus }}</p>
-          <p class="admin-stat-note">Lifecycle chính của đơn hàng.</p>
+          <p class="admin-stat-eyebrow">Order Status</p>
+          <p class="admin-stat-value admin-stat-value-small">{{ getOrderStatusLabel(order.orderStatus) }}</p>
+          <p class="admin-stat-note">Current processing status of this order.</p>
         </article>
 
         <article class="admin-stat-card">
           <p class="admin-stat-eyebrow">Payment</p>
-          <p class="admin-stat-value admin-stat-value-small">{{ order.paymentMethod || 'N/A' }}</p>
-          <p class="admin-stat-note">Trạng thái: {{ order.paymentStatus || 'N/A' }}</p>
+          <p class="admin-stat-value admin-stat-value-small">{{ getPaymentMethodLabel(order.paymentMethod) }}</p>
+          <p class="admin-stat-note">Status: {{ getPaymentStatusLabel(order.paymentStatus) }}</p>
         </article>
 
         <article class="admin-stat-card">
-          <p class="admin-stat-eyebrow">Tổng tiền</p>
+          <p class="admin-stat-eyebrow">Total Amount</p>
           <p class="admin-stat-value admin-stat-value-small">{{ formatCurrency(order.grandTotal) }}</p>
-          <p class="admin-stat-note">{{ formatNumber(order.itemCount) }} dòng hàng trong order.</p>
+          <p class="admin-stat-note">{{ formatNumber(order.itemCount) }} items in this order.</p>
         </article>
 
         <article class="admin-stat-card">
-          <p class="admin-stat-eyebrow">Cập nhật cuối</p>
-          <p class="admin-stat-value admin-stat-value-small">{{ formatDate(order.updatedAt) || 'N/A' }}</p>
-          <p class="admin-stat-note">Mốc thời gian gần nhất backend ghi nhận thay đổi.</p>
+          <p class="admin-stat-eyebrow">Last Updated</p>
+          <p class="admin-stat-value admin-stat-value-small">{{ formatDate(order.updatedAt) || 'Not available' }}</p>
+          <p class="admin-stat-note">Most recent update timestamp for this order.</p>
         </article>
       </div>
 
@@ -270,7 +301,7 @@ onMounted(() => {
           <div class="admin-card-header">
             <div>
               <p class="admin-section-kicker">Order Items</p>
-              <h2 class="admin-card-title">Sản phẩm và tiền hàng</h2>
+              <h2 class="admin-card-title">Products and Totals</h2>
             </div>
           </div>
 
@@ -285,9 +316,9 @@ onMounted(() => {
                 />
                 <div>
                   <p class="admin-ledger-title">{{ item.productName || item.sku || item.variantId }}</p>
-                  <p class="admin-ledger-subtitle">{{ item.variantLabel || 'Không có nhãn variant' }}</p>
+                  <p class="admin-ledger-subtitle">{{ item.variantLabel || 'No variant description' }}</p>
                   <p class="admin-ledger-subtitle">
-                    SL {{ formatNumber(item.quantity) }} • {{ formatCurrency(item.unitPrice) }}
+                    Qty {{ formatNumber(item.quantity) }} • {{ formatCurrency(item.unitPrice) }}
                   </p>
                 </div>
               </div>
@@ -300,19 +331,19 @@ onMounted(() => {
 
           <div class="admin-order-total-grid">
             <div>
-              <span>Tạm tính</span>
+              <span>Subtotal</span>
               <strong>{{ formatCurrency(order.subtotal) }}</strong>
             </div>
             <div>
-              <span>Giảm giá</span>
+              <span>Discount</span>
               <strong>{{ formatCurrency(order.discountTotal) }}</strong>
             </div>
             <div>
-              <span>Phí vận chuyển</span>
+              <span>Shipping Fee</span>
               <strong>{{ formatCurrency(order.shippingFee) }}</strong>
             </div>
             <div>
-              <span>Tổng cộng</span>
+              <span>Grand Total</span>
               <strong>{{ formatCurrency(order.grandTotal) }}</strong>
             </div>
           </div>
@@ -322,26 +353,26 @@ onMounted(() => {
           <section class="admin-subcard">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Customer</p>
-                <h2 class="admin-card-title">Thông tin người nhận</h2>
+                <p class="admin-section-kicker">Customer Info</p>
+                <h2 class="admin-card-title">Recipient Details</h2>
               </div>
             </div>
 
             <div class="admin-audit-list">
               <div class="admin-audit-row">
-                <dt>Người nhận</dt>
+                <dt>Recipient</dt>
                 <dd>{{ order.recipientName }}</dd>
               </div>
               <div class="admin-audit-row">
-                <dt>Số điện thoại</dt>
+                <dt>Phone Number</dt>
                 <dd>{{ order.phoneNumber }}</dd>
               </div>
               <div class="admin-audit-row">
-                <dt>Địa chỉ</dt>
-                <dd>{{ order.shippingAddressLine || 'N/A' }}</dd>
+                <dt>Address</dt>
+                <dd>{{ order.shippingAddressLine || 'Not available' }}</dd>
               </div>
               <div class="admin-audit-row">
-                <dt>Tạo lúc</dt>
+                <dt>Created At</dt>
                 <dd>{{ formatDate(order.createdAt) }}</dd>
               </div>
             </div>
@@ -350,8 +381,8 @@ onMounted(() => {
           <section class="admin-subcard">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Actions</p>
-                <h2 class="admin-card-title">Hành động nghiệp vụ</h2>
+                <p class="admin-section-kicker">Order Actions</p>
+                <h2 class="admin-card-title">Workflow Actions</h2>
               </div>
             </div>
 
@@ -362,7 +393,7 @@ onMounted(() => {
                 :disabled="!canConfirm || actionBusy"
                 @click="applyStatus('confirmed')"
               >
-                {{ actionBusy && canConfirm ? 'Đang cập nhật...' : 'Xác nhận đơn' }}
+                {{ actionBusy && canConfirm ? 'Updating...' : 'Confirm Order' }}
               </button>
 
               <button
@@ -371,7 +402,7 @@ onMounted(() => {
                 :disabled="!canComplete || actionBusy"
                 @click="applyStatus('completed')"
               >
-                {{ actionBusy && canComplete ? 'Đang cập nhật...' : 'Hoàn tất đơn' }}
+                {{ actionBusy && canComplete ? 'Updating...' : 'Complete Order' }}
               </button>
 
               <button
@@ -380,7 +411,7 @@ onMounted(() => {
                 :disabled="!canReconcileVnpay || actionBusy"
                 @click="reconcileVnpay"
               >
-                {{ actionBusy && canReconcileVnpay ? 'Đang reconcile...' : 'Reconcile VNPAY' }}
+                {{ actionBusy && canReconcileVnpay ? 'Reconciling...' : 'Reconcile VNPAY' }}
               </button>
 
               <button
@@ -389,13 +420,13 @@ onMounted(() => {
                 :disabled="!canCancel || actionBusy"
                 @click="cancelOrder"
               >
-                {{ actionBusy && canCancel ? 'Đang hủy...' : 'Hủy đơn hàng' }}
+                {{ actionBusy && canCancel ? 'Cancelling...' : 'Cancel Order' }}
               </button>
             </div>
 
             <div class="admin-note-block">
-              <p>Transition hợp lệ hiện tại: `pending -> confirmed -> completed`.</p>
-              <p>Nếu payment `vnpay` vẫn `pending`, backend có thể từ chối chuyển trạng thái xử lý.</p>
+              <p>Valid processing order: Pending → Confirmed → Completed.</p>
+              <p>For VNPAY orders still in pending payment, the system may temporarily block progression.</p>
             </div>
           </section>
         </div>
@@ -404,31 +435,31 @@ onMounted(() => {
       <section class="admin-card">
         <div class="admin-card-header">
           <div>
-            <p class="admin-section-kicker">Status Log</p>
-            <h2 class="admin-card-title">Lịch sử thay đổi trạng thái</h2>
+            <p class="admin-section-kicker">Workflow History</p>
+            <h2 class="admin-card-title">Status Change History</h2>
           </div>
         </div>
 
         <div v-if="order.statusLogs.length === 0" class="admin-empty-state">
-          Backend chưa ghi log thay đổi trạng thái nào cho order này.
+          No status-change history is available for this order.
         </div>
 
         <div v-else class="admin-table-shell">
           <table class="admin-table">
             <thead>
               <tr>
-                <th>Từ trạng thái</th>
-                <th>Sang trạng thái</th>
-                <th>Thay đổi bởi</th>
-                <th>Thời điểm</th>
+                <th>From Status</th>
+                <th>To Status</th>
+                <th>Changed By</th>
+                <th>Timestamp</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(log, index) in order.statusLogs" :key="`${log.changedAt}-${index}`">
-                <td>{{ log.fromStatus || 'N/A' }}</td>
-                <td>{{ log.toStatus || 'N/A' }}</td>
-                <td>{{ log.changedBy || 'N/A' }}</td>
-                <td>{{ formatDate(log.changedAt) || 'N/A' }}</td>
+                <td>{{ getOrderStatusLabel(log.fromStatus) }}</td>
+                <td>{{ getOrderStatusLabel(log.toStatus) }}</td>
+                <td>{{ log.changedBy || 'Not available' }}</td>
+                <td>{{ formatDate(log.changedAt) || 'Not available' }}</td>
               </tr>
             </tbody>
           </table>

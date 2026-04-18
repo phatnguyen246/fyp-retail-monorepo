@@ -30,8 +30,6 @@ async function handleSubmit() {
     brandCode: product.value.brandCode,
     categoryCode: product.value.categoryCode,
     productType: product.value.productType,
-    shortDescription: product.value.shortDescription || undefined,
-    longDescription: product.value.longDescription || undefined,
     tagCodes: product.value.tagCodes,
     badges: product.value.badges,
     specs: product.value.specs,
@@ -62,10 +60,10 @@ onMounted(() => {
   <section class="admin-page">
     <header class="admin-page-header">
       <div>
-        <p class="admin-page-kicker">Bút lục mới</p>
-        <h1 class="admin-page-title">Khởi tạo sản phẩm</h1>
+        <p class="admin-page-kicker">New Record</p>
+        <h1 class="admin-page-title">Create Product</h1>
         <p class="admin-page-subtitle">
-          Tạo product theo đúng schema backend, kèm badge, tag và toàn bộ smartphone specs cấp product.
+          Create a new product record with business metadata, visibility settings, and published specifications.
         </p>
       </div>
     </header>
@@ -73,26 +71,38 @@ onMounted(() => {
     <form class="admin-card admin-form-grid" @submit.prevent="handleSubmit">
       <div class="admin-card-header">
         <div>
-          <p class="admin-section-kicker">Thông tin cốt lõi</p>
-          <h2 class="admin-card-title">Hồ sơ product</h2>
+          <p class="admin-section-kicker">Core Information</p>
+          <h2 class="admin-card-title">Product Profile</h2>
         </div>
       </div>
 
       <div class="admin-two-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Tên sản phẩm</span>
-          <input v-model="product.title" class="admin-input" type="text" required />
+          <span class="admin-label">Product Name</span>
+          <input
+            v-model="product.title"
+            class="admin-input"
+            type="text"
+            placeholder="Example: iPhone 16 Pro Max"
+            required
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Product group code</span>
-          <input v-model="product.productGroupCode" class="admin-input" type="text" required />
+          <span class="admin-label">Product Group Code</span>
+          <input
+            v-model="product.productGroupCode"
+            class="admin-input"
+            type="text"
+            placeholder="Example: APPLE_IPHONE_16_PRO_MAX"
+            required
+          />
         </label>
       </div>
 
       <div class="admin-three-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Thương hiệu</span>
+          <span class="admin-label">Brand</span>
           <select v-model="product.brandCode" class="admin-select">
             <option v-for="option in referenceOptions.brands" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -101,7 +111,7 @@ onMounted(() => {
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Danh mục</span>
+          <span class="admin-label">Category</span>
           <select v-model="product.categoryCode" class="admin-select">
             <option
               v-for="option in referenceOptions.categories"
@@ -114,7 +124,7 @@ onMounted(() => {
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Lifecycle</span>
+          <span class="admin-label">Display Lifecycle</span>
           <select v-model="product.status" class="admin-select">
             <option
               v-for="option in referenceOptions.productStatuses"
@@ -127,22 +137,12 @@ onMounted(() => {
         </label>
       </div>
 
-      <label class="admin-field">
-        <span class="admin-label">Mô tả ngắn</span>
-        <textarea v-model="product.shortDescription" class="admin-textarea" rows="3" />
-      </label>
-
-      <label class="admin-field">
-        <span class="admin-label">Mô tả dài</span>
-        <textarea v-model="product.longDescription" class="admin-textarea" rows="5" />
-      </label>
-
       <div class="admin-card-divider"></div>
 
       <div class="admin-card-header">
         <div>
-          <p class="admin-section-kicker">Phân loại</p>
-          <h2 class="admin-card-title">Badge và tag</h2>
+          <p class="admin-section-kicker">Classification</p>
+          <h2 class="admin-card-title">Badges and Tags</h2>
         </div>
       </div>
 
@@ -182,106 +182,186 @@ onMounted(() => {
 
       <label class="admin-toggle-row">
         <input v-model="product.contactWhenOutOfStock" type="checkbox" />
-        <span>Cho phép khách để lại nhu cầu khi hệ thống ghi nhận hết hàng</span>
+        <span>Allow customers to leave demand when this product is out of stock</span>
       </label>
 
       <div class="admin-card-divider"></div>
 
       <div class="admin-card-header">
         <div>
-          <p class="admin-section-kicker">Smartphone specs</p>
-          <h2 class="admin-card-title">Thông số cấp product</h2>
+          <p class="admin-section-kicker">Specifications</p>
+          <h2 class="admin-card-title">Product-level Specs</h2>
         </div>
       </div>
 
       <div class="admin-three-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Kích thước màn hình</span>
-          <input v-model="product.specs.screen.size" class="admin-input" type="text" />
+          <span class="admin-label">Screen Size</span>
+          <input
+            v-model="product.specs.screen.size"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 6.7 inches"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Công nghệ màn hình</span>
-          <input v-model="product.specs.screen.technology" class="admin-input" type="text" />
+          <span class="admin-label">Display Technology</span>
+          <input
+            v-model="product.specs.screen.technology"
+            class="admin-input"
+            type="text"
+            placeholder="Example: LTPO OLED"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Độ phân giải</span>
-          <input v-model="product.specs.screen.resolution" class="admin-input" type="text" />
+          <span class="admin-label">Resolution</span>
+          <input
+            v-model="product.specs.screen.resolution"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 2796 x 1290"
+          />
         </label>
       </div>
 
       <div class="admin-three-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Tần số quét</span>
-          <input v-model="product.specs.screen.refreshRate" class="admin-input" type="text" />
+          <span class="admin-label">Refresh Rate</span>
+          <input
+            v-model="product.specs.screen.refreshRate"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 120Hz"
+          />
         </label>
 
         <label class="admin-field">
           <span class="admin-label">Chipset</span>
-          <input v-model="product.specs.chipset" class="admin-input" type="text" />
+          <input
+            v-model="product.specs.chipset"
+            class="admin-input"
+            type="text"
+            placeholder="Example: Apple A18 Pro"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Pin</span>
-          <input v-model="product.specs.battery" class="admin-input" type="text" />
+          <span class="admin-label">Battery</span>
+          <input
+            v-model="product.specs.battery"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 4685mAh"
+          />
         </label>
       </div>
 
       <div class="admin-three-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Camera sau</span>
-          <input v-model="product.specs.rearCamera" class="admin-input" type="text" />
+          <span class="admin-label">Rear Camera</span>
+          <input
+            v-model="product.specs.rearCamera"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 48MP + 12MP + 12MP"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Camera trước</span>
-          <input v-model="product.specs.frontCamera" class="admin-input" type="text" />
+          <span class="admin-label">Front Camera</span>
+          <input
+            v-model="product.specs.frontCamera"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 12MP"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Hệ điều hành</span>
-          <input v-model="product.specs.operatingSystem" class="admin-input" type="text" />
+          <span class="admin-label">Operating System</span>
+          <input
+            v-model="product.specs.operatingSystem"
+            class="admin-input"
+            type="text"
+            placeholder="Example: iOS 18"
+          />
         </label>
       </div>
 
       <div class="admin-three-column-grid">
         <label class="admin-field">
           <span class="admin-label">SIM</span>
-          <input v-model="product.specs.sim" class="admin-input" type="text" />
+          <input
+            v-model="product.specs.sim"
+            class="admin-input"
+            type="text"
+            placeholder="Example: Dual SIM (Nano-SIM + eSIM)"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Mạng</span>
-          <input v-model="product.specs.network" class="admin-input" type="text" />
+          <span class="admin-label">Network</span>
+          <input
+            v-model="product.specs.network"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 5G, Wi-Fi 6E, Bluetooth 5.3"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Sạc</span>
-          <input v-model="product.specs.charging" class="admin-input" type="text" />
+          <span class="admin-label">Charging</span>
+          <input
+            v-model="product.specs.charging"
+            class="admin-input"
+            type="text"
+            placeholder="Example: USB-C, 30W fast charge"
+          />
         </label>
       </div>
 
       <div class="admin-three-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Kích thước máy</span>
-          <input v-model="product.specs.dimensions" class="admin-input" type="text" />
+          <span class="admin-label">Dimensions</span>
+          <input
+            v-model="product.specs.dimensions"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 163 x 77.6 x 8.25 mm"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Khối lượng</span>
-          <input v-model="product.specs.weight" class="admin-input" type="text" />
+          <span class="admin-label">Weight</span>
+          <input
+            v-model="product.specs.weight"
+            class="admin-input"
+            type="text"
+            placeholder="Example: 227g"
+          />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Chất liệu</span>
-          <input v-model="product.specs.material" class="admin-input" type="text" />
+          <span class="admin-label">Materials</span>
+          <input
+            v-model="product.specs.material"
+            class="admin-input"
+            type="text"
+            placeholder="Example: Titanium + reinforced glass"
+          />
         </label>
       </div>
 
       <label class="admin-field">
-        <span class="admin-label">Chuẩn kháng nước</span>
-        <input v-model="product.specs.waterResistance" class="admin-input" type="text" />
+        <span class="admin-label">Water Resistance</span>
+        <input
+          v-model="product.specs.waterResistance"
+          class="admin-input"
+          type="text"
+          placeholder="Example: IP68"
+        />
       </label>
 
       <div v-if="errorMessage" class="admin-alert admin-alert-danger">
@@ -290,10 +370,10 @@ onMounted(() => {
 
       <div class="admin-button-row">
         <button type="button" class="admin-button admin-button-secondary" @click="router.back()">
-          Quay lại
+          Back
         </button>
         <button type="submit" class="admin-button admin-button-primary" :disabled="saving">
-          {{ saving ? 'Đang tạo...' : 'Tạo product' }}
+          {{ saving ? 'Creating...' : 'Create Product' }}
         </button>
       </div>
     </form>

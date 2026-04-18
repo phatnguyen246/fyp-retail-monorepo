@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatCurrency, formatDate, formatNumber } from '../../services/formatters'
 import { useAdminStore } from '../../store/admin'
@@ -7,6 +7,7 @@ import { useAdminStore } from '../../store/admin'
 const adminStore = useAdminStore()
 
 const filters = ref({
+  query: '',
   status: 'all',
   deleted: 'false',
   sort: 'updatedAt:desc',
@@ -24,20 +25,43 @@ const meta = ref({
 })
 const pageError = ref('')
 const importFile = ref(null)
+const importFileInputRef = ref(null)
 const importSummary = ref(null)
 const importError = ref('')
 const importing = ref(false)
+const importModalOpen = ref(false)
 
 const referenceOptions = computed(() => adminStore.referenceOptions)
 const activeProducts = computed(() => products.value.filter((product) => product.status === 'active').length)
 const draftProducts = computed(() => products.value.filter((product) => product.status === 'draft').length)
 const inStockProducts = computed(() => products.value.filter((product) => product.hasInStockVariants).length)
+const filteredProducts = computed(() => {
+  const query = filters.value.query.trim().toLowerCase()
+
+  if (!query) {
+    return products.value
+  }
+
+  return products.value.filter((product) =>
+    [
+      product.title,
+      product.productGroupCode,
+      product.listingVariantSnapshot?.sku,
+      product.listingVariantSnapshot?.ram,
+      product.listingVariantSnapshot?.rom,
+      product.listingVariantSnapshot?.colorFullName,
+      product.listingVariantSnapshot?.color,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query)),
+  )
+})
 
 const pageSizeOptions = [12, 24, 48]
 
-function createProductMonogram(product) {
-  const title = product.title.trim()
-  return title ? title.slice(0, 1).toUpperCase() : 'P'
+function getProductStatusLabel(status) {
+  const options = referenceOptions.value?.productStatuses || []
+  return options.find((option) => option.value === status)?.label || status || 'Not available'
 }
 
 async function loadProducts() {
@@ -56,13 +80,9 @@ async function loadProducts() {
   loading.value = false
 }
 
-async function handleFilterSubmit() {
-  filters.value.page = 1
-  await loadProducts()
-}
-
 async function resetFilters() {
   filters.value = {
+    query: '',
     status: 'all',
     deleted: 'false',
     sort: 'updatedAt:desc',
@@ -81,9 +101,22 @@ function handleImportSelection(event) {
   importFile.value = event.target.files?.[0] ?? null
 }
 
+function openFilePicker() {
+  importFileInputRef.value?.click()
+}
+
+function openImportModal() {
+  importError.value = ''
+  importModalOpen.value = true
+}
+
+function closeImportModal() {
+  importModalOpen.value = false
+}
+
 async function submitImport() {
   if (!importFile.value) {
-    importError.value = 'Chọn một file CSV trước khi import.'
+    importError.value = 'Please choose a CSV file before importing.'
     return
   }
 
@@ -111,6 +144,18 @@ onMounted(async () => {
   await adminStore.ensureReferenceOptions()
   await loadProducts()
 })
+
+watch(
+  () => [filters.value.status, filters.value.deleted, filters.value.sort, filters.value.limit],
+  async (_, previousValues) => {
+    if (!previousValues) {
+      return
+    }
+
+    filters.value.page = 1
+    await loadProducts()
+  },
+)
 </script>
 
 <template>
@@ -118,98 +163,89 @@ onMounted(async () => {
     <header class="admin-page-header">
       <div>
         <p class="admin-page-kicker">Product Management</p>
-        <h1 class="admin-page-title">Danh sách sản phẩm</h1>
+        <h1 class="admin-page-title">Product List</h1>
         <p class="admin-page-subtitle">
-          Trang list chuẩn enterprise admin: filter bar, data table, pagination và đường dẫn rõ ràng sang detail/form để xử lý CRUD.
+          Monitor the product catalog, filter quickly for operations, and open detail pages for business updates.
         </p>
       </div>
 
       <div class="admin-toolbar">
         <button type="button" class="admin-button admin-button-secondary" @click="loadProducts">
-          Tải lại
+          Reload
+        </button>
+        <button type="button" class="admin-button admin-button-secondary" @click="openImportModal">
+          Import CSV
         </button>
         <RouterLink :to="{ name: 'admin-product-create' }" class="admin-button admin-button-primary">
-          Tạo sản phẩm mới
+          Create product
         </RouterLink>
       </div>
     </header>
 
-    <div class="admin-stat-grid">
+    <div class="admin-stat-grid admin-product-list-stat-grid">
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Tổng bản ghi</p>
+        <p class="admin-stat-eyebrow">Total records</p>
         <p class="admin-stat-value">{{ formatNumber(meta.total) }}</p>
-        <p class="admin-stat-note">Tổng số product khớp bộ lọc backend hiện tại.</p>
+        <p class="admin-stat-note">Total products under current filter conditions.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Đang bán</p>
+        <p class="admin-stat-eyebrow">Active</p>
         <p class="admin-stat-value">{{ formatNumber(activeProducts) }}</p>
-        <p class="admin-stat-note">Số product `active` trong trang dữ liệu vừa nạp.</p>
+        <p class="admin-stat-note">Products currently available for sale.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Bản nháp</p>
+        <p class="admin-stat-eyebrow">Draft</p>
         <p class="admin-stat-value">{{ formatNumber(draftProducts) }}</p>
-        <p class="admin-stat-note">Các hồ sơ còn ở giai đoạn chuẩn bị nội dung/catalog.</p>
+        <p class="admin-stat-note">Products still in content preparation stage.</p>
       </article>
 
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Có tồn kho</p>
+        <p class="admin-stat-eyebrow">In stock</p>
         <p class="admin-stat-value">{{ formatNumber(inStockProducts) }}</p>
-        <p class="admin-stat-note">Product đang có ít nhất một variant còn hàng.</p>
+        <p class="admin-stat-note">Products with at least one variant currently in stock.</p>
       </article>
     </div>
 
     <section class="admin-card">
       <div class="admin-card-header">
         <div>
-          <p class="admin-section-kicker">Bulk Import</p>
-          <h2 class="admin-card-title">Import CSV catalog</h2>
+          <p class="admin-section-kicker">Product Catalog</p>
+          <h2 class="admin-card-title">Product Data Table</h2>
+        </div>
+
+        <div class="admin-table-meta">
+          <span>{{ formatNumber(meta.total) }} records</span>
+          <span>Page {{ meta.page }}/{{ meta.totalPages }}</span>
         </div>
       </div>
 
-      <form class="admin-form-grid" @submit.prevent="submitImport">
-        <label class="admin-field">
-          <span class="admin-label">File CSV</span>
-          <input class="admin-input" type="file" accept=".csv,text/csv" @change="handleImportSelection" />
-        </label>
-
-        <p class="admin-muted-text">
-          Backend yêu cầu đầy đủ cột product và variant. Import hoạt động theo cơ chế upsert qua `productGroupCode` và `sku`.
-        </p>
-
-        <div v-if="importError" class="admin-alert admin-alert-danger">
-          {{ importError }}
-        </div>
-
-        <div v-if="importSummary?.meta" class="admin-note-block">
-          <p>Row count: <strong>{{ formatNumber(importSummary.meta.rowCount) }}</strong></p>
-          <p>Product count: <strong>{{ formatNumber(importSummary.meta.productCount) }}</strong></p>
-          <p>Variant count: <strong>{{ formatNumber(importSummary.meta.variantCount) }}</strong></p>
-        </div>
-
-        <div class="admin-button-row">
-          <button type="submit" class="admin-button admin-button-primary" :disabled="importing">
-            {{ importing ? 'Đang import...' : 'Chạy import CSV' }}
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <section class="admin-card admin-filter-bar">
-      <div class="admin-card-header">
-        <div>
-          <p class="admin-section-kicker">Filter Bar</p>
-          <h2 class="admin-card-title">Lọc và điều hướng danh sách</h2>
-        </div>
-
-        <p class="admin-muted-text">Bộ lọc hiện gọi trực tiếp API admin catalog và giữ nguyên logic paging backend.</p>
-      </div>
-
-      <form class="admin-form-grid" @submit.prevent="handleFilterSubmit">
-        <div class="admin-four-column-grid">
+      <div class="admin-form-grid">
+        <div class="admin-product-list-filter-grid">
           <label class="admin-field">
-            <span class="admin-label">Trạng thái</span>
+            <span class="admin-label-row">
+              <span class="admin-label">Search</span>
+              <span
+                class="admin-field-hint"
+                title="You can enter product name, group code, SKU, or variant specs such as RAM/ROM/color."
+                tabindex="0"
+                data-tooltip="You can enter product name, group code, SKU, or variant specs such as RAM/ROM/color."
+                aria-label="Search: You can enter product name, group code, SKU, or variant specs such as RAM/ROM/color."
+              >
+                ?
+              </span>
+            </span>
+            <input
+              v-model="filters.query"
+              class="admin-input"
+              type="search"
+              placeholder="Example: iPhone, 256GB Black, SKU..."
+            />
+          </label>
+
+          <label class="admin-field">
+            <span class="admin-label">Status</span>
             <select v-model="filters.status" class="admin-select">
               <option
                 v-for="option in referenceOptions.listStatusFilters"
@@ -222,7 +258,7 @@ onMounted(async () => {
           </label>
 
           <label class="admin-field">
-            <span class="admin-label">Hiển thị</span>
+            <span class="admin-label">Visibility</span>
             <select v-model="filters.deleted" class="admin-select">
               <option
                 v-for="option in referenceOptions.deletedFilters"
@@ -235,7 +271,7 @@ onMounted(async () => {
           </label>
 
           <label class="admin-field">
-            <span class="admin-label">Sắp xếp</span>
+            <span class="admin-label">Sort</span>
             <select v-model="filters.sort" class="admin-select">
               <option
                 v-for="option in referenceOptions.productSortOptions"
@@ -248,36 +284,19 @@ onMounted(async () => {
           </label>
 
           <label class="admin-field">
-            <span class="admin-label">Số dòng / trang</span>
+            <span class="admin-label">Rows per page</span>
             <select v-model.number="filters.limit" class="admin-select">
               <option v-for="size in pageSizeOptions" :key="size" :value="size">
-                {{ size }} dòng
+                {{ size }} rows
               </option>
             </select>
           </label>
         </div>
 
         <div class="admin-button-row">
-          <button type="submit" class="admin-button admin-button-primary">
-            Áp dụng bộ lọc
-          </button>
           <button type="button" class="admin-button admin-button-secondary" @click="resetFilters">
-            Đặt lại
+            Reset
           </button>
-        </div>
-      </form>
-    </section>
-
-    <section class="admin-card">
-      <div class="admin-card-header">
-        <div>
-          <p class="admin-section-kicker">Product List</p>
-          <h2 class="admin-card-title">Bảng dữ liệu sản phẩm</h2>
-        </div>
-
-        <div class="admin-table-meta">
-          <span>{{ formatNumber(meta.total) }} bản ghi</span>
-          <span>Trang {{ meta.page }}/{{ meta.totalPages }}</span>
         </div>
       </div>
 
@@ -285,32 +304,31 @@ onMounted(async () => {
         {{ pageError }}
       </div>
 
-      <div v-if="loading" class="admin-empty-state">Đang tải danh mục sản phẩm...</div>
+      <div v-if="loading" class="admin-empty-state">Loading product catalog...</div>
 
-      <div v-else-if="products.length === 0" class="admin-empty-state">
-        Không có sản phẩm nào khớp bộ lọc hiện tại.
+      <div v-else-if="filteredProducts.length === 0" class="admin-empty-state">
+        No products match the current filters.
       </div>
 
       <div v-else class="admin-table-shell">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Sản phẩm</th>
-              <th>Mã nhóm</th>
-              <th>Thương hiệu</th>
-              <th>Trạng thái</th>
-              <th>Giá niêm yết</th>
-              <th>Biến thể</th>
-              <th>Tồn kho</th>
-              <th>Cập nhật</th>
-              <th>Hành động</th>
+              <th>Product</th>
+              <th>Group Code</th>
+              <th>Brand</th>
+              <th>Status</th>
+              <th>Listed Price</th>
+              <th>Variant</th>
+              <th>Inventory</th>
+              <th>Updated</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in products" :key="product.id">
+            <tr v-for="product in filteredProducts" :key="product.id">
               <td>
                 <div class="admin-product-title-cell">
-                  <div class="admin-monogram">{{ createProductMonogram(product) }}</div>
                   <div>
                     <p class="admin-table-title">{{ product.title }}</p>
                     <p class="admin-table-subtitle">
@@ -325,26 +343,26 @@ onMounted(async () => {
                 <p class="admin-table-title">{{ product.productGroupCode }}</p>
                 <p class="admin-table-subtitle">{{ product.id }}</p>
               </td>
-              <td>{{ product.brand?.name || product.brand?.code || 'Chưa rõ' }}</td>
+              <td>{{ product.brand?.name || product.brand?.code || 'Unknown' }}</td>
               <td>
                 <div class="admin-status-stack">
                   <span class="admin-status-pill" :data-tone="product.status">
-                    {{ product.status }}
+                    {{ getProductStatusLabel(product.status) }}
                   </span>
                   <span v-if="product.isDeleted" class="admin-status-pill" data-tone="danger">
-                    soft deleted
+                    Hidden
                   </span>
                 </div>
               </td>
               <td>{{ formatCurrency(product.minSalePrice, product.listingVariantSnapshot?.currency || 'VND') }}</td>
               <td>
                 <span class="admin-status-pill" :data-tone="product.hasActiveVariants ? 'success' : 'muted'">
-                  {{ product.hasActiveVariants ? 'Đã sẵn sàng bán' : 'Chưa sẵn sàng' }}
+                  {{ product.hasActiveVariants ? 'Ready for sale' : 'Not ready' }}
                 </span>
               </td>
               <td>
                 <span class="admin-status-pill" :data-tone="product.hasInStockVariants ? 'success' : 'warning'">
-                  {{ product.hasInStockVariants ? 'Còn hàng' : 'Cần kiểm tra tồn' }}
+                  {{ product.hasInStockVariants ? 'In stock' : 'Check inventory' }}
                 </span>
               </td>
               <td>{{ formatDate(product.updatedAt) }}</td>
@@ -353,7 +371,7 @@ onMounted(async () => {
                   :to="{ name: 'admin-product-detail', params: { productId: product.id } }"
                   class="admin-inline-link"
                 >
-                  Xem chi tiết
+                  View details
                 </RouterLink>
               </td>
             </tr>
@@ -368,18 +386,108 @@ onMounted(async () => {
           :disabled="meta.page <= 1"
           @click="goToPage(meta.page - 1)"
         >
-          Trang trước
+          Previous
         </button>
-        <span class="admin-pagination-label">Trang {{ meta.page }} / {{ meta.totalPages }}</span>
+        <span class="admin-pagination-label">Page {{ meta.page }} / {{ meta.totalPages }}</span>
         <button
           type="button"
           class="admin-button admin-button-secondary"
           :disabled="meta.page >= meta.totalPages"
           @click="goToPage(meta.page + 1)"
         >
-          Trang sau
+          Next
         </button>
       </div>
     </section>
+
+    <div
+      v-if="importModalOpen"
+      class="admin-modal-backdrop"
+      @click.self="closeImportModal"
+    >
+      <div class="admin-modal-panel" role="dialog" aria-modal="true">
+        <div class="admin-card-header">
+          <div>
+            <p class="admin-section-kicker">Bulk Import</p>
+            <h2 class="admin-card-title">Import Catalog from CSV</h2>
+          </div>
+          <button type="button" class="admin-button admin-button-secondary" @click="closeImportModal">
+            Close
+          </button>
+        </div>
+
+        <form class="admin-form-grid" @submit.prevent="submitImport">
+          <label class="admin-field">
+            <span class="admin-label">File CSV</span>
+            <div class="admin-button-row">
+              <button type="button" class="admin-button admin-button-secondary" @click="openFilePicker">
+                Select CSV file
+              </button>
+              <span class="admin-muted-text">
+                {{ importFile?.name || 'No file selected' }}
+              </span>
+            </div>
+            <input
+              ref="importFileInputRef"
+              class="hidden"
+              type="file"
+              accept=".csv,text/csv"
+              @change="handleImportSelection"
+            />
+          </label>
+
+          <p class="admin-muted-text">
+            The CSV must include complete product and variant data. The system matches by product group code and SKU for accurate updates.
+          </p>
+
+          <div v-if="importError" class="admin-alert admin-alert-danger">
+            {{ importError }}
+          </div>
+
+          <div v-if="importSummary?.meta" class="admin-note-block">
+            <p>Processed rows: <strong>{{ formatNumber(importSummary.meta.rowCount) }}</strong></p>
+            <p>Products: <strong>{{ formatNumber(importSummary.meta.productCount) }}</strong></p>
+            <p>Variants: <strong>{{ formatNumber(importSummary.meta.variantCount) }}</strong></p>
+          </div>
+
+          <div class="admin-button-row">
+            <button type="submit" class="admin-button admin-button-primary" :disabled="importing">
+              {{ importing ? 'Importing data...' : 'Start import' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </section>
 </template>
+
+<style scoped>
+.admin-product-list-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-product-list-stat-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1279px) {
+  .admin-product-list-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .admin-product-list-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .admin-product-list-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

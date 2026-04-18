@@ -14,27 +14,27 @@ const accountMenuRef = ref(null)
 
 const navigation = [
   {
-    label: 'Tổng quan',
+    label: 'Overview',
     routeName: 'admin-overview',
-    description: 'Theo dõi số liệu chính và việc cần xử lý',
+    description: 'Track core metrics and priority actions',
     keywords: ['dashboard', 'overview', 'kpi', 'summary'],
   },
   {
-    label: 'Sản phẩm',
+    label: 'Products',
     routeName: 'admin-products',
-    description: 'Quản lý danh mục, hồ sơ và tạo mới sản phẩm',
+    description: 'Manage catalog, records, and create products',
     keywords: ['catalog', 'product', 'sku', 'variant'],
   },
   {
-    label: 'Tồn kho',
+    label: 'Inventory',
     routeName: 'admin-inventory',
-    description: 'Kiểm tra tồn và cập nhật số lượng biến thể',
+    description: 'Check stock and update variant quantities',
     keywords: ['inventory', 'stock', 'variant', 'warehouse'],
   },
   {
-    label: 'Đơn hàng',
+    label: 'Orders',
     routeName: 'admin-orders',
-    description: 'Theo dõi đơn hàng và trạng thái thanh toán',
+    description: 'Track orders and payment status',
     keywords: ['order', 'payment', 'pending', 'confirmed'],
   },
 ]
@@ -47,77 +47,77 @@ const pageCaption = computed(() => {
   }
 
   if (typeof route.name === 'string' && route.name.startsWith('admin-product-')) {
-    return 'Sản phẩm'
+    return 'Products'
   }
 
   if (typeof route.name === 'string' && route.name.startsWith('admin-order-')) {
-    return 'Đơn hàng'
+    return 'Orders'
   }
 
-  return 'Bàn điều hành'
+  return 'Dashboard'
 })
 
 const pageMeta = computed(() => {
   if (route.name === 'admin-overview') {
     return {
-      kicker: 'Quản trị',
-      title: 'Tổng quan vận hành',
-      subtitle: 'Theo dõi số liệu chính và các đầu việc cần ưu tiên hôm nay.',
+      kicker: 'Admin',
+      title: 'Operations Overview',
+      subtitle: 'Track key metrics and today’s priority tasks.',
     }
   }
 
   if (route.name === 'admin-products' || route.name === 'admin-product-create') {
     return {
-      kicker: 'Quản trị',
-      title: 'Quản lý sản phẩm',
-      subtitle: 'Tra cứu, cập nhật và tạo mới sản phẩm trong danh mục.',
+      kicker: 'Admin',
+      title: 'Product Management',
+      subtitle: 'Find, update, and create products in the catalog.',
     }
   }
 
   if (route.name === 'admin-product-detail') {
     return {
-      kicker: 'Quản trị',
-      title: 'Hồ sơ sản phẩm',
-      subtitle: 'Xem thông tin sản phẩm, biến thể, hình ảnh và tồn kho.',
+      kicker: 'Admin',
+      title: 'Product Record',
+      subtitle: 'View product information, variants, media, and inventory.',
     }
   }
 
   if (route.name === 'admin-inventory') {
     return {
-      kicker: 'Quản trị',
-      title: 'Quản lý tồn kho',
-      subtitle: 'Kiểm tra mức tồn và cập nhật nhanh theo biến thể.',
+      kicker: 'Admin',
+      title: 'Inventory Management',
+      subtitle: 'Check stock levels and update variants quickly.',
     }
   }
 
   if (route.name === 'admin-orders') {
     return {
-      kicker: 'Quản trị',
-      title: 'Quản lý đơn hàng',
-      subtitle: 'Theo dõi trạng thái và xử lý các đơn hàng cần thao tác.',
+      kicker: 'Admin',
+      title: 'Order Management',
+      subtitle: 'Track status and process orders that need action.',
     }
   }
 
   if (route.name === 'admin-order-detail') {
     return {
-      kicker: 'Quản trị',
-      title: 'Hồ sơ đơn hàng',
-      subtitle: 'Xem chi tiết đơn hàng và cập nhật trạng thái xử lý.',
+      kicker: 'Admin',
+      title: 'Order Record',
+      subtitle: 'View order details and update processing status.',
     }
   }
 
   return {
-    kicker: 'Quản trị',
+    kicker: 'Admin',
     title: pageCaption.value,
-    subtitle: 'Khu vực quản trị dành cho theo dõi và cập nhật dữ liệu cửa hàng.',
+    subtitle: 'Admin area for monitoring and updating store data.',
   }
 })
 
 const quickActions = [
-  { label: 'Tạo sản phẩm', routeName: 'admin-product-create', keywords: ['create', 'new', 'product'] },
-  { label: 'Sản phẩm', routeName: 'admin-products', keywords: ['catalog', 'products'] },
-  { label: 'Đơn hàng', routeName: 'admin-orders', keywords: ['orders', 'pending'] },
-  { label: 'Tồn kho', routeName: 'admin-inventory', keywords: ['inventory', 'stock'] },
+  { label: 'Create Product', routeName: 'admin-product-create', keywords: ['create', 'new', 'product'] },
+  { label: 'Products', routeName: 'admin-products', keywords: ['catalog', 'products'] },
+  { label: 'Orders', routeName: 'admin-orders', keywords: ['orders', 'pending'] },
+  { label: 'Inventory', routeName: 'admin-inventory', keywords: ['inventory', 'stock'] },
 ]
 
 const commandResults = computed(() => {
@@ -231,11 +231,11 @@ onBeforeUnmount(() => {
     <aside class="admin-sidebar">
       <div class="admin-sidebar-chrome">
         <div class="admin-sidebar-brand">
-          <p class="admin-sidebar-overline">Quản trị</p>
+          <p class="admin-sidebar-overline">Admin</p>
           <h1 class="admin-sidebar-title">Retail Admin</h1>
         </div>
 
-        <nav class="admin-sidebar-nav" aria-label="Điều hướng quản trị">
+        <nav class="admin-sidebar-nav" aria-label="Admin navigation">
           <RouterLink
             v-for="item in navigation"
             :key="item.routeName"
@@ -262,7 +262,7 @@ onBeforeUnmount(() => {
             v-model="commandQuery"
             type="search"
             class="admin-search-input"
-            placeholder="Tìm nhanh trang quản trị"
+            placeholder="Quick search admin pages"
           />
 
           <div v-if="commandQuery && commandResults.length" class="admin-search-results">
@@ -289,14 +289,14 @@ onBeforeUnmount(() => {
             >
               <span class="admin-user-avatar">{{ userInitials }}</span>
               <span class="admin-user-meta">
-                <strong>Tài khoản quản trị</strong>
+                <strong>Admin account</strong>
                 <span>{{ userEmail }}</span>
               </span>
             </button>
 
             <div v-if="isAccountMenuOpen" class="admin-account-dropdown">
               <button type="button" class="admin-account-dropdown-item" @click="openLogoutConfirm">
-                Đăng xuất
+                Sign out
               </button>
             </div>
           </div>
@@ -311,10 +311,10 @@ onBeforeUnmount(() => {
 
   <ConfirmDialog
     :open="isLogoutConfirmOpen"
-    title="Xác nhận đăng xuất"
-    message="Phiên quản trị hiện tại sẽ kết thúc. Bạn có muốn tiếp tục không?"
-    confirm-label="Đăng xuất"
-    cancel-label="Ở lại"
+    title="Confirm sign out"
+    message="Your current admin session will end. Do you want to continue?"
+    confirm-label="Sign out"
+    cancel-label="Stay"
     :loading="authStore.loading"
     @cancel="closeLogoutConfirm"
     @confirm="handleLogout"

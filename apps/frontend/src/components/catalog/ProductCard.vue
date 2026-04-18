@@ -151,7 +151,7 @@ const originalPrice = computed(() => {
 const memorySummary = computed(() => {
   const ram = heroVariant.value?.ram
   const rom = heroVariant.value?.rom
-  const color = heroVariant.value?.color
+  const color = heroVariant.value?.colorFullName || heroVariant.value?.color
   const memory = [ram, rom].filter(Boolean).join('/')
 
   return [memory, color].filter(Boolean).join(' • ')
@@ -507,7 +507,7 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
             type="button"
             @click="handleColorSelect(option.key)"
           >
-            {{ option.label }}
+            {{ option.fullName }}
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import CatalogTopNav from '../components/catalog/CatalogTopNav.vue'
 import CatalogFooter from '../components/catalog/CatalogFooter.vue'
@@ -24,6 +24,15 @@ const selectedVariantId = ref('')
 const activeMediaIndex = ref(0)
 const isAddingToCart = ref(false)
 const quantity = ref(1)
+const descriptionPanelRef = ref(null)
+const descriptionHeadingRef = ref(null)
+const descriptionBodyRef = ref(null)
+const descriptionActionsRef = ref(null)
+const specsPanelRef = ref(null)
+const descriptionCollapsedContentMaxHeight = ref(0)
+const descriptionCanExpand = ref(false)
+const isDescriptionExpanded = ref(false)
+let descriptionLayoutObserver = null
 
 const productId = computed(() => String(route.params.productId ?? ''))
 const productSlug = computed(() => {
@@ -36,6 +45,11 @@ const variants = computed(() => product.value?.variants ?? [])
 function getMemoryKey(variant) {
   const attrs = variant?.variantAttributes ?? {}
   return [attrs.ram, attrs.rom].filter(Boolean).join(' - ')
+}
+
+function getColorDisplayName(variant) {
+  const attrs = variant?.variantAttributes ?? {}
+  return attrs.colorFullName || attrs.color || ''
 }
 
 function hasMatchingVariant({ memoryKey, color }) {
@@ -132,8 +146,8 @@ const colorOptions = computed(() => {
     seen.add(color)
     uniqueOptions.push({
       key: color,
-      label: color,
-      fullName: color,
+      label: getColorDisplayName(variant) || color,
+      fullName: getColorDisplayName(variant) || color,
       inStock: variants.value.some(
         (candidate) => candidate?.variantAttributes?.color === color && candidate.isInStock,
       ),
@@ -230,7 +244,7 @@ const specEntries = computed(() => {
 
 const selectedVariantLabel = computed(() => {
   const attrs = selectedVariant.value?.variantAttributes ?? {}
-  return [attrs.ram, attrs.rom, attrs.color].filter(Boolean).join(' / ')
+  return [attrs.ram, attrs.rom, attrs.colorFullName || attrs.color].filter(Boolean).join(' / ')
 })
 
 const selectedPrice = computed(() => {
@@ -250,6 +264,23 @@ const selectedPrice = computed(() => {
   }
 })
 
+const longDescriptionHtml = computed(() =>
+  normalizeRichTextHtml(product.value?.longDescription || ''),
+)
+
+const fallbackDescription = computed(
+  () => product.value?.shortDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.',
+)
+const descriptionBodyStyle = computed(() => {
+  if (isDescriptionExpanded.value || descriptionCollapsedContentMaxHeight.value <= 0) {
+    return null
+  }
+
+  return {
+    maxHeight: `${descriptionCollapsedContentMaxHeight.value}px`,
+  }
+})
+
 const isCompared = computed(() => {
   if (!product.value?.id) {
     return false
@@ -262,6 +293,143 @@ function formatBadgeLabel(value) {
   return String(value)
     .replaceAll('_', ' ')
     .replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function extractPlainTextFromHtml(value = '') {
+  const source = typeof value === 'string' ? value.trim() : ''
+
+  if (!source) {
+    return ''
+  }
+
+  if (typeof window === 'undefined' || typeof window.DOMParser !== 'function') {
+    return source.replace(/\s+/g, ' ').trim()
+  }
+
+  const parsed = new window.DOMParser().parseFromString(source, 'text/html')
+  return (parsed.body.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function normalizeRichTextHtml(value = '') {
+  const source = typeof value === 'string' ? value.trim() : ''
+
+  if (!source) {
+    return ''
+  }
+
+  if (typeof window === 'undefined' || typeof window.DOMParser !== 'function') {
+    return source
+  }
+
+  const parsed = new window.DOMParser().parseFromString(source, 'text/html')
+
+  parsed.body.querySelectorAll('script, style, noscript').forEach((node) => {
+    node.remove()
+  })
+
+  parsed.body.querySelectorAll('*').forEach((element) => {
+    for (const { name, value: attributeValue } of [...element.attributes]) {
+      const normalizedName = name.toLowerCase()
+      const normalizedValue = String(attributeValue || '').trim().toLowerCase()
+
+      if (normalizedName.startsWith('on')) {
+        element.removeAttribute(name)
+        continue
+      }
+
+      if (
+        (normalizedName === 'href' || normalizedName === 'src') &&
+        normalizedValue.startsWith('javascript:')
+      ) {
+        element.removeAttribute(name)
+      }
+    }
+  })
+
+  const plainText = extractPlainTextFromHtml(parsed.body.innerHTML)
+  const hasStructuredContent = Boolean(
+    parsed.body.querySelector('img, video, iframe, table, ul, ol, blockquote, pre, hr'),
+  )
+
+  if (!plainText && !hasStructuredContent) {
+    return ''
+  }
+
+  return parsed.body.innerHTML.trim()
+}
+
+function recalculateDescriptionLayout() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const specsPanelElement = specsPanelRef.value
+  const descriptionPanelElement = descriptionPanelRef.value
+  const descriptionBodyElement = descriptionBodyRef.value
+
+  if (!specsPanelElement || !descriptionPanelElement || !descriptionBodyElement) {
+    descriptionCollapsedContentMaxHeight.value = 0
+    descriptionCanExpand.value = false
+    return
+  }
+
+  const specsHeight = Math.round(specsPanelElement.getBoundingClientRect().height)
+
+  if (!Number.isFinite(specsHeight) || specsHeight <= 0) {
+    descriptionCollapsedContentMaxHeight.value = 0
+    descriptionCanExpand.value = false
+    return
+  }
+
+  const computedStyles = window.getComputedStyle(descriptionPanelElement)
+  const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0
+  const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0
+  const headingHeight = descriptionHeadingRef.value
+    ? Math.ceil(descriptionHeadingRef.value.getBoundingClientRect().height)
+    : 0
+  const actionsHeight = descriptionActionsRef.value
+    ? Math.ceil(descriptionActionsRef.value.getBoundingClientRect().height)
+    : 0
+  const staticOffset = Math.ceil(paddingTop + paddingBottom + headingHeight + actionsHeight + 20)
+  const maxBodyHeight = Math.max(140, specsHeight - staticOffset)
+
+  descriptionCollapsedContentMaxHeight.value = maxBodyHeight
+  descriptionCanExpand.value = descriptionBodyElement.scrollHeight > maxBodyHeight + 8
+}
+
+function scheduleDescriptionLayoutRecalculation() {
+  nextTick(() => {
+    recalculateDescriptionLayout()
+  })
+}
+
+function ensureDescriptionLayoutObserver() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (descriptionLayoutObserver) {
+    descriptionLayoutObserver.disconnect()
+    descriptionLayoutObserver = null
+  }
+
+  const targets = [specsPanelRef.value, descriptionBodyRef.value].filter(Boolean)
+
+  if (targets.length === 0 || typeof window.ResizeObserver !== 'function') {
+    return
+  }
+
+  descriptionLayoutObserver = new window.ResizeObserver(() => {
+    recalculateDescriptionLayout()
+  })
+
+  targets.forEach((element) => {
+    descriptionLayoutObserver.observe(element)
+  })
+}
+
+function toggleDescriptionExpanded() {
+  isDescriptionExpanded.value = !isDescriptionExpanded.value
 }
 
 async function loadProductDetail() {
@@ -440,6 +608,37 @@ watch(mediaItems, () => {
 watch(selectedVariantQuantityCap, (value) => {
   quantity.value = Math.min(Math.max(1, quantity.value), value)
 })
+
+watch(
+  () => [product.value?.id, longDescriptionHtml.value, fallbackDescription.value, specEntries.value.length],
+  () => {
+    isDescriptionExpanded.value = false
+    scheduleDescriptionLayoutRecalculation()
+    ensureDescriptionLayoutObserver()
+  },
+  { immediate: true },
+)
+
+watch(isDescriptionExpanded, () => {
+  scheduleDescriptionLayoutRecalculation()
+})
+
+onMounted(() => {
+  scheduleDescriptionLayoutRecalculation()
+  ensureDescriptionLayoutObserver()
+  window.addEventListener('resize', recalculateDescriptionLayout)
+})
+
+onBeforeUnmount(() => {
+  if (descriptionLayoutObserver) {
+    descriptionLayoutObserver.disconnect()
+    descriptionLayoutObserver = null
+  }
+
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', recalculateDescriptionLayout)
+  }
+})
 </script>
 
 <template>
@@ -498,7 +697,7 @@ watch(selectedVariantQuantityCap, (value) => {
           v-else-if="product"
           class="space-y-8 xl:space-y-10"
         >
-          <div class="grid gap-8 lg:grid-cols-[minmax(24rem,1.16fr)_minmax(22rem,0.84fr)] xl:gap-10">
+          <div class="grid items-start gap-8 lg:grid-cols-[minmax(24rem,1.16fr)_minmax(22rem,0.84fr)] xl:gap-10">
             <div class="space-y-4">
               <div class="detail-stage rounded-[2rem] border border-[var(--catalog-border-soft)] p-4 md:p-6">
                 <div class="detail-stage-inner mx-auto w-full max-w-[26rem]">
@@ -743,16 +942,55 @@ watch(selectedVariantQuantityCap, (value) => {
           </div>
 
           <div class="grid gap-8 lg:grid-cols-[minmax(24rem,1.16fr)_minmax(22rem,0.84fr)] xl:gap-10">
-            <article class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8">
-              <p class="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
+            <article
+              ref="descriptionPanelRef"
+              class="detail-description-panel rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8"
+            >
+              <p
+                ref="descriptionHeadingRef"
+                class="detail-description-heading mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]"
+              >
                 Mô tả chi tiết
               </p>
-              <p class="detail-copy text-[var(--catalog-text-muted)]">
-                {{ product.longDescription || product.shortDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.' }}
-              </p>
+              <div
+                ref="descriptionBodyRef"
+                class="detail-description-body text-[var(--catalog-text-muted)]"
+                :class="{ 'detail-description-body--collapsed': !isDescriptionExpanded && descriptionCanExpand }"
+                :style="descriptionBodyStyle"
+              >
+                <div
+                  v-if="longDescriptionHtml"
+                  class="detail-rich-text detail-description-body-content text-[var(--catalog-text-muted)]"
+                  v-html="longDescriptionHtml"
+                ></div>
+                <p v-else class="detail-copy detail-description-body-content text-[var(--catalog-text-muted)]">
+                  {{ fallbackDescription }}
+                </p>
+
+                <div
+                  v-if="!isDescriptionExpanded && descriptionCanExpand"
+                  class="detail-description-expand-overlay"
+                >
+                  <button class="catalog-reset-button" type="button" @click="toggleDescriptionExpanded">
+                    Xem chi tiết
+                  </button>
+                </div>
+              </div>
+              <div
+                v-if="isDescriptionExpanded && descriptionCanExpand"
+                ref="descriptionActionsRef"
+                class="detail-description-actions mt-5 text-center"
+              >
+                <button class="catalog-reset-button" type="button" @click="toggleDescriptionExpanded">
+                  Thu gọn
+                </button>
+              </div>
             </article>
 
-            <section class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8">
+            <section
+              ref="specsPanelRef"
+              class="self-start rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8"
+            >
               <div class="mb-5 flex items-center justify-between gap-4">
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
@@ -1020,6 +1258,187 @@ watch(selectedVariantQuantityCap, (value) => {
 .detail-copy {
   white-space: pre-line;
   line-height: 1.9;
+}
+
+.detail-description-body {
+  position: relative;
+  overflow: visible;
+  transition: max-height 220ms ease;
+}
+
+.detail-description-body--collapsed {
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-description-body--collapsed::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4.5rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.88) 60%,
+    rgba(255, 255, 255, 1) 100%
+  );
+  pointer-events: none;
+}
+
+.detail-description-expand-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.9rem;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.detail-description-expand-overlay .catalog-reset-button {
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.detail-rich-text {
+  line-height: 1.8;
+}
+
+.detail-rich-text :deep(> :first-child) {
+  margin-top: 0;
+}
+
+.detail-rich-text :deep(> :last-child) {
+  margin-bottom: 0;
+}
+
+.detail-rich-text :deep(h1),
+.detail-rich-text :deep(h2),
+.detail-rich-text :deep(h3),
+.detail-rich-text :deep(h4),
+.detail-rich-text :deep(h5),
+.detail-rich-text :deep(h6) {
+  margin: 1.25rem 0 0.65rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--catalog-text);
+}
+
+.detail-rich-text :deep(h1) {
+  font-size: 1.6rem;
+}
+
+.detail-rich-text :deep(h2) {
+  font-size: 1.4rem;
+}
+
+.detail-rich-text :deep(h3) {
+  font-size: 1.2rem;
+}
+
+.detail-rich-text :deep(h4),
+.detail-rich-text :deep(h5),
+.detail-rich-text :deep(h6) {
+  font-size: 1.05rem;
+}
+
+.detail-rich-text :deep(p),
+.detail-rich-text :deep(ul),
+.detail-rich-text :deep(ol),
+.detail-rich-text :deep(blockquote),
+.detail-rich-text :deep(table),
+.detail-rich-text :deep(pre),
+.detail-rich-text :deep(hr) {
+  margin: 0 0 0.95rem;
+}
+
+.detail-rich-text :deep(ul),
+.detail-rich-text :deep(ol) {
+  padding-left: 1.3rem;
+}
+
+.detail-rich-text :deep(li + li) {
+  margin-top: 0.35rem;
+}
+
+.detail-rich-text :deep(a) {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.detail-rich-text :deep(blockquote) {
+  margin-left: 0;
+  border-left: 4px solid rgba(139, 117, 0, 0.35);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.95rem;
+  background: #fff8e7;
+  color: #5b4300;
+}
+
+.detail-rich-text :deep(pre) {
+  overflow-x: auto;
+  border-radius: 0.8rem;
+  padding: 0.8rem 1rem;
+  background: #111827;
+  color: #f3f4f6;
+}
+
+.detail-rich-text :deep(code) {
+  border-radius: 0.35rem;
+  padding: 0.15rem 0.3rem;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+.detail-rich-text :deep(pre code) {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.detail-rich-text :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-rich-text :deep(th),
+.detail-rich-text :deep(td) {
+  border: 1px solid var(--catalog-border-soft);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+}
+
+.detail-rich-text :deep(img),
+.detail-rich-text :deep(video),
+.detail-rich-text :deep(iframe) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.8rem;
+}
+
+.detail-rich-text :deep(.align-left),
+.detail-rich-text :deep(.tox-text-left) {
+  text-align: left;
+}
+
+.detail-rich-text :deep(.align-center),
+.detail-rich-text :deep(.tox-text-center) {
+  text-align: center;
+}
+
+.detail-rich-text :deep(.align-right),
+.detail-rich-text :deep(.tox-text-right) {
+  text-align: right;
+}
+
+.detail-rich-text :deep(.align-justify),
+.detail-rich-text :deep(.tox-text-justify) {
+  text-align: justify;
 }
 
 .detail-skeleton {

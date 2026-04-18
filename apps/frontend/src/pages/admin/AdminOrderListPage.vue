@@ -26,10 +26,10 @@ const filters = ref({
 
 const pageSizeOptions = [10, 20, 30, 50]
 const sortOptions = [
-  { label: 'Mới nhất', value: 'createdAt:desc' },
-  { label: 'Cũ nhất', value: 'createdAt:asc' },
-  { label: 'Tổng tiền giảm dần', value: 'grandTotal:desc' },
-  { label: 'Tổng tiền tăng dần', value: 'grandTotal:asc' },
+  { label: 'Newest first', value: 'createdAt:desc' },
+  { label: 'Oldest first', value: 'createdAt:asc' },
+  { label: 'Total value: high to low', value: 'grandTotal:desc' },
+  { label: 'Total value: low to high', value: 'grandTotal:asc' },
 ]
 
 const pendingOrders = computed(() => orders.value.filter((order) => order.orderStatus === 'pending').length)
@@ -129,7 +129,7 @@ function getPrimaryAction(order) {
   if (order.orderStatus === 'pending') {
     return {
       action: 'confirm',
-      label: 'Xác nhận',
+      label: 'Confirm',
       targetStatus: 'confirmed',
       tone: 'primary',
     }
@@ -138,7 +138,7 @@ function getPrimaryAction(order) {
   if (order.orderStatus === 'confirmed') {
     return {
       action: 'complete',
-      label: 'Hoàn tất',
+      label: 'Complete',
       targetStatus: 'completed',
       tone: 'secondary',
     }
@@ -153,22 +153,53 @@ function canCancel(order) {
 
 function nextStepLabel(order) {
   if (order.orderStatus === 'pending') {
-    return 'Bước tiếp theo: xác nhận đơn'
+    return 'Next step: confirm order'
   }
 
   if (order.orderStatus === 'confirmed') {
-    return 'Bước tiếp theo: hoàn tất đơn'
+    return 'Next step: complete order'
   }
 
   if (order.orderStatus === 'completed') {
-    return 'Luồng đã hoàn tất'
+    return 'Workflow completed'
   }
 
   if (order.orderStatus === 'cancelled') {
-    return 'Đơn đã rời khỏi luồng xử lý'
+    return 'Order exited the workflow'
   }
 
-  return 'Không có thao tác khả dụng'
+  return 'No available action'
+}
+
+function getOrderStatusLabel(status) {
+  const labels = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  }
+
+  return labels[status] || status || 'Not available'
+}
+
+function getPaymentStatusLabel(status) {
+  const labels = {
+    pending: 'Pending payment',
+    paid: 'Paid',
+    cancelled: 'Cancelled',
+    failed: 'Failed',
+  }
+
+  return labels[status] || status || 'Not available'
+}
+
+function getPaymentMethodLabel(method) {
+  const labels = {
+    vnpay: 'VNPAY',
+    cod: 'Cash on Delivery',
+  }
+
+  return labels[method] || method || 'Not available'
 }
 
 function isBusy(orderId, action) {
@@ -214,7 +245,7 @@ async function applyRowStatus(order, targetStatus, actionKey) {
 
   if (result.success) {
     replaceOrder(result.data)
-    setActionMessage(`Đã chuyển đơn ${order.orderCode} sang trạng thái \`${targetStatus}\`.`, 'success')
+    setActionMessage(`Order ${order.orderCode} was moved to ${getOrderStatusLabel(targetStatus)}.`, 'success')
   } else {
     setActionMessage(result.error, 'danger')
   }
@@ -224,7 +255,7 @@ async function applyRowStatus(order, targetStatus, actionKey) {
 }
 
 async function cancelRowOrder(order) {
-  if (!window.confirm(`Hủy đơn ${order.orderCode}?`)) {
+  if (!window.confirm(`Cancel order ${order.orderCode}?`)) {
     return
   }
 
@@ -235,7 +266,7 @@ async function cancelRowOrder(order) {
 
   if (result.success) {
     replaceOrder(result.data)
-    setActionMessage(`Đã hủy đơn ${order.orderCode}.`, 'warning')
+    setActionMessage(`Order ${order.orderCode} was cancelled.`, 'warning')
   } else {
     setActionMessage(result.error, 'danger')
   }
@@ -270,22 +301,22 @@ onMounted(() => {
     <header class="admin-page-header">
       <div>
         <p class="admin-page-kicker">Order Management</p>
-        <h1 class="admin-page-title">Bảng điều phối đơn hàng</h1>
+        <h1 class="admin-page-title">Order Operations Board</h1>
         <p class="admin-page-subtitle">
-          Module order theo kiểu task-oriented: lọc danh sách, đọc trạng thái hiện tại và thực hiện đúng bước hợp lệ trong state machine của backend.
+          Track order progress, filter quickly for operations, and perform workflow actions in the correct sequence.
         </p>
       </div>
 
       <div class="admin-toolbar">
         <button type="button" class="admin-button admin-button-secondary" @click="loadOrders">
-          Tải lại danh sách
+          Reload list
         </button>
       </div>
     </header>
 
     <div class="admin-note-block">
-      <p>Workflow backend hiện có: <strong>pending → confirmed → completed</strong>.</p>
-      <p>`cancelled` là nhánh kết thúc riêng. Hệ thống hiện chưa hỗ trợ các bước `shipping` hoặc `delivered` ở API admin.</p>
+      <p>Current workflow: <strong>Pending → Confirmed → Completed</strong>.</p>
+      <p>Status <strong>Cancelled</strong> is a terminal branch and does not continue through the remaining steps.</p>
     </div>
 
     <div
@@ -302,58 +333,68 @@ onMounted(() => {
 
     <div class="admin-stat-grid">
       <article class="admin-stat-card">
-        <p class="admin-stat-eyebrow">Tổng đơn</p>
+        <p class="admin-stat-eyebrow">Total Orders</p>
         <p class="admin-stat-value">{{ formatNumber(orders.length) }}</p>
-        <p class="admin-stat-note">Toàn bộ đơn đang truy xuất được từ endpoint admin.</p>
+        <p class="admin-stat-note">All orders currently available in the admin system.</p>
       </article>
 
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">Pending</p>
         <p class="admin-stat-value">{{ formatNumber(pendingOrders) }}</p>
-        <p class="admin-stat-note">Cần xác nhận trước khi đi tiếp trong luồng xử lý.</p>
+        <p class="admin-stat-note">Needs confirmation before moving to the next workflow step.</p>
       </article>
 
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">Confirmed</p>
         <p class="admin-stat-value">{{ formatNumber(confirmedOrders) }}</p>
-        <p class="admin-stat-note">Đã được duyệt và có thể chuyển sang hoàn tất.</p>
+        <p class="admin-stat-note">Approved and ready to move to completion.</p>
       </article>
 
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">VNPAY Pending</p>
         <p class="admin-stat-value">{{ formatNumber(vnpayPendingOrders) }}</p>
-        <p class="admin-stat-note">Những đơn có thể cần đối soát thanh toán trước khi xử lý tiếp.</p>
+        <p class="admin-stat-note">Orders that may require payment reconciliation before the next step.</p>
       </article>
     </div>
 
-    <section class="admin-card admin-filter-bar">
+    <section class="admin-card">
       <div class="admin-card-header">
         <div>
-          <p class="admin-section-kicker">Filter Bar</p>
-          <h2 class="admin-card-title">Lọc danh sách đơn hàng</h2>
+          <p class="admin-section-kicker">Order List</p>
+          <h2 class="admin-card-title">Order Data Table</h2>
         </div>
 
-        <div class="admin-table-meta">
-          <span>{{ formatNumber(pagination.total) }} kết quả</span>
-          <span>{{ pagination.start }} - {{ pagination.end }}</span>
-        </div>
+        <p class="admin-muted-text">
+          {{ formatNumber(completedOrders) }} completed orders out of {{ formatNumber(orders.length) }}.
+        </p>
       </div>
 
-      <div class="admin-four-column-grid">
+      <div class="admin-order-filter-grid">
         <label class="admin-field">
-          <span class="admin-label">Tìm kiếm</span>
+          <span class="admin-label-row">
+            <span class="admin-label">Search</span>
+            <span
+              class="admin-field-hint"
+              title="You can enter order code, system ID, recipient name, or phone number."
+              tabindex="0"
+              data-tooltip="You can enter order code, system ID, recipient name, or phone number."
+              aria-label="Search: You can enter order code, system ID, recipient name, or phone number."
+            >
+              ?
+            </span>
+          </span>
           <input
             v-model="filters.query"
             class="admin-input"
             type="search"
-            placeholder="Mã đơn, khách hàng, số điện thoại"
+            placeholder="Order code, recipient, phone number"
           />
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Trạng thái đơn</span>
+          <span class="admin-label">Order Status</span>
           <select v-model="filters.status" class="admin-select">
-            <option value="all">Tất cả</option>
+            <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
@@ -362,30 +403,28 @@ onMounted(() => {
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Phương thức thanh toán</span>
+          <span class="admin-label">Payment Method</span>
           <select v-model="filters.paymentMethod" class="admin-select">
-            <option value="all">Tất cả</option>
+            <option value="all">All</option>
             <option value="vnpay">VNPAY</option>
             <option value="cod">COD</option>
-            <option value="none">Không có</option>
+            <option value="none">None</option>
           </select>
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Trạng thái thanh toán</span>
+          <span class="admin-label">Payment Status</span>
           <select v-model="filters.paymentStatus" class="admin-select">
-            <option value="all">Tất cả</option>
-            <option value="pending">Pending</option>
+            <option value="all">All</option>
+            <option value="pending">Pending payment</option>
             <option value="paid">Paid</option>
             <option value="cancelled">Cancelled</option>
-            <option value="none">Không có</option>
+            <option value="none">None</option>
           </select>
         </label>
-      </div>
 
-      <div class="admin-four-column-grid">
         <label class="admin-field">
-          <span class="admin-label">Sắp xếp</span>
+          <span class="admin-label">Sort</span>
           <select v-model="filters.sort" class="admin-select">
             <option v-for="option in sortOptions" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -394,55 +433,44 @@ onMounted(() => {
         </label>
 
         <label class="admin-field">
-          <span class="admin-label">Số dòng / trang</span>
+          <span class="admin-label">Rows per page</span>
           <select v-model.number="filters.limit" class="admin-select">
             <option v-for="size in pageSizeOptions" :key="size" :value="size">
-              {{ size }} dòng
+              {{ size }} rows
             </option>
           </select>
         </label>
-
-        <div class="admin-button-row">
-          <button type="button" class="admin-button admin-button-secondary" @click="resetFilters">
-            Đặt lại bộ lọc
-          </button>
-        </div>
       </div>
-    </section>
 
-    <section class="admin-card">
-      <div class="admin-card-header">
-        <div>
-          <p class="admin-section-kicker">Order List</p>
-          <h2 class="admin-card-title">Bảng dữ liệu đơn hàng</h2>
-        </div>
-
-        <p class="admin-muted-text">
-          {{ formatNumber(completedOrders) }} đơn hoàn tất trong tổng số {{ formatNumber(orders.length) }} đơn.
-        </p>
+      <div class="admin-button-row">
+        <button type="button" class="admin-button admin-button-secondary" @click="resetFilters">
+          Reset filters
+        </button>
       </div>
+
+      <p class="admin-muted-text">{{ formatNumber(pagination.total) }} results • {{ pagination.start }} - {{ pagination.end }}</p>
 
       <div v-if="errorMessage" class="admin-alert admin-alert-danger">
         {{ errorMessage }}
       </div>
 
-      <div v-if="loading" class="admin-empty-state">Đang tải danh sách đơn hàng...</div>
+      <div v-if="loading" class="admin-empty-state">Loading order list...</div>
 
       <div v-else-if="visibleOrders.length === 0" class="admin-empty-state">
-        Không có đơn hàng nào khớp bộ lọc hiện tại.
+        No orders match the current filters.
       </div>
 
       <div v-else class="admin-table-shell">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Đơn hàng</th>
-              <th>Khách hàng</th>
+              <th>Order</th>
+              <th>Customer</th>
               <th>Workflow</th>
-              <th>Thanh toán</th>
-              <th>Giá trị</th>
-              <th>Tạo lúc</th>
-              <th>Hành động</th>
+              <th>Payment</th>
+              <th>Value</th>
+              <th>Created At</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -458,23 +486,23 @@ onMounted(() => {
               <td>
                 <div class="admin-status-stack">
                   <span class="admin-status-pill" :data-tone="order.orderStatus">
-                    {{ order.orderStatus }}
+                    {{ getOrderStatusLabel(order.orderStatus) }}
                   </span>
                   <p class="admin-table-subtitle">{{ nextStepLabel(order) }}</p>
                 </div>
               </td>
               <td>
-                <p class="admin-table-title">{{ order.paymentMethod || 'N/A' }}</p>
+                <p class="admin-table-title">{{ getPaymentMethodLabel(order.paymentMethod) }}</p>
                 <span
                   class="admin-status-pill"
                   :data-tone="order.paymentStatus === 'paid' ? 'success' : order.paymentStatus || 'muted'"
                 >
-                  {{ order.paymentStatus || 'N/A' }}
+                  {{ getPaymentStatusLabel(order.paymentStatus) }}
                 </span>
               </td>
               <td>
                 <p class="admin-table-title">{{ formatCurrency(order.grandTotal) }}</p>
-                <p class="admin-table-subtitle">{{ formatNumber(order.itemCount) }} dòng hàng</p>
+                <p class="admin-table-subtitle">{{ formatNumber(order.itemCount) }} items</p>
               </td>
               <td>{{ formatDate(order.createdAt) }}</td>
               <td class="admin-table-actions-cell">
@@ -489,7 +517,7 @@ onMounted(() => {
                   >
                     {{
                       isBusy(order.id, getPrimaryAction(order).action)
-                        ? 'Đang xử lý...'
+                        ? 'Processing...'
                         : getPrimaryAction(order).label
                     }}
                   </button>
@@ -501,14 +529,14 @@ onMounted(() => {
                     :disabled="Boolean(busyOrderId)"
                     @click="cancelRowOrder(order)"
                   >
-                    {{ isBusy(order.id, 'cancel') ? 'Đang hủy...' : 'Hủy đơn' }}
+                    {{ isBusy(order.id, 'cancel') ? 'Cancelling...' : 'Cancel Order' }}
                   </button>
 
                   <RouterLink
                     :to="{ name: 'admin-order-detail', params: { orderId: order.id } }"
                     class="admin-inline-link"
                   >
-                    Xem chi tiết
+                    View details
                   </RouterLink>
                 </div>
               </td>
@@ -524,18 +552,27 @@ onMounted(() => {
           :disabled="pagination.page <= 1"
           @click="goToPage(pagination.page - 1)"
         >
-          Trang trước
+          Previous
         </button>
-        <span class="admin-pagination-label">Trang {{ pagination.page }} / {{ pagination.totalPages }}</span>
+        <span class="admin-pagination-label">Page {{ pagination.page }} / {{ pagination.totalPages }}</span>
         <button
           type="button"
           class="admin-button admin-button-secondary"
           :disabled="pagination.page >= pagination.totalPages"
           @click="goToPage(pagination.page + 1)"
         >
-          Trang sau
+          Next
         </button>
       </div>
     </section>
   </section>
 </template>
+
+<style scoped>
+.admin-order-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+</style>

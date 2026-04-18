@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { describe, expect, it, vi } from "vitest";
 import { createCreateInventoryRecordService } from "../services/create-inventory-record.service.js";
 import { createGetInventoryRecordService } from "../services/get-inventory-record.service.js";
+import { createListLowStockInventoryService } from "../services/list-low-stock-inventory.service.js";
 import { createReadInventoryByVariantIdsService } from "../services/read-inventory.service.js";
 import { createUpdateInventoryRecordService } from "../services/update-inventory-record.service.js";
 
@@ -205,6 +206,73 @@ describe("inventory services", () => {
             createdAt: null,
             updatedAt: null,
         });
+    });
+
+    it("hydrates low-stock list with catalog display fields and keeps fallbacks when missing", async () => {
+        const firstVariantId = new ObjectId("65f000000000000000000171");
+        const secondVariantId = new ObjectId("65f000000000000000000172");
+        const inventoryRepository = {
+            findLowStockInventoryRecords: vi.fn().mockResolvedValue([
+                {
+                    _id: new ObjectId("65f000000000000000000173"),
+                    variantId: firstVariantId,
+                    stockQuantity: 1,
+                    lowStockThreshold: 3,
+                    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+                    updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+                },
+                {
+                    _id: new ObjectId("65f000000000000000000174"),
+                    variantId: secondVariantId,
+                    stockQuantity: 0,
+                    lowStockThreshold: 2,
+                    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+                    updatedAt: new Date("2026-01-03T00:00:00.000Z"),
+                },
+            ]),
+        };
+        const catalogAdapter = {
+            findCatalogDisplayByVariantIds: vi.fn().mockResolvedValue([
+                {
+                    variantId: firstVariantId.toHexString(),
+                    productName: "Hydrated Product",
+                    productGroupCode: "HYDRATED_PHONE",
+                    sku: "HYD-BLK-128",
+                    variantLabel: "8GB / 128GB / Black",
+                },
+            ]),
+        };
+        const listLowStockInventory = createListLowStockInventoryService({
+            inventoryRepository,
+            catalogAdapter,
+            logger: {
+                warn: vi.fn(),
+            },
+        });
+
+        const result = await listLowStockInventory();
+
+        expect(catalogAdapter.findCatalogDisplayByVariantIds).toHaveBeenCalledWith({
+            variantIds: [firstVariantId.toHexString(), secondVariantId.toHexString()],
+        });
+        expect(result).toEqual([
+            expect.objectContaining({
+                variantId: firstVariantId.toHexString(),
+                stockQuantity: 1,
+                productName: "Hydrated Product",
+                productGroupCode: "HYDRATED_PHONE",
+                sku: "HYD-BLK-128",
+                variantLabel: "8GB / 128GB / Black",
+            }),
+            expect.objectContaining({
+                variantId: secondVariantId.toHexString(),
+                stockQuantity: 0,
+                productName: null,
+                productGroupCode: null,
+                sku: null,
+                variantLabel: null,
+            }),
+        ]);
     });
 
     it("rejects create when the catalog variant does not exist", async () => {

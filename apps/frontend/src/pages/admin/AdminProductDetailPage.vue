@@ -102,7 +102,7 @@ const longDescriptionEditorConfig = {
   toolbar_sticky: true,
   toolbar_mode: 'sliding',
   placeholder:
-    'Viết mô tả dài theo cấu trúc rõ ràng: điểm nổi bật, trải nghiệm sử dụng, thông số đáng chú ý, đối tượng phù hợp.',
+    'Write detailed content with a clear structure: highlights, user experience, notable specifications, and target audience.',
   plugins: [
     'advlist',
     'autolink',
@@ -122,7 +122,7 @@ const longDescriptionEditorConfig = {
   toolbar:
     'undo redo | blocks | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote table link | removeformat | visualblocks code preview fullscreen',
   quickbars_selection_toolbar: 'bold italic underline | quicklink blockquote bullist numlist',
-  block_formats: 'Đoạn văn=p; Tiêu đề lớn=h2; Tiêu đề vừa=h3; Tiêu đề nhỏ=h4',
+  block_formats: 'Paragraph=p; Heading 2=h2; Heading 3=h3; Heading 4=h4',
   formats: {
     alignleft: [
       { selector: 'p,h1,h2,h3,h4,h5,h6,div,figure,table', styles: { textAlign: 'left' } },
@@ -240,54 +240,54 @@ const longDescriptionEditorConfig = {
 }
 
 const fieldHints = {
-  productTitle: 'Tên hiển thị chính của product trong admin và storefront.',
-  productStatus: 'Trạng thái vòng đời quyết định khả năng hiển thị và vận hành của product.',
-  shortDescription: 'Mô tả ngắn dùng cho listing hoặc phần giới thiệu súc tích.',
-  longDescription: 'Mô tả dài hơn để diễn giải rõ nội dung sản phẩm.',
-  brandCode: 'Chọn brandCode mới nếu cần đổi thương hiệu đang liên kết với product.',
-  categoryCode: 'Chọn categoryCode mới nếu cần đổi danh mục đang liên kết với product.',
-  badges: 'Các badge marketing hiển thị kèm product trên storefront.',
-  tagCodes: 'Danh sách tagCodes hiện tại của product. Bỏ chọn hoặc thêm mới để cập nhật trực tiếp.',
-  contactWhenOutOfStock: 'Cho phép storefront chuyển sang trạng thái liên hệ khi biến thể hết hàng.',
-  screenSize: 'Kích thước màn hình ở cấp product.',
-  screenTechnology: 'Công nghệ tấm nền hoặc loại màn hình.',
-  screenResolution: 'Độ phân giải hiển thị tiêu chuẩn của thiết bị.',
-  screenRefreshRate: 'Tần số quét màn hình nếu có.',
-  chipset: 'Chipset hoặc SoC chính của sản phẩm.',
-  battery: 'Dung lượng pin hoặc thông tin pin trọng yếu.',
-  rearCamera: 'Thông tin cụm camera sau.',
-  frontCamera: 'Thông tin camera trước.',
-  operatingSystem: 'Hệ điều hành hoặc nền tảng phần mềm xuất xưởng.',
-  sim: 'Chuẩn SIM mà thiết bị hỗ trợ.',
-  network: 'Chuẩn mạng và kết nối di động chính.',
-  charging: 'Chuẩn sạc hoặc công nghệ sạc hỗ trợ.',
-  dimensions: 'Kích thước tổng thể của thiết bị.',
-  weight: 'Khối lượng thiết bị.',
-  material: 'Vật liệu hoàn thiện thân máy hoặc khung vỏ.',
-  waterResistance: 'Chuẩn kháng nước hoặc mô tả khả năng chống chịu môi trường.',
-  cloneGroupCode: 'Mã nhóm mới cho bản clone. Backend dùng giá trị này để tạo product mới.',
-  cloneTitle: 'Tên tùy chọn cho bản clone. Để trống nếu muốn backend tự dùng tên mặc định.',
-  variantSku: 'SKU duy nhất của variant dùng cho quản trị, đồng bộ và tồn kho.',
-  variantStatus: 'Trạng thái vòng đời của variant.',
-  variantRam: 'Giá trị RAM trong variantAttributes.',
-  variantRom: 'Giá trị ROM trong variantAttributes.',
-  variantColor: 'Mã màu ngắn cho variant. Với form tạo mới, tên màu đầy đủ chỉ bổ sung sau khi tạo variant.',
-  variantColorFullName: 'Tên màu đầy đủ để hiển thị đẹp hơn nếu cần.',
-  ramSort: 'Thứ tự sắp xếp RAM khi render lựa chọn variant.',
-  romSort: 'Thứ tự sắp xếp ROM khi render lựa chọn variant.',
-  colorPriority: 'Ưu tiên của màu trong danh sách biến thể.',
-  variantSortOrder: 'Thứ tự tổng quát của variant trong product.',
-  originalPrice: 'Giá niêm yết gốc trước khi giảm giá.',
-  salePrice: 'Giá bán thực tế dùng cho storefront.',
-  currency: 'Mã tiền tệ của giá, ví dụ VND.',
-  videoUrl: 'URL video gắn với variant nếu có.',
-  videoThumbnailUrl: 'Ảnh đại diện của video variant.',
-  isPrimaryColor: 'Đánh dấu variant này là màu chủ đạo hoặc mặc định nổi bật.',
-  uploadImage: 'Tải ảnh JPEG, PNG hoặc WebP, tối đa 5 MB. Backend tự gán sortOrder tăng dần.',
-  stockQuantity: 'Số lượng tồn kho hiện tại của variant.',
-  lowStockThreshold: 'Ngưỡng cảnh báo tồn kho thấp cho variant này.',
+  productTitle: 'Primary product name shown in admin and storefront.',
+  productStatus: 'Lifecycle status controlling product visibility and operations.',
+  shortDescription: 'Short summary used in listings or compact introductions.',
+  longDescription: 'Long-form product content for detailed presentation.',
+  brandCode: 'Select a new brand code if you need to change linked brand.',
+  categoryCode: 'Select a new category code if you need to change linked category.',
+  badges: 'Marketing badges displayed with the product on storefront.',
+  tagCodes: 'Current tag codes assigned to this product. Add/remove directly.',
+  contactWhenOutOfStock: 'Allow contact state when variants are out of stock.',
+  screenSize: 'Product-level screen size.',
+  screenTechnology: 'Display panel technology or screen type.',
+  screenResolution: 'Standard display resolution.',
+  screenRefreshRate: 'Display refresh rate, if available.',
+  chipset: 'Main chipset or SoC of the product.',
+  battery: 'Battery capacity or critical battery details.',
+  rearCamera: 'Rear camera module details.',
+  frontCamera: 'Front camera details.',
+  operatingSystem: 'Preinstalled operating system or software platform.',
+  sim: 'Supported SIM standard.',
+  network: 'Primary network and mobile connectivity standards.',
+  charging: 'Charging standard or supported charging technology.',
+  dimensions: 'Overall device dimensions.',
+  weight: 'Device weight.',
+  material: 'Body/frame finishing materials.',
+  waterResistance: 'Water-resistance rating or environmental durability notes.',
+  cloneGroupCode: 'New group code for the clone. Used to create a new product.',
+  cloneTitle: 'Optional clone title. Leave blank to use default naming.',
+  variantSku: 'Unique variant SKU used for admin, sync, and inventory.',
+  variantStatus: 'Lifecycle status of the variant.',
+  variantRam: 'Variant RAM value.',
+  variantRom: 'Variant storage value.',
+  variantColor: 'Short color code for the variant.',
+  variantColorFullName: 'Full display color name for customer-facing text.',
+  ramSort: 'Sort order for RAM when rendering variants.',
+  romSort: 'Sort order for storage when rendering variants.',
+  colorPriority: 'Color priority in the variant list.',
+  variantSortOrder: 'Overall sort order of the variant in this product.',
+  originalPrice: 'Original listed price before discount.',
+  salePrice: 'Actual selling price shown to customers.',
+  currency: 'Currency code for pricing, e.g. VND.',
+  videoUrl: 'Video URL associated with the variant.',
+  videoThumbnailUrl: 'Thumbnail URL for variant video.',
+  isPrimaryColor: 'Mark this variant as primary/default highlight color.',
+  uploadImage: 'Upload JPEG, PNG, or WebP up to 5 MB. Display order is auto-managed.',
+  stockQuantity: 'Current stock quantity for this variant.',
+  lowStockThreshold: 'Low-stock threshold for this variant.',
   currentRecordSummary:
-    'Mục này dùng để đối chiếu nhanh thông tin sản phẩm hiện đang được hệ thống ghi nhận. Khi cần điều chỉnh thương hiệu, ngành hàng hoặc nhãn phân loại, hãy thao tác ở phần cập nhật bên phải.',
+    'Use this section to quickly review currently recorded product data. Update brand, category, or classification tags in the edit panel on the right.',
 }
 
 const FieldLabel = defineComponent({
@@ -361,9 +361,9 @@ const productAuditRows = computed(() => {
   }
 
   return [
-    { label: 'Mã sản phẩm', value: product.id || 'N/A' },
-    { label: 'Mã nhóm', value: product.productGroupCode || 'N/A' },
-    { label: 'Đường dẫn', value: product.slug || 'N/A' },
+    { label: 'Product ID', value: product.id || 'Not available' },
+    { label: 'Group code', value: product.productGroupCode || 'Not available' },
+    { label: 'Slug', value: product.slug || 'Not available' },
   ]
 })
 
@@ -376,25 +376,25 @@ const productSummaryCards = computed(() => {
 
   return [
     {
-      label: 'Lifecycle',
-      value: product.status || 'N/A',
-      note: 'Trạng thái hiện tại của product trong catalog.',
+      label: 'Display lifecycle',
+      value: getProductStatusLabel(product.status),
+      note: 'Current product status in the catalog.',
       tone: product.status || 'muted',
     },
     {
-      label: 'Biến thể',
+      label: 'Variants',
       value: formatNumber(detail.value?.variants.length || 0),
-      note: 'Tổng số variant đang gắn với product này.',
+      note: 'Total number of variants linked to this product.',
     },
     {
-      label: 'Giá thấp nhất',
+      label: 'Lowest price',
       value: formatCurrency(product.minSalePrice),
-      note: 'Mức giá storefront nhỏ nhất đang được suy ra.',
+      note: 'Lowest sale price currently shown to customers.',
     },
     {
-      label: 'Cập nhật cuối',
-      value: formatDate(product.updatedAt) || 'N/A',
-      note: 'Mốc backend ghi nhận thay đổi gần nhất.',
+      label: 'Last updated',
+      value: formatDate(product.updatedAt) || 'Not available',
+      note: 'Most recent update time.',
     },
   ]
 })
@@ -445,7 +445,7 @@ const hasCloneDraftChanges = computed(() => {
     productGroupCode: detail.value.product.productGroupCode
       ? `${detail.value.product.productGroupCode}_COPY`
       : '',
-    title: detail.value.product.title ? `${detail.value.product.title} Copy` : '',
+    title: detail.value.product.title ? `${detail.value.product.title} - Copy` : '',
   }
 
   return JSON.stringify(cloneDraft.value) !== JSON.stringify(defaultCloneDraft)
@@ -473,71 +473,75 @@ const productPatchOverviewItems = computed(() => {
   const items = []
 
   if (Object.hasOwn(patch, 'title')) {
-    items.push({ label: 'Tên sản phẩm', from: current.title || 'N/A', to: patch.title || 'N/A' })
+    items.push({ label: 'Product name', from: current.title || 'Not available', to: patch.title || 'Not available' })
   }
 
   if (Object.hasOwn(patch, 'status')) {
-    items.push({ label: 'Lifecycle', from: current.status || 'N/A', to: patch.status || 'N/A' })
+    items.push({
+      label: 'Display lifecycle',
+      from: getProductStatusLabel(current.status),
+      to: getProductStatusLabel(patch.status),
+    })
   }
 
   if (Object.hasOwn(patch, 'brandCode')) {
     items.push({
       label: 'Brand code',
-      from: current.brand?.code || 'N/A',
-      to: patch.brandCode || 'N/A',
+      from: current.brand?.code || 'Not available',
+      to: patch.brandCode || 'Not available',
     })
   }
 
   if (Object.hasOwn(patch, 'categoryCode')) {
     items.push({
       label: 'Category code',
-      from: current.category?.code || 'N/A',
-      to: patch.categoryCode || 'N/A',
+      from: current.category?.code || 'Not available',
+      to: patch.categoryCode || 'Not available',
     })
   }
 
   if (Object.hasOwn(patch, 'contactWhenOutOfStock')) {
     items.push({
-      label: 'Liên hệ khi hết hàng',
-      from: current.contactWhenOutOfStock ? 'Bật' : 'Tắt',
-      to: patch.contactWhenOutOfStock ? 'Bật' : 'Tắt',
+      label: 'Contact when out of stock',
+      from: current.contactWhenOutOfStock ? 'On' : 'Off',
+      to: patch.contactWhenOutOfStock ? 'On' : 'Off',
     })
   }
 
   if (Object.hasOwn(patch, 'badges')) {
     items.push({
-      label: 'Badge hiển thị',
-      from: current.badges?.join(', ') || 'Không có',
-      to: patch.badges?.join(', ') || 'Không có',
+      label: 'Display badges',
+      from: current.badges?.join(', ') || 'None',
+      to: patch.badges?.join(', ') || 'None',
     })
   }
 
   if (Object.hasOwn(patch, 'tagCodes')) {
     const currentTagCodes = (current.tags || []).map((tag) => tag.code).filter(Boolean)
     items.push({
-      label: 'Tag codes',
-      from: currentTagCodes.join(', ') || 'Không có',
-      to: patch.tagCodes?.join(', ') || 'Không có',
+      label: 'Classification tags',
+      from: currentTagCodes.join(', ') || 'None',
+      to: patch.tagCodes?.join(', ') || 'None',
     })
   }
 
   if (Object.hasOwn(patch, 'specs')) {
     const specComparisons = [
       ['Screen size', current.specs?.screen?.size, patch.specs?.screen?.size],
-      ['Screen tech', current.specs?.screen?.technology, patch.specs?.screen?.technology],
+      ['Display technology', current.specs?.screen?.technology, patch.specs?.screen?.technology],
       ['Resolution', current.specs?.screen?.resolution, patch.specs?.screen?.resolution],
       ['Refresh rate', current.specs?.screen?.refreshRate, patch.specs?.screen?.refreshRate],
       ['Chipset', current.specs?.chipset, patch.specs?.chipset],
       ['Battery', current.specs?.battery, patch.specs?.battery],
       ['Operating system', current.specs?.operatingSystem, patch.specs?.operatingSystem],
       ['Charging', current.specs?.charging, patch.specs?.charging],
-      ['Camera sau', current.specs?.rearCamera, patch.specs?.rearCamera],
-      ['Camera trước', current.specs?.frontCamera, patch.specs?.frontCamera],
+      ['Rear camera', current.specs?.rearCamera, patch.specs?.rearCamera],
+      ['Front camera', current.specs?.frontCamera, patch.specs?.frontCamera],
       ['SIM', current.specs?.sim, patch.specs?.sim],
-      ['Network', current.specs?.network, patch.specs?.network],
+      ['Network and connectivity', current.specs?.network, patch.specs?.network],
       ['Dimensions', current.specs?.dimensions, patch.specs?.dimensions],
       ['Weight', current.specs?.weight, patch.specs?.weight],
-      ['Material', current.specs?.material, patch.specs?.material],
+      ['Materials', current.specs?.material, patch.specs?.material],
       ['Water resistance', current.specs?.waterResistance, patch.specs?.waterResistance],
     ]
 
@@ -545,8 +549,8 @@ const productPatchOverviewItems = computed(() => {
       if (toValue !== undefined && (fromValue || '') !== (toValue || '')) {
         items.push({
           label,
-          from: fromValue || 'Trống',
-          to: toValue || 'Trống',
+          from: fromValue || 'Empty',
+          to: toValue || 'Empty',
         })
       }
     }
@@ -558,6 +562,23 @@ const productPatchOverviewItems = computed(() => {
 function setActionMessage(message, tone = 'success') {
   actionMessage.value = message
   actionTone.value = tone
+}
+
+function resolveOptionLabel(options, value) {
+  if (!value) {
+    return 'Not available'
+  }
+
+  const matched = (options || []).find((option) => option.value === value)
+  return matched?.label || value
+}
+
+function getProductStatusLabel(status) {
+  return resolveOptionLabel(referenceOptions.value?.productStatuses, status)
+}
+
+function getVariantStatusLabel(status) {
+  return resolveOptionLabel(referenceOptions.value?.variantStatuses, status)
 }
 
 function closeLeaveConfirm() {
@@ -756,7 +777,7 @@ async function loadProductDetail({ keepSelectedVariant = true } = {}) {
       productGroupCode: detail.value.product.productGroupCode
         ? `${detail.value.product.productGroupCode}_COPY`
         : '',
-      title: detail.value.product.title ? `${detail.value.product.title} Copy` : '',
+      title: detail.value.product.title ? `${detail.value.product.title} - Copy` : '',
     }
 
     const preferredVariantId =
@@ -811,7 +832,7 @@ async function saveProductPatch() {
   const patch = buildProductPatchPayload({ includeLongDescription: false })
 
   if (!patch || Object.keys(patch).length === 0) {
-    setActionMessage('Chưa có thay đổi nào ở product để gửi lên backend.', 'warning')
+    setActionMessage('No product changes to save.', 'warning')
     return
   }
 
@@ -820,7 +841,7 @@ async function saveProductPatch() {
   const result = await adminStore.updateProduct(productId.value, patch)
 
   if (result.success) {
-    setActionMessage('Đã cập nhật product theo patch hợp lệ của backend.', 'success')
+    setActionMessage('Product information updated successfully.', 'success')
     productPatchOverviewModalOpen.value = false
     await loadProductDetail()
   } else {
@@ -849,7 +870,7 @@ async function saveLongDescription() {
   const currentLongDescription = normalizeRichTextHtml(current.longDescription || '')
 
   if (nextLongDescription === currentLongDescription) {
-    setActionMessage('Mô tả dài chưa có thay đổi để lưu.', 'warning')
+    setActionMessage('No long-description changes to save.', 'warning')
     return
   }
 
@@ -860,7 +881,7 @@ async function saveLongDescription() {
   })
 
   if (result.success) {
-    setActionMessage('Đã cập nhật mô tả dài của product.', 'success')
+    setActionMessage('Detailed product description updated successfully.', 'success')
     longDescriptionModalOpen.value = false
     await loadProductDetail()
   } else {
@@ -872,7 +893,7 @@ async function saveLongDescription() {
 
 async function cloneCurrentProduct() {
   if (!cloneDraft.value.productGroupCode.trim()) {
-    setActionMessage('Clone yêu cầu `productGroupCode` mới.', 'danger')
+    setActionMessage('Please enter a new group code before creating a product copy.', 'danger')
     return
   }
 
@@ -896,7 +917,7 @@ async function cloneCurrentProduct() {
 }
 
 async function deleteCurrentProduct() {
-  if (!window.confirm('Soft delete product này và toàn bộ variants liên quan?')) {
+  if (!window.confirm('Are you sure you want to hide this product and its related variants?')) {
     return
   }
 
@@ -905,7 +926,7 @@ async function deleteCurrentProduct() {
   const result = await adminStore.deleteProduct(productId.value)
 
   if (result.success) {
-    setActionMessage('Đã soft delete product. Hồ sơ bên dưới phản ánh trạng thái mới.', 'warning')
+    setActionMessage('Product has been moved to hidden state.', 'warning')
     await loadProductDetail({ keepSelectedVariant: false })
   } else {
     setActionMessage(result.error, 'danger')
@@ -928,7 +949,7 @@ async function createVariantEntry() {
   if (result.success) {
     createVariantForm.value = createEmptyVariantDraft()
     createVariantModalOpen.value = false
-    setActionMessage('Đã tạo biến thể mới và rebuild derived fields cho product.', 'success')
+    setActionMessage('New variant created successfully.', 'success')
     await loadProductDetail({ keepSelectedVariant: false })
     hydrateSelectedVariant(result.data.id)
   } else {
@@ -954,7 +975,7 @@ async function saveSelectedVariant() {
   )
 
   if (result.success) {
-    setActionMessage('Đã cập nhật biến thể đang chọn.', 'success')
+    setActionMessage('Selected variant updated successfully.', 'success')
     await loadProductDetail()
     hydrateSelectedVariant(result.data.id)
   } else {
@@ -969,7 +990,7 @@ async function deleteSelectedVariant() {
     return
   }
 
-  if (!window.confirm('Soft delete biến thể đang chọn?')) {
+  if (!window.confirm('Are you sure you want to hide the selected variant?')) {
     return
   }
 
@@ -978,7 +999,7 @@ async function deleteSelectedVariant() {
   const result = await adminStore.deleteVariant(selectedVariant.value.id)
 
   if (result.success) {
-    setActionMessage('Đã soft delete biến thể.', 'warning')
+    setActionMessage('Variant has been moved to hidden state.', 'warning')
     await loadProductDetail({ keepSelectedVariant: false })
   } else {
     setActionMessage(result.error, 'danger')
@@ -999,7 +1020,7 @@ async function uploadImage(event) {
   const result = await adminStore.uploadVariantImage(selectedVariant.value.id, file)
 
   if (result.success) {
-    setActionMessage('Đã tải ảnh lên thư viện biến thể.', 'success')
+    setActionMessage('Image uploaded to variant gallery.', 'success')
     await loadVariantAssets(selectedVariant.value.id)
   } else {
     setActionMessage(result.error, 'danger')
@@ -1017,7 +1038,7 @@ async function removeImage(mediaId) {
   const result = await adminStore.deleteVariantImage(selectedVariant.value.id, mediaId)
 
   if (result.success) {
-    setActionMessage('Đã xóa ảnh khỏi gallery biến thể.', 'warning')
+    setActionMessage('Image removed from variant gallery.', 'warning')
     await loadVariantAssets(selectedVariant.value.id)
   } else {
     setActionMessage(result.error, 'danger')
@@ -1047,7 +1068,7 @@ async function saveInventoryRecord() {
   if (result.success) {
     inventoryRecord.value = result.data
     inventoryDraft.value = createInventoryDraft(result.data)
-    setActionMessage('Đã đồng bộ hồ sơ tồn kho cho biến thể này.', 'success')
+    setActionMessage('Inventory for this variant updated successfully.', 'success')
     await loadProductDetail()
   } else {
     setActionMessage(result.error, 'danger')
@@ -1117,7 +1138,7 @@ const { bypassUnsavedChangesGuard } = useUnsavedChanges({
   isDirty,
   onRouteAttempt: handleDirtyRouteAttempt,
   routeMessage:
-    'Trang hiện tại đang có thay đổi chưa được lưu. Nếu rời đi, các thay đổi này sẽ bị mất.',
+    'This page has unsaved changes. If you leave now, those changes will be lost.',
 })
 
 onMounted(async () => {
@@ -1134,22 +1155,22 @@ onMounted(async () => {
         class="admin-button admin-button-secondary admin-button-compact"
         @click="goBackToPreviousPage"
       >
-        ← Trở lại trang trước
+        ← Back
       </button>
     </div>
 
     <header class="admin-page-header">
       <div>
-        <p class="admin-page-kicker">Hồ sơ catalog</p>
-        <h1 class="admin-page-title">{{ detail?.product.title || 'Chi tiết sản phẩm' }}</h1>
+        <p class="admin-page-kicker">Product Profile</p>
+        <h1 class="admin-page-title">{{ detail?.product.title || 'Product Details' }}</h1>
         <p class="admin-page-subtitle">
-          Một bàn điều phối duy nhất cho product, variants, media gallery và inventory record.
+          Centralized workspace for product data, variants, media gallery, and inventory.
         </p>
       </div>
 
       <div class="admin-toolbar">
         <button type="button" class="admin-button admin-button-secondary" @click="loadProductDetail">
-          Tải lại hồ sơ
+          Reload record
         </button>
       </div>
     </header>
@@ -1170,7 +1191,7 @@ onMounted(async () => {
       {{ pageError }}
     </div>
 
-    <div v-if="loadingPage" class="admin-empty-state">Đang dựng hồ sơ sản phẩm...</div>
+    <div v-if="loadingPage" class="admin-empty-state">Loading product record...</div>
 
     <template v-else-if="detail">
       <div class="admin-stat-grid admin-stat-grid-compact admin-product-summary-grid">
@@ -1194,16 +1215,16 @@ onMounted(async () => {
         <section class="admin-card admin-product-detail-sidebar-card">
           <div class="admin-card-header">
             <div class="admin-heading-title">
-              <p class="admin-section-kicker">Hồ sơ hiện tại</p>
+              <p class="admin-section-kicker">Current Profile</p>
               <div class="admin-heading-title-row">
-                <h2 class="admin-card-title">Thông tin sản phẩm đang áp dụng</h2>
+                <h2 class="admin-card-title">Current Product Information</h2>
                 <SectionHint :hint="fieldHints.currentRecordSummary" />
               </div>
             </div>
 
             <div class="admin-heading-actions">
               <span class="admin-status-pill" :data-tone="detail.product.status">
-                {{ detail.product.status }}
+                {{ getProductStatusLabel(detail.product.status) }}
               </span>
             </div>
           </div>
@@ -1220,8 +1241,8 @@ onMounted(async () => {
         <section class="admin-card admin-product-detail-editor-card">
           <div class="admin-card-header">
             <div>
-              <p class="admin-section-kicker">Patch editor</p>
-              <h2 class="admin-card-title">Cập nhật product</h2>
+              <p class="admin-section-kicker">Edit Information</p>
+              <h2 class="admin-card-title">Update Product</h2>
             </div>
 
             <div class="admin-button-row">
@@ -1230,7 +1251,7 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="productActionsModalOpen = true"
               >
-                Clone product
+                Create copy
               </button>
               <button
                 type="button"
@@ -1238,7 +1259,7 @@ onMounted(async () => {
                 :disabled="deletingProduct"
                 @click="deleteCurrentProduct"
               >
-                {{ deletingProduct ? 'Đang xóa mềm...' : 'Soft delete product' }}
+                {{ deletingProduct ? 'Hiding...' : 'Hide product' }}
               </button>
             </div>
           </div>
@@ -1247,18 +1268,18 @@ onMounted(async () => {
             <div class="admin-product-edit-hero-grid">
               <section class="admin-detail-section admin-detail-section-specs admin-product-description-panel">
                 <div class="admin-detail-section-header">
-                  <h3 class="admin-detail-section-title">Mô tả dài</h3>
+                  <h3 class="admin-detail-section-title">Long Description</h3>
                 </div>
 
                 <div class="admin-description-preview">
-                  <div class="admin-description-preview-header">
+                <div class="admin-description-preview-header">
                     <p class="admin-description-preview-label">Preview</p>
                     <button
                       type="button"
                       class="admin-button admin-button-secondary admin-button-compact"
                       @click="longDescriptionModalOpen = true"
                     >
-                      Mở chỉnh sửa
+                      Open editor
                     </button>
                   </div>
                   <div class="admin-description-preview-body">
@@ -1267,7 +1288,7 @@ onMounted(async () => {
                       class="admin-rich-text-preview"
                       v-html="longDescriptionPreviewHtml"
                     />
-                    <span v-else>Chưa có mô tả dài cho sản phẩm này.</span>
+                    <span v-else>No long description for this product yet.</span>
                   </div>
                 </div>
               </section>
@@ -1275,17 +1296,17 @@ onMounted(async () => {
               <div class="admin-product-edit-side-stack">
                 <section class="admin-detail-section admin-detail-section-specs">
                   <div class="admin-detail-section-header">
-                    <h3 class="admin-detail-section-title">Thông tin cơ bản</h3>
+                    <h3 class="admin-detail-section-title">Basic Information</h3>
                   </div>
 
                   <div class="admin-two-column-grid">
                     <label class="admin-field">
-                      <FieldLabel label="Tên sản phẩm" :hint="fieldHints.productTitle" />
+                      <FieldLabel label="Product name" :hint="fieldHints.productTitle" />
                       <input v-model="productPatch.title" class="admin-input" type="text" />
                     </label>
 
                     <label class="admin-field">
-                      <FieldLabel label="Lifecycle" :hint="fieldHints.productStatus" />
+                      <FieldLabel label="Display lifecycle" :hint="fieldHints.productStatus" />
                       <select v-model="productPatch.status" class="admin-select">
                         <option
                           v-for="option in referenceOptions.productStatuses"
@@ -1300,47 +1321,47 @@ onMounted(async () => {
 
                   <div class="admin-two-column-grid">
                     <div class="admin-note-block">
-                      <p class="admin-description-preview-label">Tạo lúc</p>
-                      <p>{{ formatDate(detail?.product.createdAt) || 'N/A' }}</p>
+                      <p class="admin-description-preview-label">Created</p>
+                      <p>{{ formatDate(detail?.product.createdAt) || 'Not available' }}</p>
                     </div>
 
                     <div class="admin-note-block">
-                      <p class="admin-description-preview-label">Cập nhật</p>
-                      <p>{{ formatDate(detail?.product.updatedAt) || 'N/A' }}</p>
+                      <p class="admin-description-preview-label">Updated</p>
+                      <p>{{ formatDate(detail?.product.updatedAt) || 'Not available' }}</p>
                     </div>
                   </div>
 
                   <div class="admin-two-column-grid">
                     <div class="admin-note-block">
-                      <p class="admin-description-preview-label">Thương hiệu</p>
+                      <p class="admin-description-preview-label">Brand</p>
                       <p>
                         {{
                           detail?.product.brand
                             ? `${detail.product.brand.name} (${detail.product.brand.code})`
-                            : 'N/A'
+                            : 'Not available'
                         }}
                       </p>
                     </div>
 
                     <div class="admin-note-block">
-                      <p class="admin-description-preview-label">Ngành hàng</p>
+                      <p class="admin-description-preview-label">Category</p>
                       <p>
                         {{
                           detail?.product.category
                             ? `${detail.product.category.name} (${detail.product.category.code})`
-                            : 'N/A'
+                            : 'Not available'
                         }}
                       </p>
                     </div>
                   </div>
 
                   <div class="admin-note-block">
-                    <p class="admin-description-preview-label">Nhãn phân loại</p>
+                    <p class="admin-description-preview-label">Classification tags</p>
                     <p>
                       {{
                         detail?.product.tags?.length
                           ? detail.product.tags.map((tag) => `${tag.name} (${tag.code})`).join(', ')
-                          : 'N/A'
+                          : 'Not available'
                       }}
                     </p>
                   </div>
@@ -1348,7 +1369,7 @@ onMounted(async () => {
 
                 <section class="admin-detail-section admin-detail-section-specs">
                   <div class="admin-detail-section-header">
-                    <h3 class="admin-detail-section-title">Phân loại và hiển thị</h3>
+                    <h3 class="admin-detail-section-title">Classification and Visibility</h3>
                   </div>
 
                   <div class="admin-two-column-grid">
@@ -1380,7 +1401,7 @@ onMounted(async () => {
                   </div>
 
                   <div class="admin-field admin-field-stack">
-                    <FieldLabel label="Badge hiển thị" :hint="fieldHints.badges" />
+                    <FieldLabel label="Display badges" :hint="fieldHints.badges" />
                     <div class="admin-chip-grid">
                       <label
                         v-for="option in referenceOptions.badges"
@@ -1400,7 +1421,7 @@ onMounted(async () => {
                   </div>
 
                   <div class="admin-field admin-field-stack">
-                    <FieldLabel label="Tag codes" :hint="fieldHints.tagCodes" />
+                    <FieldLabel label="Classification tags" :hint="fieldHints.tagCodes" />
                     <div class="admin-chip-grid">
                       <label
                         v-for="option in referenceOptions.tags"
@@ -1421,12 +1442,12 @@ onMounted(async () => {
 
                   <div class="admin-field admin-field-stack">
                     <FieldLabel
-                      label="Liên hệ khi hết hàng"
+                      label="Contact when out of stock"
                       :hint="fieldHints.contactWhenOutOfStock"
                     />
                     <label class="admin-toggle-row">
                       <input v-model="productPatch.contactWhenOutOfStock" type="checkbox" />
-                      <span>Giữ trạng thái liên hệ khi hết hàng</span>
+                      <span>Keep contact state when out of stock</span>
                     </label>
                   </div>
                 </section>
@@ -1435,15 +1456,15 @@ onMounted(async () => {
 
             <section class="admin-detail-section admin-detail-section-specs-compact">
               <div class="admin-detail-section-header">
-                <h3 class="admin-detail-section-title">Thông số kỹ thuật</h3>
+                <h3 class="admin-detail-section-title">Specifications</h3>
               </div>
 
               <div class="admin-specs-layout">
                 <section class="admin-specs-group">
                   <header class="admin-specs-group-header">
                     <div>
-                      <p class="admin-specs-group-title">Màn hình</p>
-                      <p class="admin-specs-group-note">Các thông số hiển thị chính của thiết bị.</p>
+                      <p class="admin-specs-group-title">Display</p>
+                      <p class="admin-specs-group-note">Core display specifications of the device.</p>
                     </div>
                   </header>
 
@@ -1453,7 +1474,7 @@ onMounted(async () => {
                       <input v-model="productPatch.specs.screen.size" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="Screen tech" :hint="fieldHints.screenTechnology" />
+                      <FieldLabel label="Display technology" :hint="fieldHints.screenTechnology" />
                       <input v-model="productPatch.specs.screen.technology" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
@@ -1470,8 +1491,8 @@ onMounted(async () => {
                 <section class="admin-specs-group">
                   <header class="admin-specs-group-header">
                     <div>
-                      <p class="admin-specs-group-title">Hiệu năng</p>
-                      <p class="admin-specs-group-note">Nền tảng phần cứng và năng lượng.</p>
+                      <p class="admin-specs-group-title">Performance</p>
+                      <p class="admin-specs-group-note">Core hardware and power platform.</p>
                     </div>
                   </header>
 
@@ -1498,18 +1519,18 @@ onMounted(async () => {
                 <section class="admin-specs-group">
                   <header class="admin-specs-group-header">
                     <div>
-                      <p class="admin-specs-group-title">Camera và kết nối</p>
-                      <p class="admin-specs-group-note">Gom các thông tin tác động trực tiếp tới trải nghiệm dùng máy.</p>
+                      <p class="admin-specs-group-title">Camera and Connectivity</p>
+                      <p class="admin-specs-group-note">Details that directly impact usage experience.</p>
                     </div>
                   </header>
 
                   <div class="admin-specs-grid">
                     <label class="admin-field">
-                      <FieldLabel label="Camera sau" :hint="fieldHints.rearCamera" />
+                      <FieldLabel label="Rear camera" :hint="fieldHints.rearCamera" />
                       <input v-model="productPatch.specs.rearCamera" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="Camera trước" :hint="fieldHints.frontCamera" />
+                      <FieldLabel label="Front camera" :hint="fieldHints.frontCamera" />
                       <input v-model="productPatch.specs.frontCamera" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
@@ -1517,7 +1538,7 @@ onMounted(async () => {
                       <input v-model="productPatch.specs.sim" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="Network" :hint="fieldHints.network" />
+                      <FieldLabel label="Network and connectivity" :hint="fieldHints.network" />
                       <input v-model="productPatch.specs.network" class="admin-input" type="text" />
                     </label>
                   </div>
@@ -1526,8 +1547,8 @@ onMounted(async () => {
                 <section class="admin-specs-group">
                   <header class="admin-specs-group-header">
                     <div>
-                      <p class="admin-specs-group-title">Thiết kế và độ bền</p>
-                      <p class="admin-specs-group-note">Kích thước, vật liệu và khả năng chống chịu.</p>
+                      <p class="admin-specs-group-title">Design and Durability</p>
+                      <p class="admin-specs-group-note">Dimensions, materials, and resistance details.</p>
                     </div>
                   </header>
 
@@ -1541,7 +1562,7 @@ onMounted(async () => {
                       <input v-model="productPatch.specs.weight" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="Material" :hint="fieldHints.material" />
+                      <FieldLabel label="Materials" :hint="fieldHints.material" />
                       <input v-model="productPatch.specs.material" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
@@ -1560,7 +1581,7 @@ onMounted(async () => {
                 :disabled="!hasProductPatchChanges"
                 @click="resetProductPatch"
               >
-                Khôi phục patch
+                Revert changes
               </button>
               <button
                 type="button"
@@ -1568,7 +1589,7 @@ onMounted(async () => {
                 :disabled="savingProduct || !hasProductPatchChanges"
                 @click="openProductPatchOverview"
               >
-                {{ savingProduct ? 'Đang lưu...' : 'Lưu patch product' }}
+                {{ savingProduct ? 'Saving...' : 'Save product updates' }}
               </button>
             </div>
           </form>
@@ -1579,8 +1600,8 @@ onMounted(async () => {
         <section class="admin-card">
           <div class="admin-card-header">
             <div>
-              <p class="admin-section-kicker">Registry</p>
-              <h2 class="admin-card-title">Variants của product</h2>
+              <p class="admin-section-kicker">Variant List</p>
+              <h2 class="admin-card-title">Product Variants</h2>
             </div>
 
             <div class="admin-button-row">
@@ -1589,13 +1610,13 @@ onMounted(async () => {
                 class="admin-button admin-button-primary"
                 @click="createVariantModalOpen = true"
               >
-                Mở form tạo variant
+                Create variant
               </button>
             </div>
           </div>
 
           <div v-if="detail.variants.length === 0" class="admin-empty-state">
-            Product này chưa có variant nào.
+            This product has no variants yet.
           </div>
 
           <div v-else class="admin-variant-list">
@@ -1629,9 +1650,9 @@ onMounted(async () => {
 
               <div class="admin-variant-list-side">
                 <div class="admin-variant-list-status">
-                  <span class="admin-status-pill" :data-tone="variant.status">{{ variant.status }}</span>
+                  <span class="admin-status-pill" :data-tone="variant.status">{{ getVariantStatusLabel(variant.status) }}</span>
                   <span class="admin-status-pill" :data-tone="variant.isInStock ? 'success' : 'muted'">
-                    {{ variant.isInStock ? 'in stock' : 'out' }}
+                    {{ variant.isInStock ? 'In stock' : 'Out of stock' }}
                   </span>
                 </div>
 
@@ -1641,14 +1662,14 @@ onMounted(async () => {
                     class="admin-button admin-button-secondary admin-button-compact"
                     @click="openVariantMediaGallery(variant.id)"
                   >
-                    Thư viện ảnh
+                    Media gallery
                   </button>
                   <button
                     type="button"
                     class="admin-button admin-button-secondary admin-button-compact"
                     @click="openVariantWorkshop(variant.id)"
                   >
-                    Chỉnh sửa
+                    Edit
                   </button>
                 </div>
               </div>
@@ -1667,8 +1688,8 @@ onMounted(async () => {
           <div class="admin-modal-panel admin-modal-panel-wide" role="dialog" aria-modal="true">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Patch overview</p>
-                <h2 class="admin-card-title">Xác nhận thay đổi product</h2>
+                <p class="admin-section-kicker">Review Changes</p>
+                <h2 class="admin-card-title">Confirm Product Update</h2>
               </div>
 
               <button
@@ -1676,13 +1697,13 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="productPatchOverviewModalOpen = false"
               >
-                Đóng
+                Close
               </button>
             </div>
 
             <div class="admin-form-grid">
               <div v-if="productPatchOverviewItems.length === 0" class="admin-empty-state">
-                Chưa có thay đổi nào để lưu.
+                No changes to save.
               </div>
 
               <div v-else class="admin-audit-list admin-product-patch-overview-list">
@@ -1706,7 +1727,7 @@ onMounted(async () => {
                   class="admin-button admin-button-secondary"
                   @click="productPatchOverviewModalOpen = false"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button
                   type="button"
@@ -1714,7 +1735,7 @@ onMounted(async () => {
                   :disabled="savingProduct || !hasProductPatchChanges"
                   @click="saveProductPatch"
                 >
-                  {{ savingProduct ? 'Đang lưu...' : 'Xác nhận lưu patch' }}
+                  {{ savingProduct ? 'Saving...' : 'Confirm save' }}
                 </button>
               </div>
             </div>
@@ -1729,8 +1750,8 @@ onMounted(async () => {
           <div class="admin-modal-panel admin-modal-panel-wide" role="dialog" aria-modal="true">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Long description</p>
-                <h2 class="admin-card-title">Chỉnh sửa mô tả dài</h2>
+                <p class="admin-section-kicker">Detailed Description</p>
+                <h2 class="admin-card-title">Edit Long Description</h2>
               </div>
 
               <button
@@ -1738,24 +1759,24 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="longDescriptionModalOpen = false"
               >
-                Đóng
+                Close
               </button>
             </div>
 
             <div class="admin-form-grid">
               <section class="admin-note-block admin-long-description-note">
                 <p>
-                  Editor này tối ưu cho nội dung catalog dài: tiêu đề phân cấp, bullet list, bảng so
-                  sánh, liên kết tham khảo và chế độ xem HTML khi cần kiểm soát markup.
+                  This editor is suited for long-form content: heading hierarchy, lists, comparison tables,
+                  and reference links.
                 </p>
                 <p>
-                  Word count: <strong>{{ formatNumber(longDescriptionMetrics.words) }}</strong>
-                  · Character count: <strong>{{ formatNumber(longDescriptionMetrics.characters) }}</strong>
+                  Words: <strong>{{ formatNumber(longDescriptionMetrics.words) }}</strong>
+                  · Characters: <strong>{{ formatNumber(longDescriptionMetrics.characters) }}</strong>
                 </p>
               </section>
 
               <div class="admin-field admin-long-description-editor-field">
-                <FieldLabel label="Nội dung mô tả" :hint="fieldHints.longDescription" />
+                <FieldLabel label="Description content" :hint="fieldHints.longDescription" />
                 <div class="admin-long-description-editor-shell">
                   <Editor
                     v-model="productPatch.longDescription"
@@ -1772,7 +1793,7 @@ onMounted(async () => {
                   class="admin-button admin-button-secondary"
                   @click="longDescriptionModalOpen = false"
                 >
-                  Đóng
+                  Close
                 </button>
                 <button
                   type="button"
@@ -1780,7 +1801,7 @@ onMounted(async () => {
                   :disabled="savingLongDescription || !hasLongDescriptionChanges"
                   @click="saveLongDescription"
                 >
-                  {{ savingLongDescription ? 'Đang lưu...' : 'Lưu mô tả dài' }}
+                  {{ savingLongDescription ? 'Saving...' : 'Save long description' }}
                 </button>
               </div>
             </div>
@@ -1795,8 +1816,8 @@ onMounted(async () => {
           <div class="admin-modal-panel" role="dialog" aria-modal="true">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Hành động quản trị</p>
-                <h2 class="admin-card-title">Clone sản phẩm</h2>
+                <p class="admin-section-kicker">Admin Actions</p>
+                <h2 class="admin-card-title">Create Product Copy</h2>
               </div>
 
               <button
@@ -1804,7 +1825,7 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="productActionsModalOpen = false"
               >
-                Đóng
+                Close
               </button>
             </div>
 
@@ -1823,7 +1844,7 @@ onMounted(async () => {
 
               <div class="admin-button-row">
                 <button type="submit" class="admin-button admin-button-secondary" :disabled="cloningProduct">
-                  {{ cloningProduct ? 'Đang clone...' : 'Clone thành draft mới' }}
+                  {{ cloningProduct ? 'Creating copy...' : 'Create draft copy' }}
                 </button>
               </div>
             </form>
@@ -1838,8 +1859,8 @@ onMounted(async () => {
           <div class="admin-modal-panel admin-modal-panel-wide" role="dialog" aria-modal="true">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Variant workshop</p>
-                <h2 class="admin-card-title">Đang chỉnh: {{ selectedVariant.sku }}</h2>
+                <p class="admin-section-kicker">Variant Editor</p>
+                <h2 class="admin-card-title">Editing: {{ selectedVariant.sku }}</h2>
               </div>
 
               <button
@@ -1847,7 +1868,7 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="variantWorkshopModalOpen = false"
               >
-                Đóng
+                Close
               </button>
             </div>
 
@@ -1855,7 +1876,7 @@ onMounted(async () => {
               <form class="admin-form-grid admin-product-detail-form" @submit.prevent="saveSelectedVariant">
                 <section class="admin-detail-section">
                   <div class="admin-detail-section-header">
-                    <h3 class="admin-detail-section-title">Nhận diện và thuộc tính</h3>
+                    <h3 class="admin-detail-section-title">Identity and Attributes</h3>
                   </div>
 
                   <div class="admin-two-column-grid">
@@ -1865,7 +1886,7 @@ onMounted(async () => {
                     </label>
 
                     <label class="admin-field">
-                      <FieldLabel label="Lifecycle" :hint="fieldHints.variantStatus" />
+                      <FieldLabel label="Display lifecycle" :hint="fieldHints.variantStatus" />
                       <select v-model="selectedVariantDraft.status" class="admin-select">
                         <option
                           v-for="option in referenceOptions.variantStatuses"
@@ -1892,7 +1913,7 @@ onMounted(async () => {
                       <input v-model="selectedVariantDraft.variantAttributes.color" class="admin-input" type="text" />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="Color full name" :hint="fieldHints.variantColorFullName" />
+                      <FieldLabel label="Full color name" :hint="fieldHints.variantColorFullName" />
                       <input
                         v-model="selectedVariantDraft.variantAttributes.colorFullName"
                         class="admin-input"
@@ -1903,11 +1924,11 @@ onMounted(async () => {
 
                   <div class="admin-four-column-grid">
                     <label class="admin-field">
-                      <FieldLabel label="RAM sort" :hint="fieldHints.ramSort" />
+                      <FieldLabel label="RAM sort order" :hint="fieldHints.ramSort" />
                       <input v-model.number="selectedVariantDraft.ramSort" class="admin-input" type="number" min="0" />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="ROM sort" :hint="fieldHints.romSort" />
+                      <FieldLabel label="ROM sort order" :hint="fieldHints.romSort" />
                       <input v-model.number="selectedVariantDraft.romSort" class="admin-input" type="number" min="0" />
                     </label>
                     <label class="admin-field">
@@ -1920,7 +1941,7 @@ onMounted(async () => {
                       />
                     </label>
                     <label class="admin-field">
-                      <FieldLabel label="Variant order" :hint="fieldHints.variantSortOrder" />
+                      <FieldLabel label="Variant sort order" :hint="fieldHints.variantSortOrder" />
                       <input
                         v-model.number="selectedVariantDraft.variantSortOrder"
                         class="admin-input"
@@ -1933,12 +1954,12 @@ onMounted(async () => {
 
                 <section class="admin-detail-section">
                   <div class="admin-detail-section-header">
-                    <h3 class="admin-detail-section-title">Giá bán và metadata</h3>
+                    <h3 class="admin-detail-section-title">Pricing and Additional Information</h3>
                   </div>
 
                   <div class="admin-three-column-grid">
                     <label class="admin-field">
-                      <FieldLabel label="Original price" :hint="fieldHints.originalPrice" />
+                      <FieldLabel label="List price" :hint="fieldHints.originalPrice" />
                       <input
                         v-model.number="selectedVariantDraft.originalPrice"
                         class="admin-input"
@@ -1973,25 +1994,25 @@ onMounted(async () => {
                   </div>
 
                   <div class="admin-field admin-field-stack">
-                    <FieldLabel label="Màu chủ đạo" :hint="fieldHints.isPrimaryColor" />
+                    <FieldLabel label="Primary color" :hint="fieldHints.isPrimaryColor" />
                     <label class="admin-toggle-row">
                       <input v-model="selectedVariantDraft.isPrimaryColor" type="checkbox" />
-                      <span>Biến thể màu chủ đạo</span>
+                      <span>Primary color variant</span>
                     </label>
                   </div>
 
                   <div class="admin-note-block">
                     <p>Variant ID: <strong>{{ selectedVariant.id }}</strong></p>
                     <p>
-                      Stock flag: <strong>{{ selectedVariant.isInStock ? 'true' : 'false' }}</strong> •
-                      Soft delete: <strong>{{ selectedVariant.isDeleted ? 'true' : 'false' }}</strong>
+                      Inventory status: <strong>{{ selectedVariant.isInStock ? 'In stock' : 'Out of stock' }}</strong> •
+                      Visibility: <strong>{{ selectedVariant.isDeleted ? 'Hidden' : 'Visible' }}</strong>
                     </p>
                   </div>
                 </section>
 
                 <div class="admin-button-row">
                   <button type="submit" class="admin-button admin-button-primary" :disabled="savingVariant">
-                    {{ savingVariant ? 'Đang lưu variant...' : 'Lưu variant' }}
+                    {{ savingVariant ? 'Saving variant...' : 'Save variant' }}
                   </button>
                   <button
                     type="button"
@@ -1999,7 +2020,7 @@ onMounted(async () => {
                     :disabled="deletingVariant"
                     @click="deleteSelectedVariant"
                   >
-                    {{ deletingVariant ? 'Đang xóa mềm...' : 'Soft delete variant' }}
+                    {{ deletingVariant ? 'Hiding...' : 'Hide variant' }}
                   </button>
                 </div>
               </form>
@@ -2009,17 +2030,17 @@ onMounted(async () => {
                   <div class="admin-card-header">
                     <div>
                       <p class="admin-section-kicker">Inventory</p>
-                      <h3 class="admin-card-title">Tồn kho của variant</h3>
+                      <h3 class="admin-card-title">Variant Inventory</h3>
                     </div>
                   </div>
 
                   <div v-if="inventoryRecord" class="admin-note-block">
                     <p>
-                      `recordExists`: <strong>{{ inventoryRecord.recordExists ? 'true' : 'false' }}</strong>
+                      Inventory record: <strong>{{ inventoryRecord.recordExists ? 'Exists' : 'Not created' }}</strong>
                     </p>
                     <p>
-                      `isInStock`: <strong>{{ inventoryRecord.isInStock ? 'true' : 'false' }}</strong> •
-                      `isLowStock`: <strong>{{ inventoryRecord.isLowStock ? 'true' : 'false' }}</strong>
+                      Stock status: <strong>{{ inventoryRecord.isInStock ? 'In stock' : 'Out of stock' }}</strong> •
+                      Alert: <strong>{{ inventoryRecord.isLowStock ? 'Low stock' : 'Stable' }}</strong>
                     </p>
                   </div>
 
@@ -2036,7 +2057,7 @@ onMounted(async () => {
                       </label>
 
                       <label class="admin-field">
-                        <FieldLabel label="Low stock threshold" :hint="fieldHints.lowStockThreshold" />
+                        <FieldLabel label="Low-stock threshold" :hint="fieldHints.lowStockThreshold" />
                         <input
                           v-model.number="inventoryDraft.lowStockThreshold"
                           class="admin-input"
@@ -2048,7 +2069,7 @@ onMounted(async () => {
 
                     <div class="admin-button-row">
                       <button type="submit" class="admin-button admin-button-secondary" :disabled="savingInventory">
-                        {{ savingInventory ? 'Đang lưu tồn kho...' : 'Lưu inventory record' }}
+                        {{ savingInventory ? 'Saving inventory...' : 'Save inventory' }}
                       </button>
                     </div>
                   </form>
@@ -2066,8 +2087,8 @@ onMounted(async () => {
           <div class="admin-modal-panel admin-modal-panel-wide" role="dialog" aria-modal="true">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Media gallery</p>
-                <h2 class="admin-card-title">Ảnh của variant: {{ selectedVariant.sku }}</h2>
+                <p class="admin-section-kicker">Media Gallery</p>
+                <h2 class="admin-card-title">Variant Images: {{ selectedVariant.sku }}</h2>
               </div>
 
               <button
@@ -2075,7 +2096,7 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="variantMediaModalOpen = false"
               >
-                Đóng
+                Close
               </button>
             </div>
 
@@ -2091,11 +2112,11 @@ onMounted(async () => {
               </label>
 
               <div v-if="loadingVariantAssets || uploadingImage" class="admin-empty-state">
-                Đang đồng bộ gallery...
+                Syncing media gallery...
               </div>
 
               <div v-else-if="variantImages.length === 0" class="admin-empty-state">
-                Variant này chưa có ảnh nào.
+                This variant has no images yet.
               </div>
 
               <div v-else class="admin-media-grid">
@@ -2104,11 +2125,11 @@ onMounted(async () => {
                   <div class="admin-media-meta">
                     <p class="admin-table-title">{{ media.fileName }}</p>
                     <p class="admin-table-subtitle">
-                      sort {{ formatNumber(media.sortOrder) }} • {{ formatNumber(media.size) }} bytes
+                      Sort {{ formatNumber(media.sortOrder) }} • {{ formatNumber(media.size) }} bytes
                     </p>
                   </div>
                   <button type="button" class="admin-inline-link" @click="removeImage(media.id)">
-                    Xóa ảnh
+                    Remove image
                   </button>
                 </article>
               </div>
@@ -2124,8 +2145,8 @@ onMounted(async () => {
           <div class="admin-modal-panel admin-modal-panel-wide" role="dialog" aria-modal="true">
             <div class="admin-card-header">
               <div>
-                <p class="admin-section-kicker">Khởi tạo variant</p>
-                <h2 class="admin-card-title">Tạo biến thể mới</h2>
+                <p class="admin-section-kicker">Create Variant</p>
+                <h2 class="admin-card-title">New Variant</h2>
               </div>
 
               <button
@@ -2133,14 +2154,14 @@ onMounted(async () => {
                 class="admin-button admin-button-secondary"
                 @click="createVariantModalOpen = false"
               >
-                Đóng
+                Close
               </button>
             </div>
 
             <form class="admin-form-grid admin-product-detail-form" @submit.prevent="createVariantEntry">
               <section class="admin-detail-section">
                 <div class="admin-detail-section-header">
-                  <h3 class="admin-detail-section-title">Nhận diện biến thể</h3>
+                  <h3 class="admin-detail-section-title">Variant Identity</h3>
                 </div>
 
                 <div class="admin-two-column-grid">
@@ -2150,7 +2171,7 @@ onMounted(async () => {
                   </label>
 
                   <label class="admin-field">
-                    <FieldLabel label="Lifecycle" :hint="fieldHints.variantStatus" />
+                    <FieldLabel label="Display lifecycle" :hint="fieldHints.variantStatus" />
                     <select v-model="createVariantForm.status" class="admin-select">
                       <option
                         v-for="option in referenceOptions.variantStatuses"
@@ -2180,11 +2201,11 @@ onMounted(async () => {
 
                 <div class="admin-four-column-grid">
                   <label class="admin-field">
-                    <FieldLabel label="RAM sort" :hint="fieldHints.ramSort" />
+                    <FieldLabel label="RAM sort order" :hint="fieldHints.ramSort" />
                     <input v-model.number="createVariantForm.ramSort" class="admin-input" type="number" min="0" />
                   </label>
                   <label class="admin-field">
-                    <FieldLabel label="ROM sort" :hint="fieldHints.romSort" />
+                    <FieldLabel label="ROM sort order" :hint="fieldHints.romSort" />
                     <input v-model.number="createVariantForm.romSort" class="admin-input" type="number" min="0" />
                   </label>
                   <label class="admin-field">
@@ -2197,7 +2218,7 @@ onMounted(async () => {
                     />
                   </label>
                   <label class="admin-field">
-                    <FieldLabel label="Variant order" :hint="fieldHints.variantSortOrder" />
+                    <FieldLabel label="Variant sort order" :hint="fieldHints.variantSortOrder" />
                     <input
                       v-model.number="createVariantForm.variantSortOrder"
                       class="admin-input"
@@ -2210,12 +2231,12 @@ onMounted(async () => {
 
               <section class="admin-detail-section">
                 <div class="admin-detail-section-header">
-                  <h3 class="admin-detail-section-title">Giá và media</h3>
+                  <h3 class="admin-detail-section-title">Pricing and Additional Information</h3>
                 </div>
 
                 <div class="admin-three-column-grid">
                   <label class="admin-field">
-                    <FieldLabel label="Original price" :hint="fieldHints.originalPrice" />
+                    <FieldLabel label="List price" :hint="fieldHints.originalPrice" />
                     <input
                       v-model.number="createVariantForm.originalPrice"
                       class="admin-input"
@@ -2245,10 +2266,10 @@ onMounted(async () => {
                 </div>
 
                 <div class="admin-field admin-field-stack">
-                  <FieldLabel label="Màu chủ đạo" :hint="fieldHints.isPrimaryColor" />
+                  <FieldLabel label="Primary color" :hint="fieldHints.isPrimaryColor" />
                   <label class="admin-toggle-row">
                     <input v-model="createVariantForm.isPrimaryColor" type="checkbox" />
-                    <span>Đặt biến thể này là màu chủ đạo</span>
+                    <span>Set this variant as primary color</span>
                   </label>
                 </div>
               </section>
@@ -2259,10 +2280,10 @@ onMounted(async () => {
                   class="admin-button admin-button-secondary"
                   @click="createVariantModalOpen = false"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" class="admin-button admin-button-primary" :disabled="creatingVariant">
-                  {{ creatingVariant ? 'Đang tạo variant...' : 'Tạo variant' }}
+                  {{ creatingVariant ? 'Creating variant...' : 'Create variant' }}
                 </button>
               </div>
             </form>
@@ -2273,10 +2294,10 @@ onMounted(async () => {
 
     <ConfirmDialog
       :open="leaveConfirmOpen"
-      title="Rời trang khi còn thay đổi chưa lưu"
-      message="Trang hiện tại đang có thay đổi chưa được lưu. Nếu quay lại hoặc chuyển trang, các thay đổi này sẽ bị mất."
-      confirm-label="Rời trang"
-      cancel-label="Ở lại"
+      title="Leave page with unsaved changes"
+      message="This page contains unsaved changes. If you navigate away, those changes will be lost."
+      confirm-label="Leave page"
+      cancel-label="Stay"
       @cancel="closeLeaveConfirm"
       @confirm="confirmLeavePage"
     />
