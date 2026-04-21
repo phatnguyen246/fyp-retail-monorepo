@@ -1,18 +1,21 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { formatCurrency, formatDate, formatNumber } from '../../services/formatters'
 import { useAdminStore } from '../../store/admin'
 
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const loading = ref(true)
-const errorMessage = ref('')
-const actionMessage = ref('')
-const actionTone = ref('success')
 const orders = ref([])
-const busyOrderId = ref('')
-const busyAction = ref('')
+const meta = ref({
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 1,
+})
 
 const filters = ref({
   query: '',
@@ -32,124 +35,13 @@ const sortOptions = [
   { label: 'Total value: low to high', value: 'grandTotal:asc' },
 ]
 
-const pendingOrders = computed(() => orders.value.filter((order) => order.orderStatus === 'pending').length)
-const confirmedOrders = computed(() => orders.value.filter((order) => order.orderStatus === 'confirmed').length)
-const completedOrders = computed(() => orders.value.filter((order) => order.orderStatus === 'completed').length)
+const pendingOrders = computed(() => (orders.value || []).filter((order) => order?.orderStatus === 'pending').length)
+const confirmedOrders = computed(() => (orders.value || []).filter((order) => order?.orderStatus === 'confirmed').length)
+const completedOrders = computed(() => (orders.value || []).filter((order) => order?.orderStatus === 'completed').length)
 const vnpayPendingOrders = computed(() =>
-  orders.value.filter((order) => order.paymentMethod === 'vnpay' && order.paymentStatus === 'pending')
+  (orders.value || []).filter((order) => order?.paymentMethod === 'vnpay' && order?.paymentStatus === 'pending')
     .length,
 )
-
-const filteredOrders = computed(() => {
-  const query = filters.value.query.trim().toLowerCase()
-  const [sortField, sortDirection] = filters.value.sort.split(':')
-  let rows = [...orders.value]
-
-  if (query) {
-    rows = rows.filter((order) =>
-      [
-        order.orderCode,
-        order.id,
-        order.recipientName,
-        order.phoneNumber,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(query),
-    )
-  }
-
-  if (filters.value.status !== 'all') {
-    rows = rows.filter((order) => order.orderStatus === filters.value.status)
-  }
-
-  if (filters.value.paymentMethod !== 'all') {
-    rows = rows.filter((order) => (order.paymentMethod || 'none') === filters.value.paymentMethod)
-  }
-
-  if (filters.value.paymentStatus !== 'all') {
-    rows = rows.filter((order) => (order.paymentStatus || 'none') === filters.value.paymentStatus)
-  }
-
-  rows.sort((left, right) => {
-    let leftValue = left[sortField]
-    let rightValue = right[sortField]
-
-    if (sortField === 'createdAt') {
-      leftValue = new Date(left.createdAt || 0).getTime()
-      rightValue = new Date(right.createdAt || 0).getTime()
-    }
-
-    if (typeof leftValue === 'string' || typeof rightValue === 'string') {
-      return sortDirection === 'asc'
-        ? String(leftValue || '').localeCompare(String(rightValue || ''))
-        : String(rightValue || '').localeCompare(String(leftValue || ''))
-    }
-
-    return sortDirection === 'asc'
-      ? Number(leftValue || 0) - Number(rightValue || 0)
-      : Number(rightValue || 0) - Number(leftValue || 0)
-  })
-
-  return rows
-})
-
-const pagination = computed(() => {
-  const total = filteredOrders.value.length
-  const limit = filters.value.limit
-  const totalPages = Math.max(1, Math.ceil(total / limit))
-  const page = Math.min(filters.value.page, totalPages)
-
-  return {
-    total,
-    limit,
-    page,
-    totalPages,
-    start: total === 0 ? 0 : (page - 1) * limit + 1,
-    end: Math.min(page * limit, total),
-  }
-})
-
-const visibleOrders = computed(() => {
-  const startIndex = (pagination.value.page - 1) * pagination.value.limit
-  return filteredOrders.value.slice(startIndex, startIndex + pagination.value.limit)
-})
-
-function setActionMessage(message, tone = 'success') {
-  actionMessage.value = message
-  actionTone.value = tone
-}
-
-function replaceOrder(updatedOrder) {
-  orders.value = orders.value.map((order) => (order.id === updatedOrder.id ? updatedOrder : order))
-}
-
-function getPrimaryAction(order) {
-  if (order.orderStatus === 'pending') {
-    return {
-      action: 'confirm',
-      label: 'Confirm',
-      targetStatus: 'confirmed',
-      tone: 'primary',
-    }
-  }
-
-  if (order.orderStatus === 'confirmed') {
-    return {
-      action: 'complete',
-      label: 'Complete',
-      targetStatus: 'completed',
-      tone: 'secondary',
-    }
-  }
-
-  return null
-}
-
-function canCancel(order) {
-  return ['pending', 'confirmed'].includes(order.orderStatus)
-}
 
 function nextStepLabel(order) {
   if (order.orderStatus === 'pending') {
@@ -202,15 +94,12 @@ function getPaymentMethodLabel(method) {
   return labels[method] || method || 'Not available'
 }
 
-function isBusy(orderId, action) {
-  return busyOrderId.value === orderId && busyAction.value === action
-}
-
-function goToPage(page) {
+async function goToPage(page) {
   filters.value.page = page
+  await loadOrders()
 }
 
-function resetFilters() {
+async function resetFilters() {
   filters.value = {
     query: '',
     status: 'all',
@@ -220,74 +109,62 @@ function resetFilters() {
     page: 1,
     limit: 20,
   }
+  await loadOrders()
 }
 
 async function loadOrders() {
   loading.value = true
-  errorMessage.value = ''
 
-  const result = await adminStore.fetchOrders()
+  const result = await adminStore.fetchOrders(filters.value)
 
   if (result.success) {
-    orders.value = result.data
+    const payload = result.data
+    const items = Array.isArray(payload?.items)
+      ? payload.items
+      : Array.isArray(payload)
+        ? payload
+        : []
+
+    orders.value = items
+    meta.value = {
+      page: Number(payload?.meta?.page || filters.value.page || 1),
+      limit: Number(payload?.meta?.limit || filters.value.limit || 20),
+      total: Number(payload?.meta?.total || items.length),
+      totalPages: Number(payload?.meta?.totalPages || 1),
+    }
   } else {
-    errorMessage.value = result.error
+    notify(result.error, 'danger')
+    orders.value = []
+    meta.value = {
+      page: 1,
+      limit: Number(filters.value.limit || 20),
+      total: 0,
+      totalPages: 1,
+    }
   }
 
   loading.value = false
 }
 
-async function applyRowStatus(order, targetStatus, actionKey) {
-  busyOrderId.value = order.id
-  busyAction.value = actionKey
 
-  const result = await adminStore.updateOrderStatus(order.id, targetStatus)
-
-  if (result.success) {
-    replaceOrder(result.data)
-    setActionMessage(`Order ${order.orderCode} was moved to ${getOrderStatusLabel(targetStatus)}.`, 'success')
-  } else {
-    setActionMessage(result.error, 'danger')
-  }
-
-  busyOrderId.value = ''
-  busyAction.value = ''
-}
-
-async function cancelRowOrder(order) {
-  if (!window.confirm(`Cancel order ${order.orderCode}?`)) {
-    return
-  }
-
-  busyOrderId.value = order.id
-  busyAction.value = 'cancel'
-
-  const result = await adminStore.cancelOrder(order.id)
-
-  if (result.success) {
-    replaceOrder(result.data)
-    setActionMessage(`Order ${order.orderCode} was cancelled.`, 'warning')
-  } else {
-    setActionMessage(result.error, 'danger')
-  }
-
-  busyOrderId.value = ''
-  busyAction.value = ''
-}
-
+let searchTimeout = null
 watch(
-  () => [filters.value.query, filters.value.status, filters.value.paymentMethod, filters.value.paymentStatus, filters.value.sort, filters.value.limit],
+  () => filters.value.query,
   () => {
-    filters.value.page = 1
-  },
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      filters.value.page = 1
+      loadOrders()
+    }, 400)
+  }
 )
 
 watch(
-  () => pagination.value.totalPages,
-  (totalPages) => {
-    if (filters.value.page > totalPages) {
-      filters.value.page = totalPages
-    }
+  () => [filters.value.status, filters.value.paymentMethod, filters.value.paymentStatus, filters.value.sort, filters.value.limit],
+  async (_, previousValues) => {
+    if (!previousValues) return
+    filters.value.page = 1
+    await loadOrders()
   },
 )
 
@@ -319,41 +196,35 @@ onMounted(() => {
       <p>Status <strong>Cancelled</strong> is a terminal branch and does not continue through the remaining steps.</p>
     </div>
 
-    <div
-      v-if="actionMessage"
-      class="admin-alert"
-      :class="{
-        'admin-alert-success': actionTone === 'success',
-        'admin-alert-warning': actionTone === 'warning',
-        'admin-alert-danger': actionTone === 'danger',
-      }"
-    >
-      {{ actionMessage }}
-    </div>
-
-    <div class="admin-stat-grid">
+    <div class="admin-stat-grid admin-order-stat-grid">
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">Total Orders</p>
-        <p class="admin-stat-value">{{ formatNumber(orders.length) }}</p>
-        <p class="admin-stat-note">All orders currently available in the admin system.</p>
+        <p class="admin-stat-value">{{ formatNumber(meta.total) }}</p>
+        <p class="admin-stat-note">All orders matching current filter.</p>
       </article>
 
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">Pending</p>
         <p class="admin-stat-value">{{ formatNumber(pendingOrders) }}</p>
-        <p class="admin-stat-note">Needs confirmation before moving to the next workflow step.</p>
+        <p class="admin-stat-note">Needs confirmation.</p>
       </article>
 
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">Confirmed</p>
         <p class="admin-stat-value">{{ formatNumber(confirmedOrders) }}</p>
-        <p class="admin-stat-note">Approved and ready to move to completion.</p>
+        <p class="admin-stat-note">Ready to move to completion.</p>
+      </article>
+
+      <article class="admin-stat-card">
+        <p class="admin-stat-eyebrow">Completed</p>
+        <p class="admin-stat-value">{{ formatNumber(completedOrders) }}</p>
+        <p class="admin-stat-note">Finished in current filter results.</p>
       </article>
 
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">VNPAY Pending</p>
         <p class="admin-stat-value">{{ formatNumber(vnpayPendingOrders) }}</p>
-        <p class="admin-stat-note">Orders that may require payment reconciliation before the next step.</p>
+        <p class="admin-stat-note">Requires payment reconciliation.</p>
       </article>
     </div>
 
@@ -364,9 +235,10 @@ onMounted(() => {
           <h2 class="admin-card-title">Order Data Table</h2>
         </div>
 
-        <p class="admin-muted-text">
-          {{ formatNumber(completedOrders) }} completed orders out of {{ formatNumber(orders.length) }}.
-        </p>
+        <div class="admin-table-meta">
+          <span>{{ formatNumber(meta.total) }} results</span>
+          <span>Page {{ meta.page }}/{{ meta.totalPages }}</span>
+        </div>
       </div>
 
       <div class="admin-order-filter-grid">
@@ -375,10 +247,10 @@ onMounted(() => {
             <span class="admin-label">Search</span>
             <span
               class="admin-field-hint"
-              title="You can enter order code, system ID, recipient name, or phone number."
+              title="You can enter order code, recipient name, or phone number."
               tabindex="0"
-              data-tooltip="You can enter order code, system ID, recipient name, or phone number."
-              aria-label="Search: You can enter order code, system ID, recipient name, or phone number."
+              data-tooltip="You can enter order code, recipient name, or phone number."
+              aria-label="Search: You can enter order code, recipient name, or phone number."
             >
               ?
             </span>
@@ -448,15 +320,9 @@ onMounted(() => {
         </button>
       </div>
 
-      <p class="admin-muted-text">{{ formatNumber(pagination.total) }} results • {{ pagination.start }} - {{ pagination.end }}</p>
-
-      <div v-if="errorMessage" class="admin-alert admin-alert-danger">
-        {{ errorMessage }}
-      </div>
-
       <div v-if="loading" class="admin-empty-state">Loading order list...</div>
 
-      <div v-else-if="visibleOrders.length === 0" class="admin-empty-state">
+      <div v-else-if="orders.length === 0" class="admin-empty-state">
         No orders match the current filters.
       </div>
 
@@ -474,7 +340,7 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="order in visibleOrders" :key="order.id">
+            <tr v-for="order in orders" :key="order.id">
               <td>
                 <p class="admin-table-title">{{ order.orderCode }}</p>
                 <p class="admin-table-subtitle">{{ order.id }}</p>
@@ -507,31 +373,6 @@ onMounted(() => {
               <td>{{ formatDate(order.createdAt) }}</td>
               <td class="admin-table-actions-cell">
                 <div class="admin-button-column">
-                  <button
-                    v-if="getPrimaryAction(order)"
-                    type="button"
-                    class="admin-button"
-                    :class="getPrimaryAction(order)?.tone === 'primary' ? 'admin-button-primary' : 'admin-button-secondary'"
-                    :disabled="Boolean(busyOrderId)"
-                    @click="applyRowStatus(order, getPrimaryAction(order).targetStatus, getPrimaryAction(order).action)"
-                  >
-                    {{
-                      isBusy(order.id, getPrimaryAction(order).action)
-                        ? 'Processing...'
-                        : getPrimaryAction(order).label
-                    }}
-                  </button>
-
-                  <button
-                    v-if="canCancel(order)"
-                    type="button"
-                    class="admin-button admin-button-danger admin-button-compact"
-                    :disabled="Boolean(busyOrderId)"
-                    @click="cancelRowOrder(order)"
-                  >
-                    {{ isBusy(order.id, 'cancel') ? 'Cancelling...' : 'Cancel Order' }}
-                  </button>
-
                   <RouterLink
                     :to="{ name: 'admin-order-detail', params: { orderId: order.id } }"
                     class="admin-inline-link"
@@ -545,21 +386,21 @@ onMounted(() => {
         </table>
       </div>
 
-      <div v-if="pagination.totalPages > 1" class="admin-pagination">
+      <div v-if="meta.totalPages > 1" class="admin-pagination">
         <button
           type="button"
           class="admin-button admin-button-secondary"
-          :disabled="pagination.page <= 1"
-          @click="goToPage(pagination.page - 1)"
+          :disabled="meta.page <= 1"
+          @click="goToPage(meta.page - 1)"
         >
           Previous
         </button>
-        <span class="admin-pagination-label">Page {{ pagination.page }} / {{ pagination.totalPages }}</span>
+        <span class="admin-pagination-label">Page {{ meta.page }} / {{ meta.totalPages }}</span>
         <button
           type="button"
           class="admin-button admin-button-secondary"
-          :disabled="pagination.page >= pagination.totalPages"
-          @click="goToPage(pagination.page + 1)"
+          :disabled="meta.page >= meta.totalPages"
+          @click="goToPage(meta.page + 1)"
         >
           Next
         </button>
@@ -574,5 +415,27 @@ onMounted(() => {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.admin-order-stat-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .admin-order-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-order-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-order-stat-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

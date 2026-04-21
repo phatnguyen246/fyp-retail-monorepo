@@ -387,6 +387,7 @@ export function buildStorefrontCompareItem({
     product,
     variants = [],
     references,
+    mediaByVariantId = new Map(),
     hasInStockVariants = product?.hasInStockVariants === true,
 } = {}) {
     const activeVariants = [...filterActiveCatalogVariants(variants)].sort(
@@ -400,6 +401,7 @@ export function buildStorefrontCompareItem({
                 product,
                 references,
                 variants: activeVariants,
+                mediaByVariantId,
                 hasInStockVariants,
                 includeStatus: false,
             }),
@@ -407,7 +409,7 @@ export function buildStorefrontCompareItem({
             defaultSelectedVariantId: toIdString(defaultVariant?._id),
         },
         defaultVariant: defaultVariant
-            ? mapVariant(defaultVariant, new Map())
+            ? mapVariant(defaultVariant, mediaByVariantId)
             : null,
     };
 }

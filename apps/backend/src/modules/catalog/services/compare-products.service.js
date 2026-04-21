@@ -2,6 +2,7 @@ import { createCatalogValidation } from "../validation/index.js";
 import {
     assertStorefrontProductVisible,
     buildStorefrontCompareItem,
+    groupMediaByVariantId,
     hydrateStorefrontReferences,
 } from "./catalog-storefront.service-helpers.js";
 import { hydrateCatalogProductsWithLiveInventory } from "./catalog-live-inventory.helpers.js";
@@ -11,6 +12,7 @@ export function createCompareProductsService({
     productRepository,
     referenceRepository,
     variantRepository,
+    mediaRepository,
     validation = createCatalogValidation(),
     logger = console,
 } = {}) {
@@ -35,7 +37,7 @@ export function createCompareProductsService({
         const orderedProducts = parsedInput.productIds.map((productId) =>
             productById.get(productId)
         );
-        const [references, liveCatalogGraph] = await Promise.all([
+        const [references, liveCatalogGraph, mediaList] = await Promise.all([
             hydrateStorefrontReferences({
                 referenceRepository,
                 products: orderedProducts,
@@ -46,7 +48,12 @@ export function createCompareProductsService({
                 variants,
                 logger,
             }),
+            mediaRepository.listMediaByVariantIds({
+                variantIds: variants.map((variant) => variant._id),
+            }),
         ]);
+
+        const mediaByVariantId = groupMediaByVariantId(mediaList);
 
         return {
             items: orderedProducts.map((product) =>
@@ -57,6 +64,7 @@ export function createCompareProductsService({
                             product._id.toHexString()
                         ) ?? [],
                     references,
+                    mediaByVariantId,
                     hasInStockVariants:
                         liveCatalogGraph.productAvailabilityById.get(
                             product._id.toHexString()

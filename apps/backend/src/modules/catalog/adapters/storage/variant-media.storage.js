@@ -26,15 +26,8 @@ function normalizeFileSize(size) {
     return size;
 }
 
-function encodeStoragePath(storagePath) {
-    return storagePath
-        .split("/")
-        .map((segment) => encodeURIComponent(segment))
-        .join("/");
-}
-
 function buildStorageObjectUrl({ bucketName, storagePath }) {
-    return `https://storage.googleapis.com/${encodeURIComponent(bucketName)}/${encodeStoragePath(storagePath)}`;
+    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(storagePath)}?alt=media`;
 }
 
 export function createVariantMediaStorage({ bucket } = {}) {
@@ -86,11 +79,22 @@ export function createVariantMediaStorage({ bucket } = {}) {
 
         await blob.save(buffer, {
             contentType: mimeType,
+            metadata: {
+                cacheControl: "public, max-age=900",
+            },
+        });
+
+        // Generate a long-lived signed URL (valid until year 2500)
+        // This is the most reliable way to ensure the image is viewable
+        // even if public access is restricted at the bucket level.
+        const [signedUrl] = await blob.getSignedUrl({
+            action: "read",
+            expires: "01-01-2500",
         });
 
         return {
             storagePath,
-            url: buildStorageObjectUrl({ bucketName, storagePath }),
+            url: signedUrl,
             fileName,
             mimeType,
             size,

@@ -140,10 +140,36 @@ export function createInventoryRepository({
                 });
         },
 
-        countInventoryRecords({ filter = {} } = {}) {
+        countInventoryRecordsByFilter({ filter = {} } = {}) {
             return baseRepository
                 .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)
                 .countDocuments(filter);
+        },
+
+        findInventoryRecordsByFilter({
+            filter = {},
+            projection,
+            sort,
+            skip = 0,
+            limit,
+        } = {}) {
+            const cursor = baseRepository
+                .getCollection(INVENTORY_COLLECTIONS.inventoryRecords)
+                .find(filter, projection ? { projection } : undefined);
+
+            if (sort && Object.keys(sort).length > 0) {
+                cursor.sort(sort);
+            }
+
+            if (Number.isInteger(skip) && skip > 0) {
+                cursor.skip(skip);
+            }
+
+            if (Number.isInteger(limit) && limit > 0) {
+                cursor.limit(limit);
+            }
+
+            return cursor.toArray();
         },
 
         countOutOfStockInventoryRecords() {

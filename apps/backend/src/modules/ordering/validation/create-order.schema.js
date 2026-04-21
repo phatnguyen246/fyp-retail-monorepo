@@ -9,6 +9,7 @@ import {
 const baseCreateOrderInputShape = {
     cartVariantIds: z.array(objectIdStringSchema("cartVariantIds")).min(1),
     recipientName: requiredTextSchema("recipientName"),
+    email: z.string().email("Invalid email address"),
     phoneNumber: requiredTextSchema("phoneNumber"),
     paymentMethod: z.enum(["cod", "vnpay"]).optional().default("cod"),
 };

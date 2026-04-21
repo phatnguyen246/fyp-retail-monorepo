@@ -408,6 +408,7 @@ function normalizeOrder(order) {
     orderCode: ensureString(order?.orderCode),
     accountId: normalizeId(order?.accountId),
     recipientName: ensureString(order?.recipientName),
+    email: ensureNullableString(order?.email),
     phoneNumber: ensureString(order?.phoneNumber),
     street: ensureNullableString(order?.street),
     provinceCode: ensureNullableString(order?.provinceCode),
@@ -788,6 +789,10 @@ export const useAdminStore = defineStore('admin', () => {
       const normalizedPage = ensureInteger(filters.page, 1)
       const normalizedLimit = ensureInteger(filters.limit, 12)
 
+      if (filters.q && filters.q.trim().length > 0) {
+        params.q = filters.q.trim()
+      }
+
       if (filters.status && filters.status !== 'all') {
         params.status = filters.status
       }
@@ -1010,26 +1015,82 @@ export const useAdminStore = defineStore('admin', () => {
     }, 'Unable to batch-read inventory.')
   }
 
-  async function fetchLowStockInventory() {
+  async function fetchLowStockInventory(filters = {}) {
     return runRequest(async () => {
-      const response = await http.get('/admin/inventory/low-stock')
+      const params = {}
+      const normalizedPage = ensureInteger(filters.page, 1)
+      const normalizedLimit = ensureInteger(filters.limit, 20)
+
+      if (filters.q && filters.q.trim().length > 0) {
+        params.q = filters.q.trim()
+      }
+
+      if (filters.stockState && filters.stockState !== 'all') {
+        params.stockState = filters.stockState
+      }
+
+      params.page = normalizedPage
+      params.limit = normalizedLimit
+
+      const sortParts = extractSortParts(filters.sort)
+      params.sortBy = sortParts.sortBy
+      params.sortOrder = sortParts.sortOrder
+
+      const response = await http.get('/admin/inventory/low-stock', { params })
+      const payload = unwrapResponseData(response)
+      const items = ensureArray(payload).map((item) => normalizeOverviewLowStockRecord(item))
+      const meta = normalizeMeta(unwrapResponseMeta(response), items.length, normalizedPage, normalizedLimit)
 
       return {
         success: true,
-        data: ensureArray(unwrapResponseData(response)).map((item) =>
-          normalizeOverviewLowStockRecord(item),
-        ),
+        data: {
+          items,
+          meta,
+        },
       }
     }, 'Unable to load low-stock list.')
   }
 
-  async function fetchOrders() {
+  async function fetchOrders(filters = {}) {
     return runRequest(async () => {
-      const response = await http.get('/admin/orders')
+      const params = {}
+      const normalizedPage = ensureInteger(filters.page, 1)
+      const normalizedLimit = ensureInteger(filters.limit, 20)
+
+      if (filters.query && filters.query.trim().length > 0) {
+        params.q = filters.query.trim()
+      }
+
+      if (filters.status && filters.status !== 'all') {
+        params.status = filters.status
+      }
+
+      if (filters.paymentMethod && filters.paymentMethod !== 'all') {
+        params.paymentMethod = filters.paymentMethod
+      }
+
+      if (filters.paymentStatus && filters.paymentStatus !== 'all') {
+        params.paymentStatus = filters.paymentStatus
+      }
+
+      params.page = normalizedPage
+      params.limit = normalizedLimit
+
+      const sortParts = extractSortParts(filters.sort)
+      params.sortBy = sortParts.sortBy
+      params.sortOrder = sortParts.sortOrder
+
+      const response = await http.get('/admin/orders', { params })
+      const payload = unwrapResponseData(response)
+      const items = ensureArray(payload).map((order) => normalizeOrder(order))
+      const meta = normalizeMeta(unwrapResponseMeta(response), items.length, normalizedPage, normalizedLimit)
 
       return {
         success: true,
-        data: ensureArray(unwrapResponseData(response)).map((order) => normalizeOrder(order)),
+        data: {
+          items,
+          meta,
+        },
       }
     }, 'Unable to load order list.')
   }

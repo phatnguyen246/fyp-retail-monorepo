@@ -79,6 +79,7 @@ export const ORDER_DOCUMENT_SHAPE = Object.freeze({
     orderCode: { type: "string", required: true },
     accountId: { type: "string", required: false, default: null },
     recipientName: { type: "string", required: true },
+    email: { type: "string", required: true },
     phoneNumber: { type: "string", required: true },
     street: { type: "string", required: false, default: null },
     provinceCode: { type: "number", required: false, default: null },
@@ -133,6 +134,7 @@ export function createOrder(input = {}) {
         orderCode: normalizeRequiredString(input.orderCode, "orderCode"),
         accountId: normalizeOptionalString(input.accountId, "accountId"),
         recipientName: normalizeRequiredString(input.recipientName, "recipientName"),
+        email: normalizeRequiredString(input.email, "email"),
         phoneNumber: normalizeRequiredString(input.phoneNumber, "phoneNumber"),
         street: normalizeOptionalString(input.street, "street"),
         provinceCode: normalizeOptionalPositiveInteger(

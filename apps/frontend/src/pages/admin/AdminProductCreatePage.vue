@@ -1,14 +1,15 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { createEmptyProductDraft, useAdminStore } from '../../store/admin'
 
 const router = useRouter()
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const product = ref(createEmptyProductDraft())
 const saving = ref(false)
-const errorMessage = ref('')
 
 const referenceOptions = computed(() => adminStore.referenceOptions)
 
@@ -22,7 +23,6 @@ function toggleListValue(list, value) {
 
 async function handleSubmit() {
   saving.value = true
-  errorMessage.value = ''
 
   const payload = {
     productGroupCode: product.value.productGroupCode,
@@ -45,7 +45,7 @@ async function handleSubmit() {
       params: { productId: result.data.id },
     })
   } else {
-    errorMessage.value = result.error
+    notify(result.error, 'danger')
   }
 
   saving.value = false
@@ -363,10 +363,6 @@ onMounted(() => {
           placeholder="Example: IP68"
         />
       </label>
-
-      <div v-if="errorMessage" class="admin-alert admin-alert-danger">
-        {{ errorMessage }}
-      </div>
 
       <div class="admin-button-row">
         <button type="button" class="admin-button admin-button-secondary" @click="router.back()">

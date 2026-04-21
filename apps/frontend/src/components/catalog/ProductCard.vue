@@ -368,7 +368,7 @@ function handleCompareToggle() {
   if (compareStore.isCompared(props.product.id)) {
     compareStore.removeProduct(props.product.id)
   } else {
-    compareStore.addProduct(props.product.id)
+    compareStore.addProduct(props.product)
   }
 }
 
@@ -538,7 +538,7 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
 .catalog-variant-option {
   border-radius: 0.22rem;
   padding: 0.42rem 0.66rem;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   line-height: 1;

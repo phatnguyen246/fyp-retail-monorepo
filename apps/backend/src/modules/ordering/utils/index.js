@@ -104,6 +104,7 @@ export function createOrderSummaryView(order) {
         orderCode: order?.orderCode ?? null,
         accountId: order?.accountId ?? null,
         recipientName: order?.recipientName ?? null,
+        email: order?.email ?? null,
         phoneNumber: order?.phoneNumber ?? null,
         street: order?.street ?? null,
         provinceCode: order?.provinceCode ?? null,

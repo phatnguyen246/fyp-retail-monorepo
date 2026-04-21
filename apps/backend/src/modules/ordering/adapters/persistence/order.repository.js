@@ -31,12 +31,13 @@ export function createOrderRepository({
             });
         },
 
-        findOrdersByFilter({ filter = {}, projection, sort, limit } = {}) {
+        findOrdersByFilter({ filter = {}, projection, sort, skip = 0, limit } = {}) {
             return baseRepository.findManyByFilter({
                 collectionName: ORDER_COLLECTIONS.orders,
                 filter,
                 projection,
                 sort,
+                skip,
                 limit,
             });
         },

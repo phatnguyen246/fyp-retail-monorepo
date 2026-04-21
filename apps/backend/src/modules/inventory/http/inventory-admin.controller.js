@@ -49,11 +49,14 @@ export function createInventoryAdminController({ services }) {
             });
         },
 
-        async listLowStockInventory(_req, res) {
-            const inventoryRecords = await services.listLowStockInventory();
+        async listLowStockInventory(req, res) {
+            const result = await services.listLowStockInventory({
+                query: req.query,
+            });
 
             return sendInventorySuccess(res, {
-                data: inventoryRecords,
+                data: result.data,
+                meta: result.meta,
             });
         },
     };

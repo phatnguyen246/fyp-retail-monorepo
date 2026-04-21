@@ -9,9 +9,9 @@ import { formatCurrency, formatNumber } from '../services/formatters'
 import {
   composeShippingAddressLine,
   createEmptyShippingAddress,
-  isShippingAddressComplete,
   normalizeShippingAddress,
 } from '../services/shipping-address'
+import { checkoutShippingSchema } from '../validation/forms'
 
 const VNPAY_CONTEXT_STORAGE_KEY = 'checkout:vnpay-context'
 
@@ -21,6 +21,7 @@ const router = useRouter()
 
 const shippingInfo = reactive({
   recipientName: '',
+  email: '',
   phoneNumber: '',
   shippingAddress: createEmptyShippingAddress(),
 })
@@ -64,11 +65,23 @@ const hasCartError = computed(() => Boolean(cartStore.error))
 const isCartLoading = computed(() => cartStore.loading === true && cartStore.items.length === 0)
 
 const canSubmit = computed(() => {
+  const validationResult = checkoutShippingSchema.safeParse({
+    recipientName: shippingInfo.recipientName,
+    email: shippingInfo.email,
+    phoneNumber: shippingInfo.phoneNumber,
+    street: shippingInfo.shippingAddress.street,
+    provinceCode: shippingInfo.shippingAddress.provinceCode,
+    provinceName: shippingInfo.shippingAddress.provinceName,
+    districtCode: shippingInfo.shippingAddress.districtCode,
+    districtName: shippingInfo.shippingAddress.districtName,
+    wardCode: shippingInfo.shippingAddress.wardCode,
+    wardName: shippingInfo.shippingAddress.wardName,
+    paymentMethod: paymentMethod.value,
+    cartVariantIds: readyItems.value.map((item) => item.variantId),
+  })
+
   return (
-    readyItems.value.length > 0 &&
-    shippingInfo.recipientName.trim().length > 0 &&
-    shippingInfo.phoneNumber.trim().length > 0 &&
-    isShippingAddressComplete(shippingInfo.shippingAddress) &&
+    validationResult.success &&
     cartStore.loading === false &&
     orderingStore.loading === false
   )
@@ -107,38 +120,68 @@ function handleShippingAddressUpdate(nextAddress) {
   shippingInfo.shippingAddress = normalizeShippingAddress(nextAddress)
 }
 
-function validateBeforeSubmit() {
+function mapCheckoutValidationIssues(issues) {
   const nextFieldErrors = {}
 
-  if (!shippingInfo.recipientName.trim()) {
-    nextFieldErrors.recipientName = 'Nhap ten nguoi nhan.'
+  for (const issue of issues) {
+    const [head] = issue.path
+
+    if (head === 'recipientName') {
+      nextFieldErrors.recipientName = issue.message
+      continue
+    }
+
+    if (head === 'email') {
+      nextFieldErrors.email = issue.message
+      continue
+    }
+
+    if (head === 'phoneNumber') {
+      nextFieldErrors.phoneNumber = issue.message
+      continue
+    }
+
+    if (head === 'street') {
+      nextFieldErrors.street = issue.message
+      continue
+    }
+
+    if (head === 'provinceCode' || head === 'districtCode' || head === 'wardCode') {
+      nextFieldErrors.shippingAddress = issue.message
+    }
   }
 
-  if (!shippingInfo.phoneNumber.trim()) {
-    nextFieldErrors.phoneNumber = 'Nhap so dien thoai nguoi nhan.'
+  return nextFieldErrors
+}
+
+function validateBeforeSubmit() {
+  const validationResult = checkoutShippingSchema.safeParse({
+    recipientName: shippingInfo.recipientName,
+    email: shippingInfo.email,
+    phoneNumber: shippingInfo.phoneNumber,
+    street: shippingInfo.shippingAddress.street,
+    provinceCode: shippingInfo.shippingAddress.provinceCode,
+    provinceName: shippingInfo.shippingAddress.provinceName,
+    districtCode: shippingInfo.shippingAddress.districtCode,
+    districtName: shippingInfo.shippingAddress.districtName,
+    wardCode: shippingInfo.shippingAddress.wardCode,
+    wardName: shippingInfo.shippingAddress.wardName,
+    paymentMethod: paymentMethod.value,
+    cartVariantIds: readyItems.value.map((item) => item.variantId),
+  })
+
+  if (!validationResult.success) {
+    fieldErrors.value = mapCheckoutValidationIssues(validationResult.error.issues)
+    const cartIssue = validationResult.error.issues.find((issue) => issue.path[0] === 'cartVariantIds')
+    if (cartIssue) {
+      submitMessageTone.value = 'warning'
+      submitMessage.value = cartIssue.message
+    }
+    return null
   }
 
-  if (!shippingInfo.shippingAddress.street.trim()) {
-    nextFieldErrors.street = 'Nhap so nha va ten duong.'
-  }
-
-  if (!shippingInfo.shippingAddress.provinceCode) {
-    nextFieldErrors.shippingAddress = 'Chon tinh/thanh pho giao hang.'
-  } else if (!shippingInfo.shippingAddress.districtCode) {
-    nextFieldErrors.shippingAddress = 'Chon quan/huyen giao hang.'
-  } else if (!shippingInfo.shippingAddress.wardCode) {
-    nextFieldErrors.shippingAddress = 'Chon phuong/xa giao hang.'
-  }
-
-  if (readyItems.value.length === 0) {
-    submitMessageTone.value = 'warning'
-    submitMessage.value =
-      'Khong co san pham hop le de checkout. Hay quay lai gio hang de xu ly cac line dang bi loai.'
-  }
-
-  fieldErrors.value = nextFieldErrors
-
-  return Object.keys(nextFieldErrors).length === 0 && readyItems.value.length > 0
+  fieldErrors.value = {}
+  return validationResult.data
 }
 
 function mapOrderingError(error) {
@@ -213,23 +256,26 @@ function persistVnpayContext(order) {
 async function handlePlaceOrder() {
   resetFeedback()
 
-  if (!validateBeforeSubmit()) {
+  const validatedInput = validateBeforeSubmit()
+
+  if (!validatedInput) {
     return
   }
 
   const orderDetails = {
-    recipientName: shippingInfo.recipientName.trim(),
-    phoneNumber: shippingInfo.phoneNumber.trim(),
-    street: shippingInfo.shippingAddress.street.trim(),
-    provinceCode: shippingInfo.shippingAddress.provinceCode,
-    provinceName: shippingInfo.shippingAddress.provinceName,
-    districtCode: shippingInfo.shippingAddress.districtCode,
-    districtName: shippingInfo.shippingAddress.districtName,
-    wardCode: shippingInfo.shippingAddress.wardCode,
-    wardName: shippingInfo.shippingAddress.wardName,
+    recipientName: validatedInput.recipientName,
+    email: validatedInput.email,
+    phoneNumber: validatedInput.phoneNumber,
+    street: validatedInput.street,
+    provinceCode: validatedInput.provinceCode,
+    provinceName: validatedInput.provinceName,
+    districtCode: validatedInput.districtCode,
+    districtName: validatedInput.districtName,
+    wardCode: validatedInput.wardCode,
+    wardName: validatedInput.wardName,
     shippingAddressLine: shippingAddressLine.value,
-    paymentMethod: paymentMethod.value,
-    cartVariantIds: readyItems.value.map((item) => item.variantId),
+    paymentMethod: validatedInput.paymentMethod,
+    cartVariantIds: validatedInput.cartVariantIds,
   }
 
   const { success, order, error } = await orderingStore.createOrder(orderDetails)
@@ -242,7 +288,15 @@ async function handlePlaceOrder() {
 
   if (order.paymentMethod === 'vnpay') {
     persistVnpayContext(order)
-    await router.push({ name: 'vnpay-checkout', params: { orderId: order.id } })
+    
+    // Fetch VNPAY URL and open in new tab
+    const vnpayResult = await orderingStore.createVnPayUrl(order.id)
+    if (vnpayResult.success && vnpayResult.paymentUrl) {
+      window.open(vnpayResult.paymentUrl, '_blank')
+    }
+    
+    // Redirect current tab to order detail
+    await router.push({ name: 'order-detail', params: { orderId: order.id } })
     return
   }
 
@@ -342,24 +396,35 @@ async function handlePlaceOrder() {
                 </div>
 
                 <form class="mt-8 grid gap-5 md:grid-cols-2" autocomplete="off" @submit.prevent="handlePlaceOrder">
-                  <label class="flex flex-col gap-3 md:col-span-1">
+                  <label class="flex flex-col gap-3 md:col-span-2">
                     <span class="text-sm font-medium text-[var(--catalog-text)]">Ten nguoi nhan</span>
                     <input
                       v-model="shippingInfo.recipientName"
                       id="checkout-recipient-name"
                       name="recipient_name"
                       type="text"
-                      autocomplete="section-shipping shipping name"
-                      data-form-type="other"
-                      data-lpignore="true"
-                      data-1p-ignore
-                      data-bwignore="true"
                       placeholder="Nguyen Van A"
                       class="checkout-input"
                       :class="{ 'checkout-input--error': fieldErrors.recipientName }"
                     />
                     <span v-if="fieldErrors.recipientName" class="text-sm text-[var(--catalog-danger)]">
                       {{ fieldErrors.recipientName }}
+                    </span>
+                  </label>
+
+                  <label class="flex flex-col gap-3 md:col-span-1">
+                    <span class="text-sm font-medium text-[var(--catalog-text)]">Email xac nhan</span>
+                    <input
+                      v-model="shippingInfo.email"
+                      id="checkout-recipient-email"
+                      name="recipient_email"
+                      type="email"
+                      placeholder="nva@example.com"
+                      class="checkout-input"
+                      :class="{ 'checkout-input--error': fieldErrors.email }"
+                    />
+                    <span v-if="fieldErrors.email" class="text-sm text-[var(--catalog-danger)]">
+                      {{ fieldErrors.email }}
                     </span>
                   </label>
 
@@ -371,12 +436,6 @@ async function handlePlaceOrder() {
                       name="recipient_phone"
                       type="tel"
                       inputmode="numeric"
-                      pattern="[0-9]*"
-                      autocomplete="section-shipping shipping tel-national"
-                      data-form-type="other"
-                      data-lpignore="true"
-                      data-1p-ignore
-                      data-bwignore="true"
                       placeholder="0900 000 000"
                       class="checkout-input"
                       :class="{ 'checkout-input--error': fieldErrors.phoneNumber }"

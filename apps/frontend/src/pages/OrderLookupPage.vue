@@ -5,6 +5,7 @@ import CatalogTopNav from '../components/catalog/CatalogTopNav.vue'
 import CatalogFooter from '../components/catalog/CatalogFooter.vue'
 import { useOrderingStore } from '../store/ordering'
 import { formatCurrency, formatDate, formatNumber } from '../services/formatters'
+import { orderLookupFormSchema } from '../validation/forms'
 
 const router = useRouter()
 const orderingStore = useOrderingStore()
@@ -23,14 +24,18 @@ function resetFeedback() {
 }
 
 function validateForm() {
-  const nextFieldErrors = {}
+  const validationResult = orderLookupFormSchema.safeParse({
+    orderCode: lookupForm.orderCode,
+  })
 
-  if (!lookupForm.orderCode.trim()) {
-    nextFieldErrors.orderCode = 'Nhập mã đơn hàng.'
+  if (!validationResult.success) {
+    const orderCodeIssue = validationResult.error.issues.find((issue) => issue.path[0] === 'orderCode')
+    fieldErrors.value = orderCodeIssue ? { orderCode: orderCodeIssue.message } : {}
+    return null
   }
 
-  fieldErrors.value = nextFieldErrors
-  return Object.keys(nextFieldErrors).length === 0
+  fieldErrors.value = {}
+  return validationResult.data
 }
 
 function mapLookupError(error) {
@@ -64,12 +69,14 @@ async function handleLookup() {
   resetFeedback()
   result.value = null
 
-  if (!validateForm()) {
+  const validatedInput = validateForm()
+
+  if (!validatedInput) {
     return
   }
 
   const payload = {
-    orderCode: lookupForm.orderCode.trim(),
+    orderCode: validatedInput.orderCode,
   }
 
   const { success, data, error } = await orderingStore.lookupGuestOrder(payload)

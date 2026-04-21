@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { loginFormSchema } from '../validation/forms'
 
 const route = useRoute()
 const router = useRouter()
@@ -9,6 +10,8 @@ const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
+const showPassword = ref(false)
+const clientError = ref('')
 const isAdminEntry = computed(() => route.name === 'admin-login')
 const title = computed(() => (isAdminEntry.value ? 'Đăng nhập quản trị' : 'Đăng nhập'))
 const subtitle = computed(() =>
@@ -20,9 +23,20 @@ const registerTarget = computed(() => (isAdminEntry.value ? '/login' : '/registe
 const registerLabel = computed(() => (isAdminEntry.value ? 'Đăng nhập khách hàng' : 'Đăng ký ngay'))
 
 async function handleLogin() {
-  const success = await authStore.login({
+  clientError.value = ''
+  const validationResult = loginFormSchema.safeParse({
     email: email.value,
     password: password.value,
+  })
+
+  if (!validationResult.success) {
+    clientError.value = validationResult.error.issues[0]?.message || 'Thong tin dang nhap khong hop le.'
+    return
+  }
+
+  const success = await authStore.login({
+    email: validationResult.data.email,
+    password: validationResult.data.password,
   })
 
   if (success) {
@@ -56,11 +70,30 @@ async function handleLogin() {
         </div>
         <div class="auth-form-group">
           <label class="auth-label" for="password">Mật khẩu</label>
-          <input id="password" v-model="password" class="auth-input" type="password" placeholder="••••••••" required />
+          <div class="auth-input-wrapper">
+            <input
+              id="password"
+              v-model="password"
+              class="auth-input auth-input--with-toggle"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="••••••••"
+              required
+            />
+            <button
+              type="button"
+              class="auth-password-toggle"
+              :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+              @click="showPassword = !showPassword"
+            >
+              <span class="material-symbols-outlined">
+                {{ showPassword ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div v-if="authStore.error" class="auth-error-message">
-          {{ authStore.error }}
+        <div v-if="clientError || authStore.error" class="auth-error-message">
+          {{ clientError || authStore.error }}
         </div>
 
         <button :disabled="authStore.loading" class="auth-submit-button" type="submit">
@@ -131,6 +164,42 @@ async function handleLogin() {
   background-color: var(--catalog-surface-soft);
   color: var(--catalog-text);
   transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.auth-input-wrapper {
+  position: relative;
+}
+
+.auth-input--with-toggle {
+  padding-right: 3rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--catalog-text-soft);
+  cursor: pointer;
+  transition: color 200ms ease, background-color 200ms ease;
+}
+
+.auth-password-toggle:hover {
+  color: var(--catalog-primary-deep);
+  background-color: rgba(139, 117, 0, 0.08);
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 2px solid rgba(139, 117, 0, 0.55);
+  outline-offset: 1px;
 }
 
 .auth-input:focus {

@@ -140,6 +140,23 @@ export const useOrderingStore = defineStore('ordering', () => {
     }
   }
 
+  async function cancelOrder(orderId) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await http.post(`/orders/${orderId}/cancel`)
+      const payload = unwrapPayload(response)
+      order.value = payload
+      return { success: true, data: payload }
+    } catch (e) {
+      const errorPayload = extractErrorPayload(e, 'Could not cancel order.')
+      error.value = errorPayload.message
+      return { success: false, error: errorPayload }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     order: readonly(order),
     loading: readonly(loading),
@@ -151,5 +168,6 @@ export const useOrderingStore = defineStore('ordering', () => {
     lookupGuestOrder,
     getOrderById,
     fetchOrders,
+    cancelOrder,
   }
 })

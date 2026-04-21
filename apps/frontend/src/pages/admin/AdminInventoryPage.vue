@@ -1,9 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { formatDate, formatNumber } from '../../services/formatters'
 import { createInventoryDraft, useAdminStore } from '../../store/admin'
+import { inventoryLookupSchema, inventoryRecordUpsertSchema } from '../../validation/forms'
 
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const lookupVariantId = ref('')
 const inventoryRecord = ref(null)
@@ -12,16 +15,19 @@ const inventoryWorkbenchModalOpen = ref(false)
 const lowStockRecords = ref([])
 const loadingLookup = ref(false)
 const loadingLowStock = ref(false)
-const inventoryMessage = ref('')
-const inventoryTone = ref('success')
-const lowStockError = ref('')
+const lowStockMeta = ref({
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 1,
+})
 
 const lowStockFilters = ref({
-  query: '',
+  q: '',
   stockState: 'all',
   sort: 'stockQuantity:asc',
   page: 1,
-  limit: 10,
+  limit: 20,
 })
 
 const lowStockPageSizeOptions = [10, 20, 30]
@@ -36,73 +42,14 @@ const inventoryActionLabel = computed(() =>
   inventoryRecord.value?.recordExists ? 'Update inventory' : 'Create inventory record',
 )
 
-const outOfStockCount = computed(() => lowStockRecords.value.filter((record) => !record.isInStock).length)
-const lowStockCount = computed(() => lowStockRecords.value.filter((record) => record.isLowStock).length)
-
-const filteredLowStockRecords = computed(() => {
-  const query = lowStockFilters.value.query.trim().toLowerCase()
-  const [sortField, sortDirection] = lowStockFilters.value.sort.split(':')
-  let rows = [...lowStockRecords.value]
-
-  if (query) {
-    rows = rows.filter((record) =>
-      [
-        record.productName,
-        record.variantLabel,
-        record.sku,
-        record.productGroupCode,
-        record.variantId,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query)),
-    )
-  }
-
-  if (lowStockFilters.value.stockState === 'out') {
-    rows = rows.filter((record) => !record.isInStock)
-  } else if (lowStockFilters.value.stockState === 'low') {
-    rows = rows.filter((record) => record.isInStock)
-  }
-
-  rows.sort((left, right) => {
-    let leftValue = left[sortField]
-    let rightValue = right[sortField]
-
-    if (sortField === 'updatedAt') {
-      leftValue = new Date(left.updatedAt || 0).getTime()
-      rightValue = new Date(right.updatedAt || 0).getTime()
-    }
-
-    return sortDirection === 'asc'
-      ? Number(leftValue || 0) - Number(rightValue || 0)
-      : Number(rightValue || 0) - Number(leftValue || 0)
-  })
-
-  return rows
-})
-
-const lowStockPagination = computed(() => {
-  const total = filteredLowStockRecords.value.length
-  const limit = lowStockFilters.value.limit
-  const totalPages = Math.max(1, Math.ceil(total / limit))
-  const page = Math.min(lowStockFilters.value.page, totalPages)
-
-  return {
-    total,
-    limit,
-    page,
-    totalPages,
-  }
-})
-
-const visibleLowStockRecords = computed(() => {
-  const start = (lowStockPagination.value.page - 1) * lowStockPagination.value.limit
-  return filteredLowStockRecords.value.slice(start, start + lowStockPagination.value.limit)
-})
+const outOfStockCount = computed(() => (lowStockRecords.value || []).filter((record) => record?.stockQuantity === 0).length)
+const lowStockCount = computed(() => Number(lowStockMeta.value?.total || 0))
 
 function setInventoryMessage(message, tone = 'success') {
-  inventoryMessage.value = message
-  inventoryTone.value = tone
+  if (!message) {
+    return
+  }
+  notify(message, tone)
 }
 
 function getRecordTitle(record) {
@@ -124,45 +71,70 @@ function useInventoryRecord(record) {
   inventoryDraft.value = createInventoryDraft(record)
 }
 
-function goToLowStockPage(page) {
+async function goToLowStockPage(page) {
   lowStockFilters.value.page = page
+  await loadLowStockRecords()
 }
 
-function resetLowStockFilters() {
+async function resetLowStockFilters() {
   lowStockFilters.value = {
-    query: '',
+    q: '',
     stockState: 'all',
     sort: 'stockQuantity:asc',
     page: 1,
-    limit: 10,
+    limit: 20,
   }
+  await loadLowStockRecords()
 }
 
 async function loadLowStockRecords() {
   loadingLowStock.value = true
-  lowStockError.value = ''
 
-  const result = await adminStore.fetchLowStockInventory()
+  const result = await adminStore.fetchLowStockInventory(lowStockFilters.value)
 
   if (result.success) {
-    lowStockRecords.value = result.data
+    const payload = result.data
+    const items = Array.isArray(payload?.items)
+      ? payload.items
+      : Array.isArray(payload)
+        ? payload
+        : []
+
+    lowStockRecords.value = items
+    lowStockMeta.value = {
+      page: Number(payload?.meta?.page || lowStockFilters.value.page || 1),
+      limit: Number(payload?.meta?.limit || lowStockFilters.value.limit || 20),
+      total: Number(payload?.meta?.total || items.length),
+      totalPages: Number(payload?.meta?.totalPages || 1),
+    }
   } else {
-    lowStockError.value = result.error
+    notify(result.error, 'danger')
+    lowStockRecords.value = []
+    lowStockMeta.value = {
+      page: 1,
+      limit: Number(lowStockFilters.value.limit || 20),
+      total: 0,
+      totalPages: 1,
+    }
   }
 
   loadingLowStock.value = false
 }
 
 async function lookupInventoryRecord() {
-  if (!lookupVariantId.value.trim()) {
-    setInventoryMessage('Please enter a variant ID to look up inventory.', 'danger')
+  const validationResult = inventoryLookupSchema.safeParse({
+    variantId: lookupVariantId.value,
+  })
+
+  if (!validationResult.success) {
+    setInventoryMessage(validationResult.error.issues[0]?.message, 'danger')
     return
   }
 
   loadingLookup.value = true
   setInventoryMessage('')
 
-  const result = await adminStore.fetchInventoryRecord(lookupVariantId.value.trim())
+  const result = await adminStore.fetchInventoryRecord(validationResult.data.variantId)
 
   if (result.success) {
     useInventoryRecord(result.data)
@@ -175,20 +147,18 @@ async function lookupInventoryRecord() {
 }
 
 async function submitInventoryRecord() {
-  const variantId = inventoryDraft.value.variantId.trim()
-  const stockQuantity = Number(inventoryDraft.value.stockQuantity)
-  const lowStockThreshold = Number(inventoryDraft.value.lowStockThreshold)
+  const validationResult = inventoryRecordUpsertSchema.safeParse({
+    variantId: inventoryDraft.value.variantId,
+    stockQuantity: inventoryDraft.value.stockQuantity,
+    lowStockThreshold: inventoryDraft.value.lowStockThreshold,
+  })
 
-  if (!variantId) {
-    setInventoryMessage('Please enter a variant ID before saving inventory.', 'danger')
+  if (!validationResult.success) {
+    setInventoryMessage(validationResult.error.issues[0]?.message, 'danger')
     return
   }
 
-  if (stockQuantity < 0 || lowStockThreshold < 0) {
-    setInventoryMessage('Stock quantity and low-stock threshold must be greater than or equal to 0.', 'danger')
-    return
-  }
-
+  const { variantId, stockQuantity, lowStockThreshold } = validationResult.data
   loadingLookup.value = true
 
   const payload = {
@@ -228,19 +198,24 @@ function hydrateFromLowStock(record) {
   setInventoryMessage('Low-stock record loaded into the edit workspace.', 'warning')
 }
 
+let searchTimeout = null
 watch(
-  () => [lowStockFilters.value.query, lowStockFilters.value.stockState, lowStockFilters.value.sort, lowStockFilters.value.limit],
+  () => lowStockFilters.value.q,
   () => {
-    lowStockFilters.value.page = 1
-  },
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      lowStockFilters.value.page = 1
+      loadLowStockRecords()
+    }, 400)
+  }
 )
 
 watch(
-  () => lowStockPagination.value.totalPages,
-  (totalPages) => {
-    if (lowStockFilters.value.page > totalPages) {
-      lowStockFilters.value.page = totalPages
-    }
+  () => [lowStockFilters.value.stockState, lowStockFilters.value.sort, lowStockFilters.value.limit],
+  async (_, previousValues) => {
+    if (!previousValues) return
+    lowStockFilters.value.page = 1
+    await loadLowStockRecords()
   },
 )
 
@@ -272,18 +247,6 @@ onMounted(() => {
       <p>Data is prioritized with product and variant names for easier operations handling.</p>
     </div>
 
-    <div
-      v-if="inventoryMessage"
-      class="admin-alert"
-      :class="{
-        'admin-alert-success': inventoryTone === 'success',
-        'admin-alert-warning': inventoryTone === 'warning',
-        'admin-alert-danger': inventoryTone === 'danger',
-      }"
-    >
-      {{ inventoryMessage }}
-    </div>
-
     <div class="admin-stat-grid admin-inventory-stat-grid">
       <article class="admin-stat-card">
         <p class="admin-stat-eyebrow">Low-stock records</p>
@@ -307,8 +270,8 @@ onMounted(() => {
         </div>
 
         <div class="admin-table-meta">
-          <span>{{ formatNumber(lowStockPagination.total) }} results</span>
-          <span>Page {{ lowStockPagination.page }}/{{ lowStockPagination.totalPages }}</span>
+          <span>{{ formatNumber(lowStockMeta.total) }} results</span>
+          <span>Page {{ lowStockMeta.page }}/{{ lowStockMeta.totalPages }}</span>
         </div>
       </div>
 
@@ -327,7 +290,7 @@ onMounted(() => {
             </span>
           </span>
           <input
-            v-model="lowStockFilters.query"
+            v-model="lowStockFilters.q"
             class="admin-input"
             type="search"
             placeholder="Example: iPhone, 256GB Black, SKU..."
@@ -368,13 +331,9 @@ onMounted(() => {
         </button>
       </div>
 
-      <div v-if="lowStockError" class="admin-alert admin-alert-danger">
-        {{ lowStockError }}
-      </div>
-
       <div v-if="loadingLowStock" class="admin-empty-state">Loading low-stock records...</div>
 
-      <div v-else-if="visibleLowStockRecords.length === 0" class="admin-empty-state">
+      <div v-else-if="lowStockRecords.length === 0" class="admin-empty-state">
         No inventory records match the current filters.
       </div>
 
@@ -392,7 +351,7 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="record in visibleLowStockRecords" :key="record.id || record.variantId">
+            <tr v-for="record in lowStockRecords" :key="record.id || record.variantId">
               <td>
                 <p class="admin-table-title">{{ getRecordTitle(record) }}</p>
                 <p class="admin-table-subtitle">{{ record.productGroupCode || 'No group code' }}</p>
@@ -421,23 +380,23 @@ onMounted(() => {
         </table>
       </div>
 
-      <div v-if="lowStockPagination.totalPages > 1" class="admin-pagination">
+      <div v-if="lowStockMeta.totalPages > 1" class="admin-pagination">
         <button
           type="button"
           class="admin-button admin-button-secondary"
-          :disabled="lowStockPagination.page <= 1"
-          @click="goToLowStockPage(lowStockPagination.page - 1)"
+          :disabled="lowStockMeta.page <= 1"
+          @click="goToLowStockPage(lowStockMeta.page - 1)"
         >
           Previous
         </button>
         <span class="admin-pagination-label">
-          Page {{ lowStockPagination.page }} / {{ lowStockPagination.totalPages }}
+          Page {{ lowStockMeta.page }} / {{ lowStockMeta.totalPages }}
         </span>
         <button
           type="button"
           class="admin-button admin-button-secondary"
-          :disabled="lowStockPagination.page >= lowStockPagination.totalPages"
-          @click="goToLowStockPage(lowStockPagination.page + 1)"
+          :disabled="lowStockMeta.page >= lowStockMeta.totalPages"
+          @click="goToLowStockPage(lowStockMeta.page + 1)"
         >
           Next
         </button>

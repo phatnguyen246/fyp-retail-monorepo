@@ -18,6 +18,7 @@ export function registerOrderingModule({
     db,
     cartOrderReader,
     paymentCheckoutAdapter,
+    notificationService,
     requireAuthMiddleware = passThroughMiddleware,
     adminMiddleware = passThroughMiddleware,
     logger = console,
@@ -29,6 +30,7 @@ export function registerOrderingModule({
     });
     const services = createOrderingServices({
         adapters,
+        sendEmail: notificationService?.services?.sendEmail,
         logger,
     });
     const controller = createOrderingController({

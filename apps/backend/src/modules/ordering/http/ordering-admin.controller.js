@@ -10,11 +10,14 @@ function createRequester(req) {
 
 export function createOrderingAdminController({ services }) {
     return {
-        async listOrders(_req, res) {
-            const orders = await services.listAdminOrders();
+        async listOrders(req, res) {
+            const result = await services.listAdminOrders({
+                query: req.query,
+            });
 
             return sendOrderingSuccess(res, {
-                data: orders,
+                data: result.data,
+                meta: result.meta,
             });
         },
 

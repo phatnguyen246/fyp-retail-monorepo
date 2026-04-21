@@ -476,6 +476,18 @@ function selectVariant(variantId) {
   activeMediaIndex.value = 0
 }
 
+function nextMedia() {
+  if (activeMediaIndex.value < mediaItems.value.length - 1) {
+    activeMediaIndex.value++
+  }
+}
+
+function prevMedia() {
+  if (activeMediaIndex.value > 0) {
+    activeMediaIndex.value--
+  }
+}
+
 function handleMemorySelect(memoryKey) {
   const selectedColor = selectedVariant.value?.variantAttributes?.color
   const candidates = variants.value.filter((variant) => getMemoryKey(variant) === memoryKey)
@@ -571,7 +583,7 @@ function handleCompareToggle() {
     return
   }
 
-  compareStore.addProduct(product.value.id)
+  compareStore.addProduct(product.value)
 }
 
 async function handleAddToCart() {
@@ -700,14 +712,22 @@ onBeforeUnmount(() => {
           <div class="grid items-start gap-8 lg:grid-cols-[minmax(24rem,1.16fr)_minmax(22rem,0.84fr)] xl:gap-10">
             <div class="space-y-4">
               <div class="detail-stage rounded-[2rem] border border-[var(--catalog-border-soft)] p-4 md:p-6">
-                <div class="detail-stage-inner mx-auto w-full max-w-[26rem]">
-                  <div class="catalog-card-media detail-media-shell aspect-[4/4.65] rounded-[1.6rem]">
-                    <div class="catalog-card-media-frame rounded-[1.45rem]">
-                      <div class="detail-media-spotlight"></div>
+                <div class="detail-stage-inner relative mx-auto w-full">
+                  <div class="detail-media-shell flex h-[24rem] items-center justify-center rounded-[1.6rem] md:h-[28rem] lg:h-[32rem] xl:h-[36rem]">
+                    <button
+                      v-if="mediaItems.length > 1"
+                      class="media-nav-button media-nav-prev"
+                      :disabled="activeMediaIndex === 0"
+                      type="button"
+                      @click="prevMedia"
+                    >
+                      <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+
                     <img
                       v-if="activeMedia?.url"
                       :alt="activeMedia.fileName || product.title"
-                      class="catalog-card-image detail-product-image object-contain"
+                      class="detail-product-image max-h-full max-w-full object-contain"
                       :src="activeMedia.url"
                     />
                     <div
@@ -716,19 +736,28 @@ onBeforeUnmount(() => {
                     >
                       Chưa có hình ảnh
                     </div>
+
+                    <button
+                      v-if="mediaItems.length > 1"
+                      class="media-nav-button media-nav-next"
+                      :disabled="activeMediaIndex === mediaItems.length - 1"
+                      type="button"
+                      @click="nextMedia"
+                    >
+                      <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
                   </div>
                 </div>
               </div>
-              </div>
 
-              <div v-if="mediaItems.length > 1" class="grid grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-4">
+              <div v-if="mediaItems.length > 1" class="detail-thumbnail-scroller flex gap-3 overflow-x-auto pb-2">
                 <button
                   v-for="(media, index) in mediaItems"
                   :key="media.id || `${media.url}-${index}`"
-                  class="rounded-[1.15rem] border bg-white p-2 transition"
+                  class="detail-thumbnail-item flex-shrink-0 rounded-[1rem] border bg-white p-1.5 transition"
                   :class="
                     index === activeMediaIndex
-                      ? 'border-[var(--catalog-primary)] shadow-[0_12px_24px_rgba(139,117,0,0.18)]'
+                      ? 'border-[var(--catalog-primary)] shadow-[0_8px_16px_rgba(139,117,0,0.12)]'
                       : 'border-[var(--catalog-border-soft)] hover:border-[var(--catalog-outline)]'
                   "
                   type="button"
@@ -736,7 +765,7 @@ onBeforeUnmount(() => {
                 >
                   <img
                     :alt="media.fileName || product.title"
-                    class="aspect-square w-full rounded-[0.8rem] object-contain"
+                    class="h-14 w-14 rounded-[0.6rem] object-contain md:h-16 md:w-16"
                     :src="media.url"
                   />
                 </button>
@@ -1030,9 +1059,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .detail-stage {
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 45%),
-    linear-gradient(135deg, #f7f1e6 0%, #f4efe6 35%, #ebe5da 100%);
+  background: #ffffff;
   box-shadow: 0 20px 60px rgba(26, 28, 28, 0.05);
 }
 
@@ -1042,30 +1069,90 @@ onBeforeUnmount(() => {
 }
 
 .detail-media-shell {
-  min-height: min(68vw, 32rem);
-  max-height: 32rem;
+  width: 100%;
 }
 
-.detail-media-spotlight {
-  position: absolute;
-  top: 8%;
-  left: 50%;
-  width: 76%;
-  height: 28%;
-  transform: translateX(-50%);
+.detail-thumbnail-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: var(--catalog-border-soft) transparent;
+}
+
+.detail-thumbnail-scroller::-webkit-scrollbar {
+  height: 4px;
+}
+
+.detail-thumbnail-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detail-thumbnail-scroller::-webkit-scrollbar-thumb {
+  background-color: var(--catalog-border-soft);
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.16) 72%, transparent 100%);
-  filter: blur(12px);
-  pointer-events: none;
+}
+
+.media-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--catalog-border-soft);
+  color: var(--catalog-text);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.media-nav-button:hover:not(:disabled) {
+  background: white;
+  color: var(--catalog-primary);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.media-nav-button:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.media-nav-button:disabled {
+  opacity: 0;
+  visibility: hidden;
+  cursor: not-allowed;
+}
+
+.media-nav-prev {
+  left: 0.5rem;
+}
+
+.media-nav-next {
+  right: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .media-nav-button {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .media-nav-prev {
+    left: 1.25rem;
+  }
+
+  .media-nav-next {
+    right: 1.25rem;
+  }
 }
 
 .detail-product-image {
   position: relative;
   z-index: 1;
-  margin: 0 auto;
-  width: 86%;
-  height: 86%;
-  padding: 0;
+  display: block;
 }
 
 .detail-variant-option {
@@ -1459,13 +1546,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1023px) {
-  .detail-media-shell {
-    min-height: min(92vw, 29rem);
-  }
-
-  .detail-product-image {
-    width: 88%;
-    height: 88%;
-  }
+  /* Media query updates for smaller screens if needed */
 }
 </style>

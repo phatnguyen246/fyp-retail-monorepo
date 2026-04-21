@@ -23,8 +23,10 @@ import 'tinymce/skins/content/default/content.css'
 import 'tinymce/skins/ui/oxide/skin.css'
 import 'tinymce/themes/silver'
 import ConfirmDialog from '../../components/common/ConfirmDialog.vue'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { useUnsavedChanges } from '../../composables/useUnsavedChanges'
 import { formatCurrency, formatDate, formatNumber } from '../../services/formatters'
+import { adminCloneProductSchema } from '../../validation/forms'
 import {
   createEmptyVariantDraft,
   createInventoryDraft,
@@ -36,12 +38,10 @@ import {
 const route = useRoute()
 const router = useRouter()
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const productId = computed(() => route.params.productId)
 const loadingPage = ref(true)
-const pageError = ref('')
-const actionMessage = ref('')
-const actionTone = ref('success')
 
 const detail = ref(null)
 const productPatch = ref(createProductPatchDraft())
@@ -63,7 +63,6 @@ const uploadingImage = ref(false)
 const savingInventory = ref(false)
 const createVariantModalOpen = ref(false)
 const variantWorkshopModalOpen = ref(false)
-const variantMediaModalOpen = ref(false)
 const productActionsModalOpen = ref(false)
 const longDescriptionModalOpen = ref(false)
 const productPatchOverviewModalOpen = ref(false)
@@ -560,8 +559,7 @@ const productPatchOverviewItems = computed(() => {
 })
 
 function setActionMessage(message, tone = 'success') {
-  actionMessage.value = message
-  actionTone.value = tone
+  notify(message, tone)
 }
 
 function resolveOptionLabel(options, value) {
@@ -758,14 +756,8 @@ function openVariantWorkshop(variantId) {
   variantWorkshopModalOpen.value = true
 }
 
-function openVariantMediaGallery(variantId) {
-  hydrateSelectedVariant(variantId)
-  variantMediaModalOpen.value = true
-}
-
 async function loadProductDetail({ keepSelectedVariant = true } = {}) {
   loadingPage.value = true
-  pageError.value = ''
 
   const previousVariantId = keepSelectedVariant ? selectedVariantId.value : ''
   const result = await adminStore.fetchProductDetail(productId.value)
@@ -788,7 +780,7 @@ async function loadProductDetail({ keepSelectedVariant = true } = {}) {
     hydrateSelectedVariant(preferredVariantId)
   } else {
     detail.value = null
-    pageError.value = result.error
+    notify(result.error, 'danger')
   }
 
   loadingPage.value = false
@@ -892,16 +884,21 @@ async function saveLongDescription() {
 }
 
 async function cloneCurrentProduct() {
-  if (!cloneDraft.value.productGroupCode.trim()) {
-    setActionMessage('Please enter a new group code before creating a product copy.', 'danger')
+  const validationResult = adminCloneProductSchema.safeParse({
+    productGroupCode: cloneDraft.value.productGroupCode,
+    title: cloneDraft.value.title,
+  })
+
+  if (!validationResult.success) {
+    setActionMessage(validationResult.error.issues[0]?.message, 'danger')
     return
   }
 
   cloningProduct.value = true
 
   const result = await adminStore.cloneProduct(productId.value, {
-    productGroupCode: cloneDraft.value.productGroupCode.trim(),
-    title: cloneDraft.value.title.trim() || undefined,
+    productGroupCode: validationResult.data.productGroupCode,
+    title: validationResult.data.title || undefined,
   })
 
   if (result.success) {
@@ -1174,22 +1171,6 @@ onMounted(async () => {
         </button>
       </div>
     </header>
-
-    <div
-      v-if="actionMessage"
-      class="admin-alert"
-      :class="{
-        'admin-alert-success': actionTone === 'success',
-        'admin-alert-warning': actionTone === 'warning',
-        'admin-alert-danger': actionTone === 'danger',
-      }"
-    >
-      {{ actionMessage }}
-    </div>
-
-    <div v-if="pageError" class="admin-alert admin-alert-danger">
-      {{ pageError }}
-    </div>
 
     <div v-if="loadingPage" class="admin-empty-state">Loading product record...</div>
 
@@ -1606,6 +1587,14 @@ onMounted(async () => {
 
             <div class="admin-button-row">
               <button
+                v-if="selectedVariantId"
+                type="button"
+                class="admin-button admin-button-secondary"
+                @click="openVariantWorkshop(selectedVariantId)"
+              >
+                Edit selected variant
+              </button>
+              <button
                 type="button"
                 class="admin-button admin-button-primary"
                 @click="createVariantModalOpen = true"
@@ -1619,64 +1608,90 @@ onMounted(async () => {
             This product has no variants yet.
           </div>
 
-          <div v-else class="admin-variant-list">
+          <div v-else class="admin-variant-grid">
             <div
               v-for="variant in detail.variants"
               :key="variant.id"
-              class="admin-variant-list-item"
-              :class="{ 'admin-variant-list-item-active': selectedVariantId === variant.id }"
+              class="admin-variant-card"
+              :class="{ 'admin-variant-card-active': selectedVariantId === variant.id }"
+              @click="hydrateSelectedVariant(variant.id)"
             >
-              <div class="admin-variant-list-main">
-                <div class="admin-variant-list-summary">
+              <div class="admin-variant-card-header">
+                <div>
                   <p class="admin-table-title">{{ variant.sku }}</p>
                   <p class="admin-table-subtitle">
                     {{ variant.variantAttributes.ram }} / {{ variant.variantAttributes.rom }} /
                     {{ variant.variantAttributes.color }}
                   </p>
                 </div>
-
-                <div class="admin-variant-list-meta">
-                  <span class="admin-variant-meta-chip">
-                    RAM {{ variant.variantAttributes.ram || 'N/A' }}
-                  </span>
-                  <span class="admin-variant-meta-chip">
-                    ROM {{ variant.variantAttributes.rom || 'N/A' }}
-                  </span>
-                  <span class="admin-variant-meta-chip">
-                    {{ variant.variantAttributes.colorFullName || variant.variantAttributes.color || 'N/A' }}
-                  </span>
-                </div>
               </div>
 
-              <div class="admin-variant-list-side">
-                <div class="admin-variant-list-status">
-                  <span class="admin-status-pill" :data-tone="variant.status">{{ getVariantStatusLabel(variant.status) }}</span>
-                  <span class="admin-status-pill" :data-tone="variant.isInStock ? 'success' : 'muted'">
-                    {{ variant.isInStock ? 'In stock' : 'Out of stock' }}
-                  </span>
-                </div>
+              <div class="admin-variant-card-meta">
+                <span class="admin-variant-meta-chip">
+                  RAM {{ variant.variantAttributes.ram || 'N/A' }}
+                </span>
+                <span class="admin-variant-meta-chip">
+                  ROM {{ variant.variantAttributes.rom || 'N/A' }}
+                </span>
+                <span class="admin-variant-meta-chip">
+                  {{ variant.variantAttributes.colorFullName || variant.variantAttributes.color || 'N/A' }}
+                </span>
+              </div>
 
-                <div class="admin-variant-list-actions">
-                  <button
-                    type="button"
-                    class="admin-button admin-button-secondary admin-button-compact"
-                    @click="openVariantMediaGallery(variant.id)"
-                  >
-                    Media gallery
-                  </button>
-                  <button
-                    type="button"
-                    class="admin-button admin-button-secondary admin-button-compact"
-                    @click="openVariantWorkshop(variant.id)"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <div class="admin-variant-card-status">
+                <span class="admin-status-pill" :data-tone="variant.status">{{ getVariantStatusLabel(variant.status) }}</span>
+                <span class="admin-status-pill" :data-tone="variant.isInStock ? 'success' : 'muted'">
+                  {{ variant.isInStock ? 'In stock' : 'Out of stock' }}
+                </span>
               </div>
             </div>
           </div>
+
         </section>
 
+        <section v-if="selectedVariantId && selectedVariant" class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <p class="admin-section-kicker">Media Gallery</p>
+              <h2 class="admin-card-title">Variant Images: {{ selectedVariant.sku }}</h2>
+            </div>
+          </div>
+
+          <div class="admin-form-grid">
+            <label class="admin-field">
+              <FieldLabel label="Upload image" :hint="fieldHints.uploadImage" />
+              <input
+                class="admin-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                @change="uploadImage"
+              />
+            </label>
+
+            <div v-if="loadingVariantAssets || uploadingImage" class="admin-empty-state">
+              Syncing media gallery...
+            </div>
+
+            <div v-else-if="variantImages.length === 0" class="admin-empty-state">
+              This variant has no images yet.
+            </div>
+
+            <div v-else class="admin-media-grid">
+              <article v-for="media in variantImages" :key="media.id" class="admin-media-card">
+                <img :src="media.url" :alt="media.fileName" class="admin-media-preview" />
+                <div class="admin-media-meta">
+                  <p class="admin-table-title">{{ media.fileName }}</p>
+                  <p class="admin-table-subtitle">
+                    Sort {{ formatNumber(media.sortOrder) }} • {{ formatNumber(media.size) }} bytes
+                  </p>
+                  <button type="button" class="admin-inline-link" @click="removeImage(media.id)">
+                    Remove image
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
       </div>
 
       <Teleport to="body">
@@ -2078,65 +2093,6 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-
-        <div
-          v-if="variantMediaModalOpen && selectedVariant"
-          class="admin-modal-backdrop"
-          @click.self="variantMediaModalOpen = false"
-        >
-          <div class="admin-modal-panel admin-modal-panel-wide" role="dialog" aria-modal="true">
-            <div class="admin-card-header">
-              <div>
-                <p class="admin-section-kicker">Media Gallery</p>
-                <h2 class="admin-card-title">Variant Images: {{ selectedVariant.sku }}</h2>
-              </div>
-
-              <button
-                type="button"
-                class="admin-button admin-button-secondary"
-                @click="variantMediaModalOpen = false"
-              >
-                Close
-              </button>
-            </div>
-
-            <div class="admin-form-grid">
-              <label class="admin-field">
-                <FieldLabel label="Upload image" :hint="fieldHints.uploadImage" />
-                <input
-                  class="admin-input"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  @change="uploadImage"
-                />
-              </label>
-
-              <div v-if="loadingVariantAssets || uploadingImage" class="admin-empty-state">
-                Syncing media gallery...
-              </div>
-
-              <div v-else-if="variantImages.length === 0" class="admin-empty-state">
-                This variant has no images yet.
-              </div>
-
-              <div v-else class="admin-media-grid">
-                <article v-for="media in variantImages" :key="media.id" class="admin-media-card">
-                  <img :src="media.url" :alt="media.fileName" class="admin-media-preview" />
-                  <div class="admin-media-meta">
-                    <p class="admin-table-title">{{ media.fileName }}</p>
-                    <p class="admin-table-subtitle">
-                      Sort {{ formatNumber(media.sortOrder) }} • {{ formatNumber(media.size) }} bytes
-                    </p>
-                  </div>
-                  <button type="button" class="admin-inline-link" @click="removeImage(media.id)">
-                    Remove image
-                  </button>
-                </article>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div
           v-if="createVariantModalOpen"
           class="admin-modal-backdrop"
@@ -2303,3 +2259,129 @@ onMounted(async () => {
     />
   </section>
 </template>
+
+<style scoped>
+.admin-variant-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1280px) {
+  .admin-variant-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-variant-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-variant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-variant-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-variant-card {
+  border: 1px solid var(--admin-border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-variant-card:hover {
+  border-color: var(--admin-primary-color, #3b82f6);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.admin-variant-card-active {
+  border-color: var(--admin-primary-color, #3b82f6);
+  background-color: #f8fafc;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.admin-variant-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.admin-variant-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-variant-card-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 1.25rem;
+}
+
+.admin-media-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--admin-border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: #fff;
+  gap: 0.75rem;
+  height: fit-content;
+}
+
+.admin-media-preview {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: block;
+}
+
+.admin-media-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-media-meta .admin-table-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-media-meta .admin-table-subtitle {
+  font-size: 0.75rem;
+}
+
+.admin-media-card .admin-inline-link {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  align-self: flex-start;
+  color: var(--admin-danger-color, #ef4444);
+}
+</style>

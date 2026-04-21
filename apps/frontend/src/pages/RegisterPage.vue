@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { registerFormSchema } from '../validation/forms'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -9,19 +10,27 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 const clientError = ref(null)
 
 async function handleRegister() {
   clientError.value = null
-  if (password.value !== confirmPassword.value) {
-    clientError.value = 'Mật khẩu không khớp.'
+  const validationResult = registerFormSchema.safeParse({
+    email: email.value,
+    password: password.value,
+    confirmPassword: confirmPassword.value,
+  })
+
+  if (!validationResult.success) {
+    clientError.value = validationResult.error.issues[0]?.message || 'Thong tin dang ky khong hop le.'
     return
   }
 
   const success = await authStore.register({
-    email: email.value,
-    password: password.value,
-    confirmPassword: confirmPassword.value,
+    email: validationResult.data.email,
+    password: validationResult.data.password,
+    confirmPassword: validationResult.data.confirmPassword,
   })
 
   if (success) {
@@ -43,11 +52,51 @@ async function handleRegister() {
         </div>
         <div class="auth-form-group">
           <label class="auth-label" for="password">Mật khẩu</label>
-          <input id="password" v-model="password" class="auth-input" type="password" placeholder="••••••••" required minlength="6"/>
+          <div class="auth-input-wrapper">
+            <input
+              id="password"
+              v-model="password"
+              class="auth-input auth-input--with-toggle"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="••••••••"
+              required
+              minlength="6"
+            />
+            <button
+              type="button"
+              class="auth-password-toggle"
+              :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+              @click="showPassword = !showPassword"
+            >
+              <span class="material-symbols-outlined">
+                {{ showPassword ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
         </div>
         <div class="auth-form-group">
           <label class="auth-label" for="confirmPassword">Xác nhận mật khẩu</label>
-          <input id="confirmPassword" v-model="confirmPassword" class="auth-input" type="password" placeholder="••••••••" required minlength="6"/>
+          <div class="auth-input-wrapper">
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              class="auth-input auth-input--with-toggle"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              placeholder="••••••••"
+              required
+              minlength="6"
+            />
+            <button
+              type="button"
+              class="auth-password-toggle"
+              :aria-label="showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'"
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
+              <span class="material-symbols-outlined">
+                {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
         </div>
 
         <div v-if="clientError || authStore.error" class="auth-error-message">

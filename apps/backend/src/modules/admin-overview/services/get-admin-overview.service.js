@@ -413,7 +413,7 @@ export function createGetAdminOverviewService({
                 },
                 limit: 5,
             }),
-            inventoryRepository.countInventoryRecords(),
+            inventoryRepository.countInventoryRecordsByFilter(),
             inventoryRepository.countLowStockInventoryRecords(),
             inventoryRepository.countOutOfStockInventoryRecords(),
             inventoryRepository.findLowStockInventoryRecords({

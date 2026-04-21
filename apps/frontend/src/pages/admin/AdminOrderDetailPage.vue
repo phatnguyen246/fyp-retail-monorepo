@@ -1,38 +1,19 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { formatCurrency, formatDate, formatNumber } from '../../services/formatters'
 import { useAdminStore } from '../../store/admin'
 
 const route = useRoute()
 const router = useRouter()
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const orderId = computed(() => route.params.orderId)
 const loading = ref(true)
-const errorMessage = ref('')
-const actionMessage = ref('')
-const actionTone = ref('success')
 const actionBusy = ref(false)
 const order = ref(null)
-
-const workflowSteps = [
-  {
-    key: 'pending',
-    title: 'Pending',
-    note: 'Order has been created and is awaiting confirmation.',
-  },
-  {
-    key: 'confirmed',
-    title: 'Confirmed',
-    note: 'Order has been approved and is ready for the next step.',
-  },
-  {
-    key: 'completed',
-    title: 'Completed',
-    note: 'Order has completed the current workflow.',
-  },
-]
 
 const canConfirm = computed(() => order.value?.orderStatus === 'pending')
 const canComplete = computed(() => order.value?.orderStatus === 'confirmed')
@@ -41,45 +22,8 @@ const canReconcileVnpay = computed(
   () => order.value?.paymentMethod === 'vnpay' && order.value?.paymentStatus === 'pending',
 )
 
-const paymentTone = computed(() => {
-  if (order.value?.paymentStatus === 'paid') {
-    return 'success'
-  }
-
-  if (order.value?.paymentStatus === 'pending') {
-    return 'warning'
-  }
-
-  if (order.value?.paymentStatus === 'cancelled') {
-    return 'danger'
-  }
-
-  return 'muted'
-})
-
 function setActionMessage(message, tone = 'success') {
-  actionMessage.value = message
-  actionTone.value = tone
-}
-
-function workflowStepState(stepKey) {
-  const status = order.value?.orderStatus
-  const currentIndex = workflowSteps.findIndex((step) => step.key === status)
-  const stepIndex = workflowSteps.findIndex((step) => step.key === stepKey)
-
-  if (status === 'cancelled') {
-    return 'cancelled'
-  }
-
-  if (stepIndex < currentIndex) {
-    return 'done'
-  }
-
-  if (stepIndex === currentIndex) {
-    return 'active'
-  }
-
-  return 'upcoming'
+  notify(message, tone)
 }
 
 function getOrderStatusLabel(status) {
@@ -115,14 +59,13 @@ function getPaymentMethodLabel(method) {
 
 async function loadOrderDetail() {
   loading.value = true
-  errorMessage.value = ''
 
   const result = await adminStore.fetchOrderDetail(orderId.value)
 
   if (result.success) {
     order.value = result.data
   } else {
-    errorMessage.value = result.error
+    notify(result.error, 'danger')
   }
 
   loading.value = false
@@ -210,67 +153,10 @@ onMounted(() => {
       </div>
     </header>
 
-    <div
-      v-if="actionMessage"
-      class="admin-alert"
-      :class="{
-        'admin-alert-success': actionTone === 'success',
-        'admin-alert-warning': actionTone === 'warning',
-        'admin-alert-danger': actionTone === 'danger',
-      }"
-    >
-      {{ actionMessage }}
-    </div>
-
-    <div v-if="errorMessage" class="admin-alert admin-alert-danger">
-      {{ errorMessage }}
-    </div>
-
     <div v-if="loading" class="admin-empty-state">Loading order record...</div>
 
     <template v-else-if="order">
-      <section class="admin-card">
-        <div class="admin-card-header">
-          <div>
-            <p class="admin-section-kicker">Workflow Progress</p>
-            <h2 class="admin-card-title">Order Workflow</h2>
-          </div>
-
-          <div class="admin-status-stack">
-            <span class="admin-status-pill" :data-tone="order.orderStatus">
-              {{ getOrderStatusLabel(order.orderStatus) }}
-            </span>
-            <span class="admin-status-pill" :data-tone="paymentTone">
-              {{ getPaymentStatusLabel(order.paymentStatus) }}
-            </span>
-          </div>
-        </div>
-
-        <div class="admin-workflow-strip">
-          <article
-            v-for="step in workflowSteps"
-            :key="step.key"
-            class="admin-workflow-step"
-            :class="{
-              'admin-workflow-step-done': workflowStepState(step.key) === 'done',
-              'admin-workflow-step-active': workflowStepState(step.key) === 'active',
-              'admin-workflow-step-cancelled': workflowStepState(step.key) === 'cancelled',
-            }"
-          >
-            <span class="admin-workflow-node">{{ step.title.slice(0, 1) }}</span>
-            <div class="admin-workflow-body">
-              <strong class="admin-workflow-title">{{ step.title }}</strong>
-              <span class="admin-workflow-note">{{ step.note }}</span>
-            </div>
-          </article>
-        </div>
-
-        <div v-if="order.orderStatus === 'cancelled'" class="admin-note-block">
-          <p>This order is in Cancelled status and no longer continues in the main workflow.</p>
-        </div>
-      </section>
-
-      <div class="admin-stat-grid">
+      <div class="admin-stat-grid admin-order-detail-stat-grid">
         <article class="admin-stat-card">
           <p class="admin-stat-eyebrow">Order Status</p>
           <p class="admin-stat-value admin-stat-value-small">{{ getOrderStatusLabel(order.orderStatus) }}</p>
@@ -294,12 +180,18 @@ onMounted(() => {
           <p class="admin-stat-value admin-stat-value-small">{{ formatDate(order.updatedAt) || 'Not available' }}</p>
           <p class="admin-stat-note">Most recent update timestamp for this order.</p>
         </article>
+
+        <article class="admin-stat-card">
+          <p class="admin-stat-eyebrow">Created At</p>
+          <p class="admin-stat-value admin-stat-value-small">{{ formatDate(order.createdAt) || 'Not available' }}</p>
+          <p class="admin-stat-note">Initial creation timestamp for this order.</p>
+        </article>
       </div>
 
       <div class="admin-content-grid admin-content-grid-wide-right">
-        <section class="admin-card">
+        <section class="admin-card admin-order-items-card">
           <div class="admin-card-header">
-            <div>
+            <div class="admin-order-items-heading">
               <p class="admin-section-kicker">Order Items</p>
               <h2 class="admin-card-title">Products and Totals</h2>
             </div>
@@ -329,24 +221,24 @@ onMounted(() => {
             </article>
           </div>
 
-          <div class="admin-order-total-grid">
-            <div>
-              <span>Subtotal</span>
-              <strong>{{ formatCurrency(order.subtotal) }}</strong>
+          <dl class="admin-order-total-lines">
+            <div class="admin-order-total-line">
+              <dt>Subtotal</dt>
+              <dd>{{ formatCurrency(order.subtotal) }}</dd>
             </div>
-            <div>
-              <span>Discount</span>
-              <strong>{{ formatCurrency(order.discountTotal) }}</strong>
+            <div class="admin-order-total-line">
+              <dt>Discount</dt>
+              <dd>{{ formatCurrency(order.discountTotal) }}</dd>
             </div>
-            <div>
-              <span>Shipping Fee</span>
-              <strong>{{ formatCurrency(order.shippingFee) }}</strong>
+            <div class="admin-order-total-line">
+              <dt>Shipping Fee</dt>
+              <dd>{{ formatCurrency(order.shippingFee) }}</dd>
             </div>
-            <div>
-              <span>Grand Total</span>
-              <strong>{{ formatCurrency(order.grandTotal) }}</strong>
+            <div class="admin-order-total-line admin-order-total-line-grand">
+              <dt>Grand Total</dt>
+              <dd>{{ formatCurrency(order.grandTotal) }}</dd>
             </div>
-          </div>
+          </dl>
         </section>
 
         <div class="admin-order-sidebar">
@@ -366,6 +258,10 @@ onMounted(() => {
               <div class="admin-audit-row">
                 <dt>Phone Number</dt>
                 <dd>{{ order.phoneNumber }}</dd>
+              </div>
+              <div class="admin-audit-row">
+                <dt>Email</dt>
+                <dd>{{ order.email || 'Not available' }}</dd>
               </div>
               <div class="admin-audit-row">
                 <dt>Address</dt>
@@ -468,3 +364,80 @@ onMounted(() => {
     </template>
   </section>
 </template>
+
+<style scoped>
+.admin-order-items-heading {
+  display: inline-grid;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.admin-content-grid-wide-right {
+  align-items: start;
+}
+
+.admin-order-items-card {
+  height: auto;
+  align-content: start;
+}
+
+.admin-order-total-lines {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--admin-border-color, #e2e8f0);
+  padding-top: 0.85rem;
+}
+
+.admin-order-total-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.28);
+}
+
+.admin-order-total-line dt {
+  font-size: 0.85rem;
+  color: var(--admin-text-muted, #64748b);
+}
+
+.admin-order-total-line dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--admin-text, #0f172a);
+}
+
+.admin-order-total-line-grand {
+  border-bottom: none;
+  padding-bottom: 0.1rem;
+}
+
+.admin-order-total-line-grand dt,
+.admin-order-total-line-grand dd {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.admin-order-detail-stat-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .admin-order-detail-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-order-detail-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-order-detail-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

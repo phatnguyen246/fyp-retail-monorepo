@@ -11,6 +11,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Bar, Doughnut } from 'vue-chartjs'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { formatCurrency, formatDate, formatNumber } from '../../services/formatters'
 import { useAdminStore } from '../../store/admin'
 
@@ -127,9 +128,9 @@ const chartPalette = Object.freeze({
 })
 
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const loading = ref(true)
-const errorMessage = ref('')
 
 function createEmptyChart() {
   return {
@@ -185,7 +186,24 @@ const overview = ref({
   },
 })
 
-const lowStockPreview = computed(() => overview.value.lowStockRecords.slice(0, 5))
+const lowStockPreview = computed(() => {
+  const actualRecords = overview.value.lowStockRecords || []
+  const slots = [...actualRecords.slice(0, 5)]
+  while (slots.length < 5) {
+    slots.push(null)
+  }
+  return slots
+})
+
+const latestOrdersPreview = computed(() => {
+  const actualOrders = overview.value.recentOrders || []
+  const slots = [...actualOrders.slice(0, 5)]
+  while (slots.length < 5) {
+    slots.push(null)
+  }
+  return slots
+})
+
 const lowStockChartRecords = computed(() => overview.value.charts.lowStockTop.records || [])
 
 function getChartMeta(meta, key) {
@@ -649,14 +667,13 @@ function getLowStockShortage(record) {
 
 async function loadOverview() {
   loading.value = true
-  errorMessage.value = ''
 
   const result = await adminStore.fetchAdminOverview()
 
   if (result.success) {
     overview.value = result.data
   } else {
-    errorMessage.value = result.error
+    notify(result.error, 'danger')
   }
 
   loading.value = false
@@ -687,10 +704,6 @@ onMounted(() => {
         </button>
       </div>
     </header>
-
-    <div v-if="errorMessage" class="admin-alert admin-alert-danger">
-      {{ errorMessage }}
-    </div>
 
     <div class="admin-stat-grid">
       <article class="admin-stat-card">
@@ -999,8 +1012,8 @@ onMounted(() => {
     </div>
 
     <div class="admin-content-grid">
-      <section class="admin-card">
-        <div class="admin-card-header">
+      <section class="admin-card admin-activity-card">
+        <div class="admin-card-header mb-0 pb-2">
           <div>
             <p class="admin-section-kicker">Recent Activity</p>
             <h2 class="admin-card-title">Latest Orders</h2>
@@ -1015,26 +1028,29 @@ onMounted(() => {
           No orders to display.
         </div>
 
-        <div v-else class="admin-ledger-list admin-recent-orders-preview">
-          <article
-            v-for="order in overview.recentOrders"
-            :key="order.id"
-            class="admin-ledger-entry"
-          >
-            <div>
-              <p class="admin-ledger-title">{{ order.orderCode }}</p>
-              <p class="admin-ledger-subtitle">
-                {{ order.recipientName }} • {{ formatDate(order.createdAt) }}
-              </p>
-            </div>
+        <div v-else class="admin-ledger-list admin-recent-orders-preview mt-0">
+          <template v-for="(order, index) in latestOrdersPreview" :key="order?.id || `empty-order-${index}`">
+            <article v-if="order" class="admin-ledger-entry">
+              <div>
+                <p class="admin-ledger-title">{{ order.orderCode }}</p>
+                <p class="admin-ledger-subtitle">
+                  {{ order.recipientName }} • {{ formatDate(order.createdAt) }}
+                </p>
+              </div>
 
-            <div class="admin-ledger-trailing">
-              <span class="admin-status-pill" :data-tone="order.orderStatus">
-                {{ order.orderStatus }}
-              </span>
-              <p class="admin-ledger-amount">{{ formatCurrency(order.grandTotal) }}</p>
-            </div>
-          </article>
+              <div class="admin-ledger-trailing">
+                <span class="admin-status-pill" :data-tone="order.orderStatus">
+                  {{ order.orderStatus }}
+                </span>
+                <p class="admin-ledger-amount">{{ formatCurrency(order.grandTotal) }}</p>
+              </div>
+            </article>
+            <article v-else class="admin-ledger-entry admin-ledger-entry-placeholder">
+              <div class="admin-ledger-placeholder-line admin-ledger-placeholder-line-main"></div>
+              <div class="admin-ledger-placeholder-line admin-ledger-placeholder-line-sub"></div>
+            </article>
+          </template>
+          
           <div class="admin-recent-orders-cta-wrap">
             <div class="admin-recent-orders-cta-blur"></div>
             <RouterLink
@@ -1047,8 +1063,8 @@ onMounted(() => {
         </div>
       </section>
 
-      <section class="admin-card">
-        <div class="admin-card-header">
+      <section class="admin-card admin-activity-card">
+        <div class="admin-card-header mb-0 pb-2">
           <div>
             <p class="admin-section-kicker">Inventory Monitoring</p>
             <h2 class="admin-card-title">Low-stock Alerts</h2>
@@ -1057,36 +1073,39 @@ onMounted(() => {
 
         <div v-if="loading" class="admin-empty-state">Checking low-stock records...</div>
 
-        <div v-else-if="lowStockPreview.length === 0" class="admin-empty-state">
+        <div v-else-if="overview.lowStockRecords.length === 0" class="admin-empty-state">
           No items currently require low-stock alerts.
         </div>
 
-        <div v-else class="admin-ledger-list admin-low-stock-preview">
-          <article
-            v-for="record in lowStockPreview"
-            :key="record.id || record.variantId"
-            class="admin-ledger-entry"
-          >
-            <div>
-              <p class="admin-ledger-title">{{ getLowStockTitle(record) }}</p>
-              <p class="admin-ledger-subtitle">
-                {{ getLowStockSubtitle(record) || `Variant ${record.variantId}` }}
-              </p>
-              <p class="admin-ledger-subtitle">
-                Threshold {{ formatNumber(record.lowStockThreshold ?? 0) }} • Updated
-                {{ formatDate(record.updatedAt) }}
-              </p>
-              <p class="admin-ledger-subtitle">
-                Short by {{ formatNumber(getLowStockShortage(record)) }} units to return above threshold.
-              </p>
-            </div>
+        <div v-else class="admin-ledger-list admin-low-stock-preview mt-0">
+          <template v-for="(record, index) in lowStockPreview" :key="record?.variantId || `empty-low-stock-${index}`">
+            <article v-if="record" class="admin-ledger-entry">
+              <div>
+                <p class="admin-ledger-title">{{ getLowStockTitle(record) }}</p>
+                <p class="admin-ledger-subtitle">
+                  {{ getLowStockSubtitle(record) || `Variant ${record.variantId}` }}
+                </p>
+                <p class="admin-ledger-subtitle">
+                  Threshold {{ formatNumber(record.lowStockThreshold ?? 0) }} • Updated
+                  {{ formatDate(record.updatedAt) }}
+                </p>
+                <p class="admin-ledger-subtitle">
+                  Short by {{ formatNumber(getLowStockShortage(record)) }} units to return above threshold.
+                </p>
+              </div>
 
-            <div class="admin-ledger-trailing">
-              <span class="admin-status-pill" :data-tone="record.isInStock ? 'warning' : 'danger'">
-                {{ formatNumber(record.stockQuantity) }} units
-              </span>
-            </div>
-          </article>
+              <div class="admin-ledger-trailing">
+                <span class="admin-status-pill" :data-tone="record.isInStock ? 'warning' : 'danger'">
+                  {{ formatNumber(record.stockQuantity) }} units
+                </span>
+              </div>
+            </article>
+            <article v-else class="admin-ledger-entry admin-ledger-entry-placeholder">
+              <div class="admin-ledger-placeholder-line admin-ledger-placeholder-line-main"></div>
+              <div class="admin-ledger-placeholder-line admin-ledger-placeholder-line-sub"></div>
+            </article>
+          </template>
+
           <div class="admin-low-stock-cta-wrap">
             <div class="admin-low-stock-cta-blur"></div>
             <RouterLink
@@ -1129,6 +1148,10 @@ onMounted(() => {
 
 .admin-overview-card-order-status {
   order: 4;
+}
+
+.admin-content-grid {
+  align-items: start;
 }
 
 .admin-low-stock-preview {
@@ -1191,5 +1214,40 @@ onMounted(() => {
   z-index: 1;
   pointer-events: auto;
   backdrop-filter: blur(1px);
+}
+
+.admin-overview-activity-card {
+  gap: 0 !important;
+}
+
+.admin-activity-card {
+  height: auto;
+  align-content: start;
+  gap: 0 !important;
+}
+
+.admin-activity-card .admin-card-header {
+  padding-bottom: 0.5rem;
+}
+
+.admin-ledger-entry-placeholder {
+  pointer-events: none;
+  border-bottom-color: var(--admin-border-color-faint, #f1f5f9);
+}
+
+.admin-ledger-placeholder-line {
+  height: 0.75rem;
+  background: #f1f5f9;
+  border-radius: 99px;
+  opacity: 0.5;
+}
+
+.admin-ledger-placeholder-line-main {
+  width: 40%;
+  margin-bottom: 0.5rem;
+}
+
+.admin-ledger-placeholder-line-sub {
+  width: 25%;
 }
 </style>

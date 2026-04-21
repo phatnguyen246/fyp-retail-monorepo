@@ -119,6 +119,16 @@ function createAdminProductListFilter(query = {}) {
         filter.status = query.status;
     }
 
+    if (query.q && typeof query.q === "string" && query.q.trim().length > 0) {
+        const searchRegex = new RegExp(query.q.trim(), "i");
+        filter.$or = [
+            { title: searchRegex },
+            { productGroupCode: searchRegex },
+            { searchTitle: searchRegex },
+            { "listingVariantSnapshot.sku": searchRegex },
+        ];
+    }
+
     return filter;
 }
 

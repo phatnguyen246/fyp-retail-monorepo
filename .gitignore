@@ -51,3 +51,5 @@ temp/
 
 apps/backend/credentials/
 .codex
+GEMINI.md
+AGENTS.md

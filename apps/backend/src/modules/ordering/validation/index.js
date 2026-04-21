@@ -1,4 +1,8 @@
 import {
+    ADMIN_LIST_ORDERS_QUERY_SCHEMA,
+    parseAdminListOrdersQuery,
+} from "./admin-list-orders.schema.js";
+import {
     CREATE_ORDER_INPUT_SCHEMA,
     parseCreateOrderInput,
 } from "./create-order.schema.js";
@@ -13,6 +17,10 @@ import {
     UPDATE_ORDER_STATUS_INPUT_SCHEMA,
 } from "./update-order-status.schema.js";
 
+export {
+    ADMIN_LIST_ORDERS_QUERY_SCHEMA,
+    parseAdminListOrdersQuery,
+} from "./admin-list-orders.schema.js";
 export {
     CREATE_ORDER_INPUT_SCHEMA,
     parseCreateOrderInput,
@@ -33,6 +41,7 @@ export function createOrderingValidation() {
         guestOrderLookupInputSchema: GUEST_ORDER_LOOKUP_INPUT_SCHEMA,
         orderIdParamsSchema: ORDER_ID_PARAMS_SCHEMA,
         updateOrderStatusInputSchema: UPDATE_ORDER_STATUS_INPUT_SCHEMA,
+        parseAdminListOrdersQuery,
         parseCreateOrderInput,
         parseGuestOrderLookupInput,
         parseOrderIdParams,

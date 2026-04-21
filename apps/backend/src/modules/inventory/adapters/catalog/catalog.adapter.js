@@ -123,6 +123,35 @@ export function createInventoryCatalogAdapter({
                 };
             });
         },
+
+        async searchVariantsByKeyword({ q } = {}) {
+            if (!q || typeof q !== "string" || q.trim().length === 0) {
+                return [];
+            }
+
+            const searchRegex = new RegExp(q.trim(), "i");
+            
+            // 1. Find products matching title
+            const matchingProducts = await productRepository.findProductsByFilter({
+                filter: { title: searchRegex },
+                projection: { _id: 1 }
+            });
+            
+            const productIds = matchingProducts.map(p => p._id);
+            
+            // 2. Find variants matching SKU OR linked to matching products
+            const filter = {
+                $or: [
+                    { sku: searchRegex },
+                    { productId: { $in: productIds } }
+                ]
+            };
+            
+            return variantRepository.findVariantsByFilter({
+                filter,
+                projection: { _id: 1 }
+            });
+        },
     };
 }
 

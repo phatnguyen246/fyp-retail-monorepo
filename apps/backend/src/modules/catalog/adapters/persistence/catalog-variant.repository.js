@@ -51,6 +51,16 @@ export function createCatalogVariantRepository({
             });
         },
 
+        findVariantsByFilter({ filter = {}, projection, sort, limit } = {}) {
+            return baseRepository.findManyByFilter({
+                collectionName: CATALOG_COLLECTIONS.variants,
+                filter,
+                projection,
+                sort,
+                limit,
+            });
+        },
+
         async findProductIdsByDiscovery({
             productIds,
             ram = [],

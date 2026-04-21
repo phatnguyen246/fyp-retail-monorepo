@@ -44,6 +44,7 @@ function normalizeDeletedQueryInput(value) {
 
 export const ADMIN_LIST_PRODUCTS_QUERY_SCHEMA = z
     .object({
+        q: z.string().optional(),
         status: statusSchema.optional(),
         deleted: deletedSchema.default("false"),
         page: positiveIntegerSchema.default(1),

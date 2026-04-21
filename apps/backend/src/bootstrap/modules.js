@@ -6,6 +6,7 @@ import { registerCartModule } from "../modules/cart/index.js";
 import { createCartServices } from "../modules/cart/services/index.js";
 import { registerCatalogModule } from "../modules/catalog/index.js";
 import { registerInventoryModule } from "../modules/inventory/index.js";
+import { registerNotificationModule } from "../modules/notification/index.js";
 import { registerOrderingModule } from "../modules/ordering/api/register.js";
 import { registerPaymentModule } from "../modules/payment/index.js";
 
@@ -22,6 +23,8 @@ export function registerModules({ app, db, storage }) {
     });
 
     app.use(auth.middlewares.optionalAuth);
+
+    const notification = registerNotificationModule();
 
     const cart = registerCartModule({
         app,
@@ -55,6 +58,7 @@ export function registerModules({ app, db, storage }) {
         db,
         cartOrderReader: cartAdapters?.internal?.orderReader,
         paymentCheckoutAdapter: payment?.adapters?.checkout,
+        notificationService: notification,
         requireAuthMiddleware: auth.middlewares.requireAuth,
         adminMiddleware: auth.middlewares.requireAdmin,
     });

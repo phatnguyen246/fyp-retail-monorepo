@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import CatalogTopNav from '../components/catalog/CatalogTopNav.vue'
 import CatalogFooter from '../components/catalog/CatalogFooter.vue'
 import { useOrderingStore } from '../store/ordering'
+import { useAuthStore } from '../store/auth'
 import { formatCurrency, formatDate, formatNumber } from '../services/formatters'
 
 const props = defineProps({
@@ -14,8 +15,33 @@ const props = defineProps({
 })
 
 const orderingStore = useOrderingStore()
+const authStore = useAuthStore()
 const order = ref(null)
 const loading = ref(true)
+const isOpeningPayment = ref(false)
+const isCancellingOrder = ref(false)
+
+const isVnpayPending = computed(() => {
+  return (
+    order.value?.paymentMethod === 'vnpay' &&
+    ['pending', 'failed', 'cancelled'].includes(order.value?.paymentStatus) &&
+    order.value?.orderStatus !== 'cancelled'
+  )
+})
+
+async function handlePayNow() {
+  if (isOpeningPayment.value) return
+  isOpeningPayment.value = true
+  
+  const result = await orderingStore.createVnPayUrl(props.orderId)
+  if (result.success && result.paymentUrl) {
+    window.open(result.paymentUrl, '_blank')
+  } else {
+    alert(result.error?.message || 'Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.')
+  }
+  
+  isOpeningPayment.value = false
+}
 
 const paymentMethodLabel = computed(() => {
   if (!order.value?.paymentMethod) {
@@ -24,6 +50,37 @@ const paymentMethodLabel = computed(() => {
 
   return order.value.paymentMethod === 'vnpay' ? 'VNPAY' : 'Thanh toán khi nhận hàng'
 })
+
+const canCancelOrder = computed(() => {
+  return (
+    authStore.isAuthenticated &&
+    authStore.user?.role === 'customer' &&
+    ['pending', 'confirmed'].includes(order.value?.orderStatus) &&
+    !isCancellingOrder.value
+  )
+})
+
+const shouldShowCancelOrderButton = computed(() => {
+  return authStore.isAuthenticated && authStore.user?.role === 'customer' && Boolean(order.value?.id)
+})
+
+function formatTimelineActor(actor) {
+  if (typeof actor !== 'string' || actor.trim().length === 0) {
+    return 'hệ thống'
+  }
+
+  const normalizedActor = actor.trim().toLowerCase()
+
+  if (normalizedActor.startsWith('admin:')) {
+    return 'admin'
+  }
+
+  if (normalizedActor.startsWith('customer:')) {
+    return 'khách hàng'
+  }
+
+  return normalizedActor === 'guest' ? 'khách' : actor.trim()
+}
 
 function getOrderStatusMeta(status) {
   switch (status) {
@@ -83,7 +140,32 @@ function getTimelineLabel(log) {
   return `Đơn hàng chuyển sang trạng thái ${getOrderStatusMeta(log.toStatus).label.toLowerCase()}`
 }
 
+async function handleCancelOrder() {
+  if (!canCancelOrder.value) {
+    return
+  }
+
+  const shouldCancel = window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')
+  if (!shouldCancel) {
+    return
+  }
+
+  isCancellingOrder.value = true
+
+  const result = await orderingStore.cancelOrder(props.orderId)
+  if (result.success) {
+    order.value = result.data
+    alert('Đơn hàng đã được hủy thành công.')
+  } else {
+    alert(result.error?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại sau.')
+  }
+
+  isCancellingOrder.value = false
+}
+
 onMounted(async () => {
+  await authStore.initialize('auto')
+
   const { success, data } = await orderingStore.fetchOrder(props.orderId)
   if (success) {
     order.value = data
@@ -128,19 +210,20 @@ onMounted(async () => {
             </div>
           </section>
 
-          <div v-else class="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_25rem]">
+          <div v-else class="space-y-6">
+            <div>
+              <RouterLink
+                :to="{ name: 'order-history' }"
+                class="catalog-reset-button inline-flex items-center justify-center"
+              >
+                Quay lại danh sách đơn
+              </RouterLink>
+            </div>
+
+            <div class="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_25rem]">
             <section class="space-y-6">
               <header class="detail-hero">
-                <div class="flex flex-wrap gap-2">
-                  <span :class="getOrderStatusMeta(order.orderStatus).className">
-                    {{ getOrderStatusMeta(order.orderStatus).label }}
-                  </span>
-                  <span :class="getPaymentStatusMeta(order.paymentStatus).className">
-                    {{ getPaymentStatusMeta(order.paymentStatus).label }}
-                  </span>
-                </div>
-
-                <div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
                       Chi tiết đơn hàng
@@ -154,36 +237,57 @@ onMounted(async () => {
                     </p>
                   </div>
 
-                  <RouterLink
-                    :to="{ name: 'order-history' }"
-                    class="catalog-reset-button inline-flex items-center justify-center"
-                  >
-                    Quay lại danh sách đơn
-                  </RouterLink>
+                  <div v-if="shouldShowCancelOrderButton" class="flex justify-start lg:justify-end">
+                    <button
+                      type="button"
+                      class="catalog-reset-button inline-flex items-center justify-center"
+                      :disabled="!canCancelOrder"
+                      @click="handleCancelOrder"
+                    >
+                      {{
+                        isCancellingOrder
+                          ? 'Đang hủy đơn...'
+                          : canCancelOrder
+                            ? 'Hủy đơn hàng'
+                            : 'Không thể hủy đơn'
+                      }}
+                    </button>
+                  </div>
                 </div>
 
-                <dl class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <div class="detail-meta-card">
-                    <dt class="detail-meta-label">Tổng tiền</dt>
-                    <dd class="detail-meta-value">{{ formatCurrency(order.grandTotal) }}</dd>
-                  </div>
-                  <div class="detail-meta-card">
-                    <dt class="detail-meta-label">Số sản phẩm</dt>
-                    <dd class="detail-meta-value">{{ formatNumber(order.itemCount) }}</dd>
-                  </div>
-                  <div class="detail-meta-card">
-                    <dt class="detail-meta-label">Phương thức</dt>
-                    <dd class="detail-meta-value">{{ paymentMethodLabel }}</dd>
-                  </div>
-                  <div class="detail-meta-card">
-                    <dt class="detail-meta-label">Người nhận</dt>
-                    <dd class="detail-meta-value">{{ order.recipientName }}</dd>
-                  </div>
-                  <div class="detail-meta-card">
-                    <dt class="detail-meta-label">Số điện thoại</dt>
-                    <dd class="detail-meta-value">{{ order.phoneNumber }}</dd>
-                  </div>
-                </dl>
+                <div class="mt-8 border-t border-[var(--catalog-border-soft)] pt-6">
+                  <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
+                    Lịch sử trạng thái
+                  </p>
+                  <h2 class="catalog-display-title mt-2 text-3xl">Timeline xử lý</h2>
+
+                  <ol class="mt-8 space-y-5">
+                    <li
+                      v-for="(log, index) in order.statusLogs"
+                      :key="`${log.changedAt}-${index}`"
+                      class="detail-timeline-item"
+                    >
+                      <div class="detail-timeline-marker">
+                        <span class="material-symbols-outlined text-lg text-[var(--catalog-primary-deep)]">receipt_long</span>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <p class="text-base font-semibold text-[var(--catalog-text)]">
+                              {{ getTimelineLabel(log) }}
+                            </p>
+                            <p class="mt-1 text-sm text-[var(--catalog-text-muted)]">
+                              Cập nhật bởi {{ formatTimelineActor(log.changedBy) }}
+                            </p>
+                          </div>
+                          <time class="text-sm text-[var(--catalog-text-soft)]" :datetime="log.changedAt">
+                            {{ formatDate(log.changedAt) }}
+                          </time>
+                        </div>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
               </header>
 
               <section class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8">
@@ -256,57 +360,38 @@ onMounted(async () => {
                 </ul>
               </section>
 
-              <section class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Lịch sử trạng thái
-                </p>
-                <h2 class="catalog-display-title mt-2 text-3xl">Timeline xử lý</h2>
-
-                <ol class="mt-8 space-y-5">
-                  <li
-                    v-for="(log, index) in order.statusLogs"
-                    :key="`${log.changedAt}-${index}`"
-                    class="detail-timeline-item"
-                  >
-                    <div class="detail-timeline-marker">
-                      <span class="material-symbols-outlined text-lg text-[var(--catalog-primary-deep)]">receipt_long</span>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <p class="text-base font-semibold text-[var(--catalog-text)]">
-                            {{ getTimelineLabel(log) }}
-                          </p>
-                          <p class="mt-1 text-sm text-[var(--catalog-text-muted)]">
-                            Cập nhật bởi {{ log.changedBy || 'hệ thống' }}
-                          </p>
-                        </div>
-                        <time class="text-sm text-[var(--catalog-text-soft)]" :datetime="log.changedAt">
-                          {{ formatDate(log.changedAt) }}
-                        </time>
-                      </div>
-                    </div>
-                  </li>
-                </ol>
-              </section>
             </section>
 
             <aside class="space-y-6">
+              <section 
+                v-if="isVnpayPending"
+                class="rounded-[2rem] border border-[var(--catalog-primary)] bg-white p-6 shadow-[0_20px_60px_rgba(139,117,0,0.08)]"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-[var(--catalog-primary)]">payments</span>
+                  <h2 class="text-xl font-bold text-[var(--catalog-text)]">Thanh toán ngay</h2>
+                </div>
+                <p class="mt-3 text-sm leading-6 text-[var(--catalog-text-muted)]">
+                  Đơn hàng của bạn đang chờ thanh toán qua VNPAY. Hãy hoàn tất giao dịch để chúng tôi có thể xác nhận đơn hàng sớm nhất.
+                </p>
+                <button
+                  type="button"
+                  class="catalog-primary-button mt-6 flex w-full items-center justify-center gap-2"
+                  :disabled="isOpeningPayment"
+                  @click="handlePayNow"
+                >
+                  <span v-if="isOpeningPayment" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent"></span>
+                  {{ isOpeningPayment ? 'Đang mở VNPAY...' : 'Tiếp tục thanh toán' }}
+                </button>
+              </section>
+
               <section class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)]">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Delivery + payment
+                  Payment
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Thông tin vận hành</h2>
+                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Thông tin thanh toán</h2>
 
                 <dl class="mt-6 space-y-5">
-                  <div>
-                    <dt class="detail-side-label">Người nhận</dt>
-                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.recipientName }}</dd>
-                  </div>
-                  <div>
-                    <dt class="detail-side-label">Địa chỉ giao hàng</dt>
-                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.shippingAddressLine }}</dd>
-                  </div>
                   <div>
                     <dt class="detail-side-label">Trạng thái thanh toán</dt>
                     <dd class="mt-3">
@@ -319,36 +404,72 @@ onMounted(async () => {
                     <dt class="detail-side-label">Phương thức thanh toán</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ paymentMethodLabel }}</dd>
                   </div>
+                  <div>
+                    <dt class="detail-side-label">Tạm tính</dt>
+                    <dd class="mt-2 text-sm leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.subtotal) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Giảm giá</dt>
+                    <dd class="mt-2 text-sm leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.discountTotal) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Phí vận chuyển</dt>
+                    <dd class="mt-2 text-sm leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.shippingFee) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Tổng cộng</dt>
+                    <dd class="mt-2 text-lg leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.grandTotal) }}</dd>
+                  </div>
                 </dl>
               </section>
 
-              <section class="rounded-[2rem] border border-[rgba(139,117,0,0.18)] bg-[linear-gradient(135deg,rgba(255,249,235,0.9),rgba(244,237,216,0.88))] p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)]">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-primary-deep)]">
-                  Tóm tắt tài chính
+              <section class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)]">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
+                  Delivery + payment
                 </p>
+                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Thông tin vận hành</h2>
 
-                <dl class="mt-5 space-y-4 text-sm">
-                  <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Tạm tính</dt>
-                    <dd class="font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.subtotal) }}</dd>
+                <dl class="mt-6 space-y-5">
+                  <div>
+                    <dt class="detail-side-label">Mã đơn hàng</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.orderCode }}</dd>
                   </div>
-                  <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Giảm giá</dt>
-                    <dd class="font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.discountTotal) }}</dd>
+                  <div>
+                    <dt class="detail-side-label">Thời gian đặt</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ formatDate(order.createdAt) }}</dd>
                   </div>
-                  <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Phí vận chuyển</dt>
-                    <dd class="font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.shippingFee) }}</dd>
+                  <div>
+                    <dt class="detail-side-label">Người nhận</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.recipientName }}</dd>
                   </div>
-                  <div class="border-t border-[rgba(139,117,0,0.14)] pt-4">
-                    <div class="flex items-center justify-between gap-4">
-                      <dt class="text-base font-semibold text-[var(--catalog-text)]">Tổng cộng</dt>
-                      <dd class="text-xl font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.grandTotal) }}</dd>
-                    </div>
+                   <div>
+                    <dt class="detail-side-label">Email đặt hàng</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.email || 'Không có' }}</dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Số điện thoại</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.phoneNumber }}</dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Địa chỉ giao hàng</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.shippingAddressLine }}</dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Trạng thái đơn hàng</dt>
+                    <dd class="mt-3">
+                      <span :class="getOrderStatusMeta(order.orderStatus).className">
+                        {{ getOrderStatusMeta(order.orderStatus).label }}
+                      </span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="detail-side-label">Số sản phẩm</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ formatNumber(order.itemCount) }}</dd>
                   </div>
                 </dl>
               </section>
             </aside>
+            </div>
           </div>
         </div>
       </main>
@@ -416,7 +537,6 @@ onMounted(async () => {
   color: var(--catalog-text-soft);
 }
 
-.detail-meta-card,
 .detail-line-card {
   border: 1px solid var(--catalog-border-soft);
   border-radius: 1.35rem;
@@ -424,7 +544,6 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.84);
 }
 
-.detail-meta-label,
 .detail-line-label,
 .detail-side-label {
   font-size: 0.72rem;
@@ -434,7 +553,6 @@ onMounted(async () => {
   color: var(--catalog-text-soft);
 }
 
-.detail-meta-value,
 .detail-line-value {
   margin-top: 0.65rem;
   font-size: 1rem;

@@ -262,10 +262,10 @@ cartStore.fetchCart()
         >
           So sánh sản phẩm
           <span
-            v-if="compareStore.productIds.size > 0"
+            v-if="compareStore.count > 0"
             class="absolute -right-4 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--catalog-primary)] px-1 text-[10px] font-medium text-white"
           >
-            {{ compareStore.productIds.size }}
+            {{ compareStore.count }}
           </span>
         </RouterLink>
       </div>

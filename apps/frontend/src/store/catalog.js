@@ -444,7 +444,8 @@ export const useCatalogStore = defineStore('catalog', () => {
   async function fetchProductsForCompare(productIds) {
     try {
       const response = await http.post('/catalog/compare', { productIds })
-      return response.data
+      // Backend returns { data: { items: [...] } }
+      return response.data?.data?.items || []
     } catch (error) {
       return []
     }

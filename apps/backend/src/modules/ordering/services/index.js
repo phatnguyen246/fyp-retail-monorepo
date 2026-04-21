@@ -24,6 +24,7 @@ export { createUpdateAdminOrderStatusService } from "./update-admin-order-status
 export function createOrderingServices({
     adapters = createOrderingAdapters(),
     validation = createOrderingValidation(),
+    sendEmail,
     logger = console,
 } = {}) {
     const cartAdapter = adapters?.cart;
@@ -50,6 +51,7 @@ export function createOrderingServices({
             orderRepository,
             paymentCheckoutAdapter,
             validation,
+            sendEmail,
             logger,
         }),
         listCustomerOrders: createListCustomerOrdersService({

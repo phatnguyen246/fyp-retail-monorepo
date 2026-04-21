@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useAdminPopup } from '../../composables/useAdminPopup'
 import { formatCurrency, formatDate, formatNumber } from '../../services/formatters'
 import { useAdminStore } from '../../store/admin'
 
 const adminStore = useAdminStore()
+const { notify } = useAdminPopup()
 
 const filters = ref({
   query: '',
@@ -23,39 +25,16 @@ const meta = ref({
   total: 0,
   totalPages: 1,
 })
-const pageError = ref('')
 const importFile = ref(null)
 const importFileInputRef = ref(null)
 const importSummary = ref(null)
-const importError = ref('')
 const importing = ref(false)
 const importModalOpen = ref(false)
 
 const referenceOptions = computed(() => adminStore.referenceOptions)
-const activeProducts = computed(() => products.value.filter((product) => product.status === 'active').length)
-const draftProducts = computed(() => products.value.filter((product) => product.status === 'draft').length)
-const inStockProducts = computed(() => products.value.filter((product) => product.hasInStockVariants).length)
-const filteredProducts = computed(() => {
-  const query = filters.value.query.trim().toLowerCase()
-
-  if (!query) {
-    return products.value
-  }
-
-  return products.value.filter((product) =>
-    [
-      product.title,
-      product.productGroupCode,
-      product.listingVariantSnapshot?.sku,
-      product.listingVariantSnapshot?.ram,
-      product.listingVariantSnapshot?.rom,
-      product.listingVariantSnapshot?.colorFullName,
-      product.listingVariantSnapshot?.color,
-    ]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(query)),
-  )
-})
+const activeProducts = computed(() => (products.value || []).filter((product) => product?.status === 'active').length)
+const draftProducts = computed(() => (products.value || []).filter((product) => product?.status === 'draft').length)
+const inStockProducts = computed(() => (products.value || []).filter((product) => product?.hasInStockVariants).length)
 
 const pageSizeOptions = [12, 24, 48]
 
@@ -66,7 +45,6 @@ function getProductStatusLabel(status) {
 
 async function loadProducts() {
   loading.value = true
-  pageError.value = ''
 
   const result = await adminStore.fetchAdminProducts(filters.value)
 
@@ -74,7 +52,8 @@ async function loadProducts() {
     products.value = result.data.items
     meta.value = result.data.meta
   } else {
-    pageError.value = result.error
+    notify(result.error, 'danger')
+    products.value = []
   }
 
   loading.value = false
@@ -106,7 +85,6 @@ function openFilePicker() {
 }
 
 function openImportModal() {
-  importError.value = ''
   importModalOpen.value = true
 }
 
@@ -116,12 +94,11 @@ function closeImportModal() {
 
 async function submitImport() {
   if (!importFile.value) {
-    importError.value = 'Please choose a CSV file before importing.'
+    notify('Please choose a CSV file before importing.', 'danger')
     return
   }
 
   importing.value = true
-  importError.value = ''
 
   const result = await adminStore.importProducts(importFile.value)
 
@@ -134,7 +111,7 @@ async function submitImport() {
     await loadProducts()
   } else {
     importSummary.value = null
-    importError.value = result.error
+    notify(result.error, 'danger')
   }
 
   importing.value = false
@@ -144,6 +121,18 @@ onMounted(async () => {
   await adminStore.ensureReferenceOptions()
   await loadProducts()
 })
+
+let searchTimeout = null
+watch(
+  () => filters.value.query,
+  () => {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      filters.value.page = 1
+      loadProducts()
+    }, 400)
+  }
+)
 
 watch(
   () => [filters.value.status, filters.value.deleted, filters.value.sort, filters.value.limit],
@@ -300,13 +289,9 @@ watch(
         </div>
       </div>
 
-      <div v-if="pageError" class="admin-alert admin-alert-danger">
-        {{ pageError }}
-      </div>
-
       <div v-if="loading" class="admin-empty-state">Loading product catalog...</div>
 
-      <div v-else-if="filteredProducts.length === 0" class="admin-empty-state">
+      <div v-else-if="products.length === 0" class="admin-empty-state">
         No products match the current filters.
       </div>
 
@@ -326,7 +311,7 @@ watch(
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in filteredProducts" :key="product.id">
+            <tr v-for="product in products" :key="product.id">
               <td>
                 <div class="admin-product-title-cell">
                   <div>
@@ -439,10 +424,6 @@ watch(
           <p class="admin-muted-text">
             The CSV must include complete product and variant data. The system matches by product group code and SKU for accurate updates.
           </p>
-
-          <div v-if="importError" class="admin-alert admin-alert-danger">
-            {{ importError }}
-          </div>
 
           <div v-if="importSummary?.meta" class="admin-note-block">
             <p>Processed rows: <strong>{{ formatNumber(importSummary.meta.rowCount) }}</strong></p>

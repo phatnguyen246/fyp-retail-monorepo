@@ -9,6 +9,7 @@ import {
     rollbackDecrementedStock,
 } from "./ordering-service.helpers.js";
 import { createOrderCheckoutError } from "./ordering-service.errors.js";
+import { generateOrderConfirmationHtml } from "../../notification/utils/order-email.template.js";
 
 export function createCreateOrderService({
     cartAdapter,
@@ -17,6 +18,7 @@ export function createCreateOrderService({
     orderRepository,
     paymentCheckoutAdapter,
     validation,
+    sendEmail,
     logger = console,
 } = {}) {
     return async function createOrder({
@@ -97,6 +99,7 @@ export function createCreateOrderService({
                 baseDocument: createPendingOrderDocument({
                     accountId: normalizedRequester.accountId,
                     recipientName: parsedInput.recipientName,
+                    email: parsedInput.email,
                     phoneNumber: parsedInput.phoneNumber,
                     street: parsedInput.street ?? null,
                     provinceCode: parsedInput.provinceCode ?? null,
@@ -135,6 +138,30 @@ export function createCreateOrderService({
                         code: error?.code ?? null,
                     },
                 });
+            }
+
+            // Send order confirmation email (non-blocking)
+            if (typeof sendEmail === "function" && orderDocument.email) {
+                sendEmail({
+                    to: orderDocument.email,
+                    subject: `[Retail System] Xác nhận đơn hàng #${orderDocument.orderCode}`,
+                    html: generateOrderConfirmationHtml({ order: orderDocument }),
+                })
+                    .then((emailResult) => {
+                        if (emailResult?.success === false) {
+                            throw (
+                                emailResult?.error ??
+                                new Error("Unknown email delivery failure")
+                            );
+                        }
+                    })
+                    .catch((emailError) => {
+                        logger.error?.("Failed to send order confirmation email", {
+                            orderId: orderDocument._id.toHexString(),
+                            to: orderDocument.email,
+                            error: emailError?.message,
+                        });
+                    });
             }
 
             return createOrderDetailView(orderDocument);

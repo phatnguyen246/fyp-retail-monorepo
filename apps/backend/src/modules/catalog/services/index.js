@@ -100,6 +100,7 @@ export function createCatalogServices({
             productRepository,
             referenceRepository,
             variantRepository,
+            mediaRepository,
             validation,
             logger,
         }),

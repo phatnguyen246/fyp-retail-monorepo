@@ -177,6 +177,7 @@ export function buildOrderItemsFromCheckout({
 export function createPendingOrderDocument({
     accountId = null,
     recipientName,
+    email,
     phoneNumber,
     street = null,
     provinceCode = null,
@@ -202,6 +203,7 @@ export function createPendingOrderDocument({
         orderCode,
         accountId,
         recipientName,
+        email,
         phoneNumber,
         street,
         provinceCode,

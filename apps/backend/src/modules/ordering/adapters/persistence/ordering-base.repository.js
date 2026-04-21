@@ -61,6 +61,7 @@ export function createOrderingBaseRepository({ db } = {}) {
             filter = {},
             projection,
             sort,
+            skip = 0,
             limit,
         } = {}) {
             const cursor = getCollection(collectionName).find(
@@ -70,6 +71,10 @@ export function createOrderingBaseRepository({ db } = {}) {
 
             if (sort && Object.keys(sort).length > 0) {
                 cursor.sort(sort);
+            }
+
+            if (Number.isInteger(skip) && skip > 0) {
+                cursor.skip(skip);
             }
 
             if (Number.isInteger(limit) && limit > 0) {
