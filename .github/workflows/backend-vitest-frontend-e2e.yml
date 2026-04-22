@@ -1,0 +1,113 @@
+name: Backend Vitest + Frontend E2E
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend-e2e image (cache enabled)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/frontend/Dockerfile.e2e
+          tags: fyp-retail-system-frontend-e2e:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start stack for E2E
+        run: docker compose up -d mongo backend frontend
+
+      - name: Wait for frontend readiness
+        run: |
+          for i in {1..90}; do
+            if curl -fsS http://localhost:5173 >/dev/null; then
+              echo "Frontend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend is not ready in time" >&2
+          exit 1
+
+      - name: Run backend Vitest (capture exit code)
+        run: |
+          set +e
+          docker compose run --no-deps --name backend-vitest-ci backend /bin/bash -lc \
+            "corepack enable && pnpm install --frozen-lockfile && mkdir -p apps/backend/test-results && pnpm --filter @apps/backend exec vitest run --reporter=default --reporter=junit --outputFile=apps/backend/test-results/vitest-junit.xml"
+          echo $? > backend-exit-code.txt
+          exit 0
+
+      - name: Run frontend Playwright E2E (capture exit code)
+        run: |
+          set +e
+          docker compose run --no-deps --name frontend-e2e-ci -e E2E_BASE_URL=http://frontend:5173 frontend-e2e /bin/bash -lc \
+            "pnpm --filter @apps/frontend exec playwright test --reporter=line,html"
+          echo $? > e2e-exit-code.txt
+          exit 0
+
+      - name: Collect test artifacts from containers
+        if: always()
+        run: |
+          mkdir -p artifacts
+          docker cp backend-vitest-ci:/app/apps/backend/test-results ./artifacts/backend-test-results || true
+          docker cp frontend-e2e-ci:/app/apps/frontend/playwright-report ./artifacts/playwright-report || true
+          docker cp frontend-e2e-ci:/app/apps/frontend/test-results ./artifacts/test-results || true
+
+      - name: Upload backend Vitest artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-vitest-artifacts
+          retention-days: 14
+          path: |
+            artifacts/backend-test-results
+          if-no-files-found: warn
+
+      - name: Upload frontend E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-e2e-artifacts
+          retention-days: 14
+          path: |
+            artifacts/playwright-report
+            artifacts/test-results
+          if-no-files-found: warn
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs backend frontend mongo
+
+      - name: Cleanup containers
+        if: always()
+        run: |
+          docker rm -f backend-vitest-ci frontend-e2e-ci >/dev/null 2>&1 || true
+          docker compose down -v
+
+      - name: Fail job if any test failed
+        run: |
+          backend_code=$(cat backend-exit-code.txt)
+          e2e_code=$(cat e2e-exit-code.txt)
+
+          echo "backend_code=$backend_code"
+          echo "e2e_code=$e2e_code"
+
+          if [ "$backend_code" -ne 0 ] || [ "$e2e_code" -ne 0 ]; then
+            exit 1
+          fi

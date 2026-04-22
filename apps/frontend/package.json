@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "e2e:test": "playwright test",
     "pact:test": "vitest run --config vitest.config.pact.js",
     "pact:publish": "pact-broker publish ./pacts --broker-base-url=\"$PACT_BROKER_URL\" --broker-token=\"$PACT_BROKER_TOKEN\" --consumer-app-version=\"${PACTICIPANT_VERSION:-dev-local}\" --branch=\"${GIT_BRANCH:-main}\"",
     "pact:can-i-deploy": "pact-broker can-i-deploy --broker-base-url=\"$PACT_BROKER_URL\" --broker-token=\"$PACT_BROKER_TOKEN\" --pacticipant retail-frontend --version \"${PACTICIPANT_VERSION:-dev-local}\" --to-environment \"${TARGET_ENV:-production}\""
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@pact-foundation/pact": "^16.3.0",
     "@pact-foundation/pact-node": "^10.18.0",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.2",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",
