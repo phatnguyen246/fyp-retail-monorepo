@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index.js",
-    "test": "vitest run",
-    "test:pact": "vitest run tests/pact",
+    "test": "pnpm run test:unit && pnpm run test:integration",
+    "test:all": "pnpm run test && pnpm run test:pact",
+    "test:unit": "vitest run --config vitest.config.unit.js",
+    "test:integration": "vitest run --config vitest.config.integration.js",
+    "test:pact": "vitest run --config vitest.config.pact.js",
     "pact:can-i-deploy": "pact-broker can-i-deploy --broker-base-url=\"$PACT_BROKER_URL\" --broker-token=\"$PACT_BROKER_TOKEN\" --pacticipant retail-backend --version \"${PACTICIPANT_VERSION:-dev-local}\" --to-environment \"${TARGET_ENV:-production}\"",
     "dev:test": "pnpm test && pnpm dev",
     "e2e:vnpay:checkout": "node scripts/e2e-vnpay-checkout.js",
