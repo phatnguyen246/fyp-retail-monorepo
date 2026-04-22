@@ -87,29 +87,13 @@ jobs:
           PACTICIPANT_VERSION: ${{ github.sha }}
           TARGET_ENV: production
         run: |
-          set +e
-          OUTPUT=$(docker compose run --rm --no-deps \
+          docker compose run --rm --no-deps \
             -e PACT_BROKER_URL \
             -e PACT_BROKER_TOKEN \
             -e PACTICIPANT_VERSION \
             -e TARGET_ENV \
             backend /bin/bash -lc \
-            "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend pact:can-i-deploy" 2>&1)
-          STATUS=$?
-          set -e
-
-          echo "$OUTPUT"
-
-          if [ "$STATUS" -eq 0 ]; then
-            exit 0
-          fi
-
-          if echo "$OUTPUT" | grep -q "No pacts or verifications have been published for version"; then
-            echo "can-i-deploy is non-blocking for this provider-version strategy; verification job is the hard gate."
-            exit 0
-          fi
-
-          exit "$STATUS"
+            "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend pact:can-i-deploy"
 
   render-deploy-backend:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.detect-changes.outputs.backend_changed == 'true' || needs.detect-changes.outputs.shared_changed == 'true')
