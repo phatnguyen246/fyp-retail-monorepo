@@ -39,7 +39,7 @@ describe("catalog seeds", () => {
 
         await seedBrands({ repository, now });
 
-        expect(repository.upsertSeedDocument).toHaveBeenCalledTimes(5);
+        expect(repository.upsertSeedDocument).toHaveBeenCalledTimes(9);
         expect(repository.upsertSeedDocument).toHaveBeenNthCalledWith(1, {
             collectionName: "brands",
             code: "APPLE",
@@ -79,7 +79,7 @@ describe("catalog seeds", () => {
 
         await seedTags({ repository, now });
 
-        expect(repository.upsertSeedDocument).toHaveBeenCalledTimes(5);
+        expect(repository.upsertSeedDocument).toHaveBeenCalledTimes(10);
         expect(repository.upsertSeedDocument).toHaveBeenNthCalledWith(2, {
             collectionName: "tags",
             code: "camera-phone",

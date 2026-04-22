@@ -10,6 +10,9 @@ describe("catalog variant media storage adapter", () => {
         blob = {
             save: vi.fn().mockResolvedValue(undefined),
             delete: vi.fn().mockResolvedValue(undefined),
+            getSignedUrl: vi
+                .fn()
+                .mockResolvedValue(["https://signed.example.com/catalog-asset"]),
         };
         bucket = {
             name: "catalog-assets",
@@ -46,10 +49,17 @@ describe("catalog variant media storage adapter", () => {
         );
         expect(blob.save).toHaveBeenCalledWith(file.buffer, {
             contentType: "image/webp",
+            metadata: {
+                cacheControl: "public, max-age=900",
+            },
+        });
+        expect(blob.getSignedUrl).toHaveBeenCalledWith({
+            action: "read",
+            expires: "01-01-2500",
         });
         expect(result).toEqual({
             storagePath: "catalog/products/p123/variants/v456/front image.webp",
-            url: "https://storage.googleapis.com/catalog-assets/catalog/products/p123/variants/v456/front%20image.webp",
+            url: "https://signed.example.com/catalog-asset",
             fileName: "front image.webp",
             mimeType: "image/webp",
             size: 245678,

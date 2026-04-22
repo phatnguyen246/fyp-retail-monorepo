@@ -13,6 +13,7 @@ import {
 } from "../../catalog/tests/fixtures/index.js";
 import { createInventoryRecord } from "../../inventory/models/index.js";
 import { createAuthTestCookie } from "./auth-test.helpers.js";
+import { AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME } from "../constants/index.js";
 
 const PASSWORD = "password123";
 const GUEST_CART_ID = "guest-auth-1";
@@ -427,7 +428,9 @@ describe("auth HTTP integration", () => {
             role: "customer",
         });
         expect(accounts[0].passwordHash).not.toBe(PASSWORD);
-        expect(response.headers.get("set-cookie")).toContain("auth_access_token=");
+        expect(response.headers.get("set-cookie")).toContain(
+            `${AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME}=`
+        );
     });
 
     it("rejects duplicate register by normalized email", async () => {
@@ -508,7 +511,9 @@ describe("auth HTTP integration", () => {
             email: "customer@example.com",
             role: "customer",
         });
-        expect(loginResponse.headers.get("set-cookie")).toContain("auth_access_token=");
+        expect(loginResponse.headers.get("set-cookie")).toContain(
+            `${AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME}=`
+        );
 
         expect(invalidResponse.status).toBe(401);
         expect(invalidBody.code).toBe("AUTH_INVALID_CREDENTIALS");
@@ -530,7 +535,7 @@ describe("auth HTTP integration", () => {
         });
         const authCookie = extractCookie(
             registerResponse.headers.get("set-cookie"),
-            "auth_access_token"
+            AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME
         );
         const logoutResponse = await fetch(`${runningServer.url}/auth/logout`, {
             method: "POST",
@@ -542,7 +547,9 @@ describe("auth HTTP integration", () => {
 
         expect(logoutResponse.status).toBe(200);
         expect(logoutBody.data.success).toBe(true);
-        expect(logoutResponse.headers.get("set-cookie")).toContain("auth_access_token=;");
+        expect(logoutResponse.headers.get("set-cookie")).toContain(
+            `${AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME}=;`
+        );
     });
 
     it("returns current user for /auth/me and 401 when unauthenticated", async () => {
@@ -561,7 +568,7 @@ describe("auth HTTP integration", () => {
         });
         const authCookie = extractCookie(
             registerResponse.headers.get("set-cookie"),
-            "auth_access_token"
+            AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME
         );
         const meResponse = await fetch(`${runningServer.url}/auth/me`, {
             headers: {
@@ -583,7 +590,7 @@ describe("auth HTTP integration", () => {
         expect(missingBody.code).toBe("AUTH_UNAUTHORIZED");
     });
 
-    it("blocks customer access and allows admin access on admin routes", async () => {
+    it("rejects customer-scoped auth cookie and allows admin access on admin routes", async () => {
         runningServer = await startServer(createCatalogAdminState());
 
         const registerResponse = await fetch(`${runningServer.url}/auth/register`, {
@@ -599,7 +606,7 @@ describe("auth HTTP integration", () => {
         });
         const customerCookie = extractCookie(
             registerResponse.headers.get("set-cookie"),
-            "auth_access_token"
+            AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME
         );
         const customerResponse = await fetch(
             `${runningServer.url}/admin/catalog/products`,
@@ -641,8 +648,8 @@ describe("auth HTTP integration", () => {
         });
         const adminBody = await adminResponse.json();
 
-        expect(customerResponse.status).toBe(403);
-        expect(customerBody.code).toBe("AUTH_FORBIDDEN");
+        expect(customerResponse.status).toBe(401);
+        expect(customerBody.code).toBe("AUTH_UNAUTHORIZED");
 
         expect(adminResponse.status).toBe(201);
         expect(adminBody.data).toMatchObject({
@@ -651,7 +658,7 @@ describe("auth HTTP integration", () => {
         });
     });
 
-    it("blocks customer access and allows admin access on the admin catalog list route", async () => {
+    it("rejects customer-scoped auth cookie and allows admin access on the admin catalog list route", async () => {
         runningServer = await startServer(createCatalogAdminState());
 
         const registerResponse = await fetch(`${runningServer.url}/auth/register`, {
@@ -667,7 +674,7 @@ describe("auth HTTP integration", () => {
         });
         const customerCookie = extractCookie(
             registerResponse.headers.get("set-cookie"),
-            "auth_access_token"
+            AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME
         );
         const customerResponse = await fetch(
             `${runningServer.url}/admin/catalog/products`,
@@ -685,8 +692,8 @@ describe("auth HTTP integration", () => {
         });
         const adminBody = await adminResponse.json();
 
-        expect(customerResponse.status).toBe(403);
-        expect(customerBody.code).toBe("AUTH_FORBIDDEN");
+        expect(customerResponse.status).toBe(401);
+        expect(customerBody.code).toBe("AUTH_UNAUTHORIZED");
 
         expect(adminResponse.status).toBe(200);
         expect(adminBody.data).toEqual(
@@ -717,7 +724,7 @@ describe("auth HTTP integration", () => {
         const registerBody = await registerResponse.json();
         const authCookie = extractCookie(
             registerResponse.headers.get("set-cookie"),
-            "auth_access_token"
+            AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME
         );
         const cartResponse = await fetch(`${runningServer.url}/cart`, {
             headers: {
@@ -787,7 +794,7 @@ describe("auth HTTP integration", () => {
         });
         const authCookie = extractCookie(
             loginResponse.headers.get("set-cookie"),
-            "auth_access_token"
+            AUTH_CUSTOMER_ACCESS_TOKEN_COOKIE_NAME
         );
         const cartResponse = await fetch(`${runningServer.url}/cart`, {
             headers: {

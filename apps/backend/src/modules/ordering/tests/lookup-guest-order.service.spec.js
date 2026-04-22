@@ -10,6 +10,7 @@ function createGuestOrderFixture() {
         orderCode: "ORD-20260316-181818",
         accountId: null,
         recipientName: "Guest Customer",
+        email: "guest@example.com",
         phoneNumber: "0900000000",
         shippingAddressLine: "123 Test Street",
         paymentMethod: "cod",

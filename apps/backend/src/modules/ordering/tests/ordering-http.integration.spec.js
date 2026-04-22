@@ -184,6 +184,7 @@ function createOrderFixture({
     orderId = new ObjectId(),
     accountId = CUSTOMER_ACCOUNT_ID,
     orderCode = "ORD-20260316-000001",
+    email = "customer1@example.com",
     paymentMethod = "cod",
     paymentStatus = "pending",
     orderStatus = "pending",
@@ -215,6 +216,7 @@ function createOrderFixture({
         orderCode,
         accountId,
         recipientName: "Order Fixture",
+        email,
         phoneNumber: "0900000000",
         shippingAddressLine: "123 Test Street",
         paymentMethod,
@@ -589,6 +591,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 phoneNumber: "0900111222",
                 street: "1 Customer Street",
                 provinceCode: 79,
@@ -655,6 +658,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Tran Thi B",
+                email: "guest@example.com",
                 phoneNumber: "0900222333",
                 street: "2 Guest Street",
                 provinceCode: 48,
@@ -686,7 +690,7 @@ describe("ordering http integration", () => {
         });
     });
 
-    it("lets guests find their order by order code and phone number", async () => {
+    it("lets guests find their order by order code", async () => {
         const state = createBaseState();
 
         state.orders = [
@@ -705,7 +709,6 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 orderCode: "ORD-20260316-161616",
-                phoneNumber: "0900000000",
             }),
         });
         const body = await response.json();
@@ -715,7 +718,6 @@ describe("ordering http integration", () => {
             id: "65f000000000000000000723",
             accountId: null,
             orderCode: "ORD-20260316-161616",
-            phoneNumber: "0900000000",
         });
     });
 
@@ -738,7 +740,6 @@ describe("ordering http integration", () => {
             },
             body: JSON.stringify({
                 orderCode: "ORD-20260316-171717",
-                phoneNumber: "0900000000",
             }),
         });
         const body = await response.json();
@@ -777,6 +778,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
                 paymentMethod: "vnpay",
@@ -828,6 +830,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
             }),
@@ -855,6 +858,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 shippingAddressLine: "1 Customer Street",
             }),
         });
@@ -876,6 +880,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 phoneNumber: "0900111222",
             }),
         });
@@ -1092,6 +1097,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
             }),
@@ -1230,6 +1236,7 @@ describe("ordering http integration", () => {
             body: JSON.stringify({
                 cartVariantIds: ["65f000000000000000000702"],
                 recipientName: "Nguyen Van A",
+                email: "customer1@example.com",
                 phoneNumber: "0900111222",
                 shippingAddressLine: "1 Customer Street",
             }),

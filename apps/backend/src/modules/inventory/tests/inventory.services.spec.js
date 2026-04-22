@@ -212,7 +212,7 @@ describe("inventory services", () => {
         const firstVariantId = new ObjectId("65f000000000000000000171");
         const secondVariantId = new ObjectId("65f000000000000000000172");
         const inventoryRepository = {
-            findLowStockInventoryRecords: vi.fn().mockResolvedValue([
+            findInventoryRecordsByFilter: vi.fn().mockResolvedValue([
                 {
                     _id: new ObjectId("65f000000000000000000173"),
                     variantId: firstVariantId,
@@ -230,6 +230,7 @@ describe("inventory services", () => {
                     updatedAt: new Date("2026-01-03T00:00:00.000Z"),
                 },
             ]),
+            countInventoryRecordsByFilter: vi.fn().mockResolvedValue(2),
         };
         const catalogAdapter = {
             findCatalogDisplayByVariantIds: vi.fn().mockResolvedValue([
@@ -252,27 +253,46 @@ describe("inventory services", () => {
 
         const result = await listLowStockInventory();
 
+        expect(inventoryRepository.findInventoryRecordsByFilter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                limit: 20,
+                skip: 0,
+            })
+        );
+        expect(inventoryRepository.countInventoryRecordsByFilter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                filter: expect.any(Object),
+            })
+        );
         expect(catalogAdapter.findCatalogDisplayByVariantIds).toHaveBeenCalledWith({
             variantIds: [firstVariantId.toHexString(), secondVariantId.toHexString()],
         });
-        expect(result).toEqual([
-            expect.objectContaining({
-                variantId: firstVariantId.toHexString(),
-                stockQuantity: 1,
-                productName: "Hydrated Product",
-                productGroupCode: "HYDRATED_PHONE",
-                sku: "HYD-BLK-128",
-                variantLabel: "8GB / 128GB / Black",
-            }),
-            expect.objectContaining({
-                variantId: secondVariantId.toHexString(),
-                stockQuantity: 0,
-                productName: null,
-                productGroupCode: null,
-                sku: null,
-                variantLabel: null,
-            }),
-        ]);
+        expect(result).toEqual({
+            data: [
+                expect.objectContaining({
+                    variantId: firstVariantId.toHexString(),
+                    stockQuantity: 1,
+                    productName: "Hydrated Product",
+                    productGroupCode: "HYDRATED_PHONE",
+                    sku: "HYD-BLK-128",
+                    variantLabel: "8GB / 128GB / Black",
+                }),
+                expect.objectContaining({
+                    variantId: secondVariantId.toHexString(),
+                    stockQuantity: 0,
+                    productName: null,
+                    productGroupCode: null,
+                    sku: null,
+                    variantLabel: null,
+                }),
+            ],
+            meta: {
+                page: 1,
+                limit: 20,
+                total: 2,
+                totalPages: 1,
+            },
+        });
     });
 
     it("rejects create when the catalog variant does not exist", async () => {
