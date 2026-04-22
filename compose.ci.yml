@@ -1,0 +1,54 @@
+name: fyp-retail-system-ci
+
+services:
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/backend-test:${TEST_IMAGE_TAG}
+    env_file:
+      - ./apps/backend/.env.dev
+    depends_on:
+      - mongo
+    ports:
+      - "3000:3000"
+    command:
+      - pnpm
+      - --filter
+      - "@apps/backend"
+      - dev
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/frontend-test:${TEST_IMAGE_TAG}
+    env_file:
+      - ./apps/frontend/.env.dev
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    command:
+      - pnpm
+      - --filter
+      - "@apps/frontend"
+      - exec
+      - vite
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5173"
+
+  frontend-e2e:
+    image: ghcr.io/${GITHUB_REPOSITORY}/frontend-e2e-test:${TEST_IMAGE_TAG}
+    env_file:
+      - ./apps/frontend/.env.dev
+    environment:
+      E2E_BASE_URL: http://frontend:5173
+    depends_on:
+      - frontend
+    working_dir: /app
+    command:
+      - /bin/bash
+      - -lc
+      - pnpm --filter @apps/frontend e2e:test
