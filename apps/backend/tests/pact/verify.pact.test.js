@@ -521,6 +521,21 @@ async function downloadPactFromBroker({
 
     if (response.ok) {
       const pactBody = await response.text()
+      let publishVerificationUrl = null
+
+      try {
+        const pactJson = JSON.parse(pactBody)
+        const publishLink = pactJson?._links?.['pb:publish-verification-results']?.href
+
+        if (publishLink) {
+          publishVerificationUrl = publishLink.startsWith('http')
+            ? publishLink
+            : `${normalizedBrokerUrl}${publishLink.startsWith('/') ? '' : '/'}${publishLink}`
+        }
+      } catch {
+        publishVerificationUrl = null
+      }
+
       const pactFilePath = path.join(
         os.tmpdir(),
         `retail-frontend-retail-backend.${Date.now()}.pact.json`,
@@ -528,13 +543,76 @@ async function downloadPactFromBroker({
 
       await fs.promises.writeFile(pactFilePath, pactBody, 'utf8')
 
-      return pactFilePath
+      return { pactFilePath, publishVerificationUrl }
     }
 
     lastFailure = new Error(`Failed to fetch pact from ${url}. Status ${response.status}`)
   }
 
   throw lastFailure || new Error('Unable to fetch pact from broker')
+}
+
+function resolveBuildUrlFromEnv() {
+  if (process.env.PACT_BUILD_URL) {
+    return process.env.PACT_BUILD_URL
+  }
+
+  if (
+    process.env.GITHUB_SERVER_URL &&
+    process.env.GITHUB_REPOSITORY &&
+    process.env.GITHUB_RUN_ID
+  ) {
+    return `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+  }
+
+  return undefined
+}
+
+async function publishVerificationResultToBroker({
+  publishUrl,
+  brokerToken,
+  providerVersion,
+}) {
+  if (!publishUrl) {
+    return
+  }
+
+  const response = await fetch(publishUrl, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/hal+json, application/json',
+      'Content-Type': 'application/json',
+      ...(brokerToken
+        ? {
+            Authorization: `Bearer ${brokerToken}`,
+          }
+        : {}),
+    },
+    body: JSON.stringify({
+      success: true,
+      providerApplicationVersion: providerVersion,
+      buildUrl: resolveBuildUrlFromEnv(),
+      testResults: {
+        tests: [],
+        summary: {
+          testCount: 0,
+          failureCount: 0,
+        },
+        metadata: {
+          pactVerificationResultsSpecification: {
+            version: '1.0.0-beta.1',
+          },
+        },
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const responseBody = await response.text()
+    throw new Error(
+      `Failed to publish verification result. Status ${response.status}. Response: ${responseBody.slice(0, 500)}`,
+    )
+  }
 }
 
 describe('Pact provider verification', () => {
@@ -551,18 +629,23 @@ describe('Pact provider verification', () => {
 
   it('verifies frontend contract for catalog discovery', async () => {
     runningServer = await startProviderServer()
+    const providerVersion = process.env.PACTICIPANT_VERSION || process.env.GITHUB_SHA || 'dev-local'
+    const providerVersionBranch = process.env.GIT_BRANCH || process.env.GITHUB_REF_NAME || 'main'
+    const providerStatesSetupUrl = `${runningServer.baseUrl}/_pact/provider-states`
+    const logLevel = process.env.PACT_LOG_LEVEL || 'warn'
+    let pactFilePath
+    let publishVerificationUrl
 
     const verifierOptions = {
       provider: 'retail-backend',
       providerBaseUrl: runningServer.baseUrl,
-      providerStatesSetupUrl: `${runningServer.baseUrl}/_pact/provider-states`,
-      enablePending: true,
-      includeWipPactsSince: '2026-01-01',
-      logLevel: process.env.PACT_LOG_LEVEL || 'warn',
+      providerStatesSetupUrl,
+      logLevel,
+      providerVersionBranch,
     }
 
     if (process.env.PACT_BROKER_URL) {
-      const pactFilePath = await downloadPactFromBroker({
+      const brokerPact = await downloadPactFromBroker({
         brokerUrl: process.env.PACT_BROKER_URL,
         brokerToken: process.env.PACT_BROKER_TOKEN,
         providerName: 'retail-backend',
@@ -570,9 +653,11 @@ describe('Pact provider verification', () => {
         consumerBranch: process.env.CONSUMER_BRANCH || process.env.GIT_BRANCH || 'main',
       })
 
+      pactFilePath = brokerPact.pactFilePath
+      publishVerificationUrl = brokerPact.publishVerificationUrl
       verifierOptions.pactUrls = [pactFilePath]
     } else {
-      const pactFilePath = path.resolve(
+      pactFilePath = path.resolve(
         process.cwd(),
         '../frontend/pacts/retail-frontend-retail-backend.json',
       )
@@ -590,5 +675,13 @@ describe('Pact provider verification', () => {
 
     expect(typeof output).toBe('string')
     expect(output.length).toBeGreaterThan(0)
+
+    if (process.env.PACT_BROKER_URL) {
+      await publishVerificationResultToBroker({
+        publishUrl: publishVerificationUrl,
+        brokerToken: process.env.PACT_BROKER_TOKEN,
+        providerVersion,
+      })
+    }
   })
 })
