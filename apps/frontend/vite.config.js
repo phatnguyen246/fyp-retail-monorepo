@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
     },
     server: proxyTarget
       ? {
+          allowedHosts: ['frontend'],
           fs: {
             allow: [workspaceRoot],
           },
@@ -33,6 +34,7 @@ export default defineConfig(({ mode }) => {
           },
         }
       : {
+          allowedHosts: ['frontend'],
           fs: {
             allow: [workspaceRoot],
           },
