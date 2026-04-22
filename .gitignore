@@ -56,3 +56,4 @@ apps/backend/credentials/
 .codex
 GEMINI.md
 AGENTS.md
+tmp-e2e-debug/
