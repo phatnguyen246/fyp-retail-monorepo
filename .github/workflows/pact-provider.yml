@@ -2,8 +2,9 @@ name: Pact Provider
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main]
   pull_request:
+    branches: [dev, main]
 
 jobs:
   verify:
@@ -31,6 +32,17 @@ jobs:
             -e CONSUMER_BRANCH \
             backend /bin/bash -lc \
             "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend test:pact"
+
+  deployment-gate:
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: verify
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Deployment gate (can-i-deploy)
         env:
