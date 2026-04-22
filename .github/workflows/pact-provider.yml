@@ -7,10 +7,40 @@ on:
     branches: [dev, main]
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    outputs:
+      backend_changed: ${{ steps.filter.outputs.backend }}
+      frontend_changed: ${{ steps.filter.outputs.frontend }}
+      shared_changed: ${{ steps.filter.outputs.shared }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+            frontend:
+              - 'apps/frontend/**'
+            shared:
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+
   verify:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    needs: detect-changes
 
     steps:
       - name: Checkout
@@ -34,11 +64,13 @@ jobs:
             "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend test:pact"
 
   deployment-gate:
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    if: (github.ref == 'refs/heads/main' || github.base_ref == 'main') && (needs.detect-changes.outputs.backend_changed == 'true' || needs.detect-changes.outputs.shared_changed == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: verify
+    needs:
+      - detect-changes
+      - verify
 
     steps:
       - name: Checkout
@@ -58,3 +90,37 @@ jobs:
             -e TARGET_ENV \
             backend /bin/bash -lc \
             "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend pact:can-i-deploy"
+
+  render-deploy-backend:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.detect-changes.outputs.backend_changed == 'true' || needs.detect-changes.outputs.shared_changed == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs:
+      - detect-changes
+      - deployment-gate
+
+    steps:
+      - name: Trigger Render backend deploy hook
+        env:
+          RENDER_BACKEND_DEPLOY_HOOK_URL: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL }}
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            "$RENDER_BACKEND_DEPLOY_HOOK_URL"
+
+  render-deploy-frontend:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.detect-changes.outputs.frontend_changed == 'true' || needs.detect-changes.outputs.shared_changed == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: detect-changes
+
+    steps:
+      - name: Trigger Render frontend deploy hook
+        env:
+          RENDER_FRONTEND_DEPLOY_HOOK_URL: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            "$RENDER_FRONTEND_DEPLOY_HOOK_URL"
