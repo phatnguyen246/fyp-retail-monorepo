@@ -5,7 +5,10 @@ test('customer can register and login again with persisted account', async ({ pa
   const email = `e2e.${uniqueSuffix}@example.com`
   const password = 'password123'
 
-  await page.goto('/register')
+  await page.goto('/register', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('#email')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#password')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#confirmPassword')).toBeVisible({ timeout: 15_000 })
 
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(password)
@@ -45,7 +48,9 @@ test('customer can register and login again with persisted account', async ({ pa
   try {
     const secondPage = await secondContext.newPage()
 
-    await secondPage.goto('/login')
+    await secondPage.goto('/login', { waitUntil: 'domcontentloaded' })
+    await expect(secondPage.locator('#email')).toBeVisible({ timeout: 15_000 })
+    await expect(secondPage.locator('#password')).toBeVisible({ timeout: 15_000 })
     await secondPage.locator('#email').fill(email)
     await secondPage.locator('#password').fill(password)
     await secondPage.getByRole('button', { name: 'Đăng nhập' }).click()

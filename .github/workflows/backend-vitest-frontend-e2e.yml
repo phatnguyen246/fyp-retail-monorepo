@@ -45,11 +45,23 @@ jobs:
           echo "Frontend is not ready in time" >&2
           exit 1
 
+      - name: Wait for /register route readiness
+        run: |
+          for i in {1..90}; do
+            if docker compose exec -T frontend /bin/bash -lc "curl -fsS http://localhost:5173/register >/dev/null"; then
+              echo "/register is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "/register is not ready in time" >&2
+          exit 1
+
       - name: Run backend Vitest (capture exit code)
         run: |
           set +e
           docker compose run --no-deps --name backend-vitest-ci backend /bin/bash -lc \
-            "corepack enable && pnpm install --frozen-lockfile && mkdir -p apps/backend/test-results && pnpm --filter @apps/backend exec vitest run --reporter=default --reporter=junit --outputFile=apps/backend/test-results/vitest-junit.xml"
+            "corepack enable && pnpm install --frozen-lockfile && mkdir -p test-results && pnpm --filter @apps/backend exec vitest run --reporter=default --reporter=junit --outputFile=test-results/vitest-junit.xml"
           echo $? > backend-exit-code.txt
           exit 0
 
