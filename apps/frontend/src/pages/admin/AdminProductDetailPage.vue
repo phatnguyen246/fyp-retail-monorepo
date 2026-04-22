@@ -52,6 +52,7 @@ const cloneDraft = ref({
 })
 
 const savingProduct = ref(false)
+const verifyingYoutubeVideo = ref(false)
 const savingLongDescription = ref(false)
 const cloningProduct = ref(false)
 const deletingProduct = ref(false)
@@ -279,8 +280,7 @@ const fieldHints = {
   originalPrice: 'Original listed price before discount.',
   salePrice: 'Actual selling price shown to customers.',
   currency: 'Currency code for pricing, e.g. VND.',
-  videoUrl: 'Video URL associated with the variant.',
-  videoThumbnailUrl: 'Thumbnail URL for variant video.',
+  productYoutubeVideoUrl: 'Product-level YouTube URL shown first in storefront media.',
   isPrimaryColor: 'Mark this variant as primary/default highlight color.',
   uploadImage: 'Upload JPEG, PNG, or WebP up to 5 MB. Display order is auto-managed.',
   stockQuantity: 'Current stock quantity for this variant.',
@@ -524,6 +524,14 @@ const productPatchOverviewItems = computed(() => {
     })
   }
 
+  if (Object.hasOwn(patch, 'youtubeVideoUrl')) {
+    items.push({
+      label: 'Product YouTube URL',
+      from: current.youtubeVideo?.url || 'None',
+      to: patch.youtubeVideoUrl || 'None',
+    })
+  }
+
   if (Object.hasOwn(patch, 'specs')) {
     const specComparisons = [
       ['Screen size', current.specs?.screen?.size, patch.specs?.screen?.size],
@@ -707,10 +715,17 @@ function buildProductPatchPayload({ includeLongDescription = true } = {}) {
     patch.tagCodes = draft.tagCodes
   }
 
+  const draftYoutubeVideoUrl = draft.youtubeVideoUrl.trim()
+  const currentYoutubeVideoUrl = current.youtubeVideo?.url || ''
+
+  if (draftYoutubeVideoUrl !== currentYoutubeVideoUrl) {
+    patch.youtubeVideoUrl = draftYoutubeVideoUrl || null
+  }
+
   return patch
 }
 
-function buildVariantPayload(draft, { allowColorFullName = true, allowNullVideo = false } = {}) {
+function buildVariantPayload(draft, { allowColorFullName = true } = {}) {
   const payload = {
     sku: draft.sku.trim(),
     variantAttributes: {
@@ -735,16 +750,36 @@ function buildVariantPayload(draft, { allowColorFullName = true, allowNullVideo 
     payload.variantAttributes.colorFullName = null
   }
 
-  const videoUrl = draft.video.url.trim()
-  const videoThumbnailUrl = draft.video.thumbnailUrl.trim()
+  return payload
+}
 
-  if (videoUrl) {
-    payload.video = videoThumbnailUrl ? { url: videoUrl, thumbnailUrl: videoThumbnailUrl } : videoUrl
-  } else if (allowNullVideo) {
-    payload.video = null
+async function previewYoutubeVideo() {
+  const url = productPatch.value.youtubeVideoUrl.trim()
+
+  if (!url) {
+    productPatch.value.youtubeVideoPreview = {
+      videoId: '',
+      title: '',
+      thumbnailUrl: '',
+      url: '',
+    }
+    setActionMessage('YouTube URL was cleared for this product.', 'warning')
+    return
   }
 
-  return payload
+  verifyingYoutubeVideo.value = true
+
+  const result = await adminStore.previewYoutubeVideo(url)
+
+  if (result.success) {
+    productPatch.value.youtubeVideoPreview = result.data
+    productPatch.value.youtubeVideoUrl = result.data.url || url
+    setActionMessage('YouTube video metadata has been verified.', 'success')
+  } else {
+    setActionMessage(result.error, 'danger')
+  }
+
+  verifyingYoutubeVideo.value = false
 }
 
 function hydrateSelectedVariant(variantId) {
@@ -939,7 +974,6 @@ async function createVariantEntry() {
     productId.value,
     buildVariantPayload(createVariantForm.value, {
       allowColorFullName: false,
-      allowNullVideo: false,
     }),
   )
 
@@ -967,7 +1001,6 @@ async function saveSelectedVariant() {
     selectedVariant.value.id,
     buildVariantPayload(selectedVariantDraft.value, {
       allowColorFullName: true,
-      allowNullVideo: true,
     }),
   )
 
@@ -1430,6 +1463,47 @@ onMounted(async () => {
                       <input v-model="productPatch.contactWhenOutOfStock" type="checkbox" />
                       <span>Keep contact state when out of stock</span>
                     </label>
+                  </div>
+                </section>
+
+                <section class="admin-detail-section admin-detail-section-specs">
+                  <div class="admin-detail-section-header">
+                    <h3 class="admin-detail-section-title">Product Video Highlights</h3>
+                  </div>
+
+                  <div class="admin-field admin-field-stack">
+                    <FieldLabel label="YouTube URL" :hint="fieldHints.productYoutubeVideoUrl" />
+                    <div class="admin-inline-field-row">
+                      <input v-model="productPatch.youtubeVideoUrl" class="admin-input" type="url" />
+                      <button
+                        type="button"
+                        class="admin-button admin-button-secondary"
+                        :disabled="verifyingYoutubeVideo"
+                        @click="previewYoutubeVideo"
+                      >
+                        {{ verifyingYoutubeVideo ? 'Verifying...' : 'Verify & Fetch' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div v-if="productPatch.youtubeVideoPreview?.videoId" class="admin-note-block">
+                    <p class="admin-description-preview-label">Resolved video preview</p>
+                    <div class="admin-youtube-preview">
+                      <img
+                        v-if="productPatch.youtubeVideoPreview.thumbnailUrl"
+                        :src="productPatch.youtubeVideoPreview.thumbnailUrl"
+                        :alt="productPatch.youtubeVideoPreview.title || 'YouTube thumbnail'"
+                        class="admin-youtube-preview-image"
+                      />
+                      <div>
+                        <p class="admin-youtube-preview-title">
+                          {{ productPatch.youtubeVideoPreview.title || 'Untitled video' }}
+                        </p>
+                        <p class="admin-youtube-preview-meta">
+                          Video ID: {{ productPatch.youtubeVideoPreview.videoId }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </section>
               </div>
@@ -1997,17 +2071,6 @@ onMounted(async () => {
                     </label>
                   </div>
 
-                  <div class="admin-two-column-grid">
-                    <label class="admin-field">
-                      <FieldLabel label="Video URL" :hint="fieldHints.videoUrl" />
-                      <input v-model="selectedVariantDraft.video.url" class="admin-input" type="url" />
-                    </label>
-                    <label class="admin-field">
-                      <FieldLabel label="Video thumbnail URL" :hint="fieldHints.videoThumbnailUrl" />
-                      <input v-model="selectedVariantDraft.video.thumbnailUrl" class="admin-input" type="url" />
-                    </label>
-                  </div>
-
                   <div class="admin-field admin-field-stack">
                     <FieldLabel label="Primary color" :hint="fieldHints.isPrimaryColor" />
                     <label class="admin-toggle-row">
@@ -2210,17 +2273,6 @@ onMounted(async () => {
                   </label>
                 </div>
 
-                <div class="admin-two-column-grid">
-                  <label class="admin-field">
-                    <FieldLabel label="Video URL" :hint="fieldHints.videoUrl" />
-                    <input v-model="createVariantForm.video.url" class="admin-input" type="url" />
-                  </label>
-                  <label class="admin-field">
-                    <FieldLabel label="Video thumbnail URL" :hint="fieldHints.videoThumbnailUrl" />
-                    <input v-model="createVariantForm.video.thumbnailUrl" class="admin-input" type="url" />
-                  </label>
-                </div>
-
                 <div class="admin-field admin-field-stack">
                   <FieldLabel label="Primary color" :hint="fieldHints.isPrimaryColor" />
                   <label class="admin-toggle-row">
@@ -2383,5 +2435,39 @@ onMounted(async () => {
   margin-top: 0.25rem;
   align-self: flex-start;
   color: var(--admin-danger-color, #ef4444);
+}
+
+.admin-inline-field-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.admin-youtube-preview {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.admin-youtube-preview-image {
+  width: 9rem;
+  height: 5rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  border: 1px solid var(--admin-border-color, #e2e8f0);
+  background: #f8fafc;
+}
+
+.admin-youtube-preview-title {
+  margin: 0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.admin-youtube-preview-meta {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: #475569;
 }
 </style>

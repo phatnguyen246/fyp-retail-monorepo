@@ -54,6 +54,7 @@ export const UPDATE_PRODUCT_INPUT_SCHEMA = z
         contactWhenOutOfStock: z
             .preprocess(coerceBooleanInput, z.boolean())
             .optional(),
+        youtubeVideoUrl: optionalTrimmedStringSchema,
     })
     .strict()
     .refine((value) => Object.keys(value).length > 0, {

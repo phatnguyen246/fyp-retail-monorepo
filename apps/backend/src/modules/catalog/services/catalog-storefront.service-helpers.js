@@ -151,6 +151,29 @@ function mapMediaItem(media) {
     };
 }
 
+function mapYoutubeVideo(video) {
+    if (!video || typeof video !== "object") {
+        return null;
+    }
+
+    const videoId =
+        typeof video.videoId === "string" ? video.videoId : null;
+
+    if (!videoId) {
+        return null;
+    }
+
+    return {
+        videoId,
+        title: typeof video.title === "string" ? video.title : videoId,
+        thumbnailUrl:
+            typeof video.thumbnailUrl === "string"
+                ? video.thumbnailUrl
+                : null,
+        url: typeof video.url === "string" ? video.url : null,
+    };
+}
+
 function mapVariant(variant, mediaByVariantId = new Map()) {
     const variantId = toIdString(variant?._id);
 
@@ -334,6 +357,7 @@ export function buildStorefrontListItem({
             references.categoryMap.get(toIdString(product.categoryId))
         ),
         tags: mapTagEntities(product.tagIds, references.tagMap),
+        youtubeVideo: mapYoutubeVideo(product.youtubeVideo),
         listingVariantSnapshot: mapListingVariantSnapshot(
             product.listingVariantSnapshot
         ),

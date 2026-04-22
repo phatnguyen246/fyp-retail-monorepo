@@ -89,6 +89,7 @@ export const CREATE_PRODUCT_INPUT_SCHEMA = z
         contactWhenOutOfStock: z
             .preprocess(coerceBooleanInput, z.boolean())
             .default(false),
+        youtubeVideoUrl: optionalTrimmedStringSchema,
     })
     .strict();
 

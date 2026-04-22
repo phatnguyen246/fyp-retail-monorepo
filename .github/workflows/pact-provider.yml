@@ -1,0 +1,48 @@
+name: Pact Provider
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify provider against PactFlow contracts
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          PACTICIPANT_VERSION: ${{ github.sha }}
+          GIT_BRANCH: ${{ github.ref_name }}
+          CONSUMER_BRANCH: main
+        run: |
+          docker compose run --rm --no-deps \
+            -e PACT_BROKER_URL \
+            -e PACT_BROKER_TOKEN \
+            -e PACTICIPANT_VERSION \
+            -e GIT_BRANCH \
+            -e CONSUMER_BRANCH \
+            backend /bin/bash -lc \
+            "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend test:pact"
+
+      - name: Deployment gate (can-i-deploy)
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          PACTICIPANT_VERSION: ${{ github.sha }}
+          TARGET_ENV: production
+        run: |
+          docker compose run --rm --no-deps \
+            -e PACT_BROKER_URL \
+            -e PACT_BROKER_TOKEN \
+            -e PACTICIPANT_VERSION \
+            -e TARGET_ENV \
+            backend /bin/bash -lc \
+            "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/backend pact:can-i-deploy"

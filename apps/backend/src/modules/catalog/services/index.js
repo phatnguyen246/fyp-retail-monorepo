@@ -13,6 +13,7 @@ import { createImportProductsService } from "./import-products.service.js";
 import { createListAdminProductsService } from "./list-admin-products.service.js";
 import { createListProductsService } from "./list-products.service.js";
 import { createListVariantImagesService } from "./list-variant-images.service.js";
+import { createPreviewYoutubeVideoService } from "./preview-youtube-video.service.js";
 import { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
 import { createSearchProductsService } from "./search-products.service.js";
 import { createSoftDeleteProductService } from "./soft-delete-product.service.js";
@@ -20,6 +21,7 @@ import { createSoftDeleteVariantService } from "./soft-delete-variant.service.js
 import { createUploadVariantImageService } from "./upload-variant-image.service.js";
 import { createUpdateProductService } from "./update-product.service.js";
 import { createUpdateVariantService } from "./update-variant.service.js";
+import { createYoutubeService } from "./youtube.service.js";
 
 export { createCreateProductService } from "./create-product.service.js";
 export { createCreateVariantService } from "./create-variant.service.js";
@@ -33,6 +35,7 @@ export { createImportProductsService } from "./import-products.service.js";
 export { createListAdminProductsService } from "./list-admin-products.service.js";
 export { createListProductsService } from "./list-products.service.js";
 export { createListVariantImagesService } from "./list-variant-images.service.js";
+export { createPreviewYoutubeVideoService } from "./preview-youtube-video.service.js";
 export { createRebuildProductDerivedFieldsService } from "./rebuild-product-derived-fields.service.js";
 export { createSearchProductsService } from "./search-products.service.js";
 export { createSoftDeleteProductService } from "./soft-delete-product.service.js";
@@ -40,11 +43,13 @@ export { createSoftDeleteVariantService } from "./soft-delete-variant.service.js
 export { createUploadVariantImageService } from "./upload-variant-image.service.js";
 export { createUpdateProductService } from "./update-product.service.js";
 export { createUpdateVariantService } from "./update-variant.service.js";
+export { createYoutubeService } from "./youtube.service.js";
 
 export function createCatalogServices({
     adapters = createCatalogAdapters(),
     validation = createCatalogValidation(),
     logger = console,
+    env = process.env,
 } = {}) {
     const inventoryAdapter = adapters?.inventory;
     const productRepository = adapters?.persistence?.productRepository;
@@ -56,6 +61,7 @@ export function createCatalogServices({
         productRepository,
         variantRepository,
     });
+    const youtubeService = createYoutubeService({ env });
 
     return {
         getHealth() {
@@ -113,12 +119,18 @@ export function createCatalogServices({
             productRepository,
             referenceRepository,
             validation,
+            youtubeService,
         }),
         updateProduct: createUpdateProductService({
             productRepository,
             referenceRepository,
             validation,
             rebuildProductDerivedFields,
+            youtubeService,
+        }),
+        previewYoutubeVideo: createPreviewYoutubeVideoService({
+            validation,
+            youtubeService,
         }),
         getProductDetailAdmin: createGetProductDetailAdminService({
             productRepository,

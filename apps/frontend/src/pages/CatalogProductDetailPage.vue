@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import CatalogTopNav from '../components/catalog/CatalogTopNav.vue'
 import CatalogFooter from '../components/catalog/CatalogFooter.vue'
+import YouTubeIframePlayer from '../components/catalog/YouTubeIframePlayer.vue'
 import { useCartStore } from '../store/cart'
 import { useCompareStore } from '../store/compare'
 import {
@@ -168,14 +169,29 @@ const colorOptions = computed(() => {
 })
 
 const mediaItems = computed(() => {
+  const items = []
+  const productYoutubeVideo = product.value?.youtubeVideo
+
+  if (productYoutubeVideo?.videoId) {
+    items.push({
+      id: `youtube-${productYoutubeVideo.videoId}`,
+      type: 'video',
+      videoId: productYoutubeVideo.videoId,
+      url: productYoutubeVideo.url,
+      title: productYoutubeVideo.title,
+      thumbnailUrl: productYoutubeVideo.thumbnailUrl,
+      fileName: productYoutubeVideo.title,
+    })
+  }
+
   const selectedMedia = selectedVariant.value?.media
 
   if (Array.isArray(selectedMedia) && selectedMedia.length > 0) {
-    return selectedMedia
+    return [...items, ...selectedMedia]
   }
 
   const defaultMedia = product.value?.defaultVariant?.media
-  return Array.isArray(defaultMedia) ? defaultMedia : []
+  return Array.isArray(defaultMedia) ? [...items, ...defaultMedia] : items
 })
 
 const activeMedia = computed(() => mediaItems.value[activeMediaIndex.value] ?? null)
@@ -724,8 +740,14 @@ onBeforeUnmount(() => {
                       <span class="material-symbols-outlined">chevron_left</span>
                     </button>
 
+                    <YouTubeIframePlayer
+                      v-if="activeMedia?.type === 'video' && activeMedia?.videoId"
+                      :video-id="activeMedia.videoId"
+                      :title="activeMedia.title || product.title"
+                      class="detail-product-video"
+                    />
                     <img
-                      v-if="activeMedia?.url"
+                      v-else-if="activeMedia?.url"
                       :alt="activeMedia.fileName || product.title"
                       class="detail-product-image max-h-full max-w-full object-contain"
                       :src="activeMedia.url"
@@ -764,10 +786,23 @@ onBeforeUnmount(() => {
                   @click="activeMediaIndex = index"
                 >
                   <img
+                    v-if="media.type !== 'video'"
                     :alt="media.fileName || product.title"
                     class="h-14 w-14 rounded-[0.6rem] object-contain md:h-16 md:w-16"
                     :src="media.url"
                   />
+                  <div
+                    v-else
+                    class="detail-thumbnail-video h-14 w-14 rounded-[0.6rem] md:h-16 md:w-16"
+                  >
+                    <img
+                      v-if="media.thumbnailUrl"
+                      :alt="media.title || product.title"
+                      class="h-full w-full rounded-[0.6rem] object-cover"
+                      :src="media.thumbnailUrl"
+                    />
+                    <span v-else class="material-symbols-outlined">play_circle</span>
+                  </div>
                 </button>
               </div>
             </div>
@@ -1153,6 +1188,26 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
   display: block;
+}
+
+.detail-product-video {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 1rem;
+}
+
+.detail-thumbnail-video {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--catalog-border-soft);
+  background: var(--catalog-surface-muted);
+  color: var(--catalog-primary);
 }
 
 .detail-variant-option {

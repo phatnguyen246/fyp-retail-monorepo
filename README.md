@@ -68,8 +68,7 @@ Frontend hiện vẫn là scaffold Vite/Vue mặc định. Nó chưa phản ánh
 
 - [docs/README.md](./docs/README.md)
 - [docs/project-overview.md](./docs/project-overview.md)
-- [docs/architecture/system-design.md](./docs/architecture/system-design.md)
-- [docs/architecture/module-boundaries.md](./docs/architecture/module-boundaries.md)
+- [docs/architecture/backend-architecture.md](./docs/architecture/backend-architecture.md)
 - [docs/api/overview.md](./docs/api/overview.md)
 
 ### Module Documentation

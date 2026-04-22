@@ -35,6 +35,7 @@ describe("catalog validation", () => {
             specs: {
                 chipset: "A18",
             },
+            youtubeVideoUrl: " https://www.youtube.com/watch?v=dQw4w9WgXcQ ",
         });
 
         expect(parsed).toMatchObject({
@@ -45,6 +46,7 @@ describe("catalog validation", () => {
             tagCodes: ["camera-phone", "battery-phone"],
             badges: ["new"],
             status: "draft",
+            youtubeVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         });
 
         expect(() =>
@@ -86,6 +88,14 @@ describe("catalog validation", () => {
                 productGroupCode: "APPLE_IPHONE_16",
             })
         ).toThrow();
+
+        expect(
+            parseUpdateProductInput({
+                youtubeVideoUrl: "https://youtu.be/dQw4w9WgXcQ",
+            })
+        ).toMatchObject({
+            youtubeVideoUrl: "https://youtu.be/dQw4w9WgXcQ",
+        });
 
         expect(() =>
             parseUpdateVariantInput({

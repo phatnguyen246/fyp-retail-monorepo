@@ -38,6 +38,7 @@ describe("product model", () => {
             productType: "smartphone",
             status: "draft",
             contactWhenOutOfStock: false,
+            youtubeVideo: null,
             defaultSelectedVariantId: null,
             listingVariantSnapshot: null,
             minSalePrice: null,
@@ -133,5 +134,9 @@ describe("product model", () => {
         expect(SMARTPHONE_SPECS_SHAPE).not.toHaveProperty("ram");
         expect(SMARTPHONE_SPECS_SHAPE).not.toHaveProperty("rom");
         expect(SMARTPHONE_SPECS_SHAPE).not.toHaveProperty("color");
+        expect(PRODUCT_DOCUMENT_SHAPE.youtubeVideo).toMatchObject({
+            default: null,
+            required: false,
+        });
     });
 });

@@ -7,7 +7,7 @@ import { createCartServices } from "../modules/cart/services/index.js";
 import { registerCatalogModule } from "../modules/catalog/index.js";
 import { registerInventoryModule } from "../modules/inventory/index.js";
 import { registerNotificationModule } from "../modules/notification/index.js";
-import { registerOrderingModule } from "../modules/ordering/api/register.js";
+import { registerOrderingModule } from "../modules/ordering/http/register.js";
 import { registerPaymentModule } from "../modules/payment/index.js";
 
 export function registerModules({ app, db, storage }) {

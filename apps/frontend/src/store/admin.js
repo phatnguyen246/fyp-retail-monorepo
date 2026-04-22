@@ -228,6 +228,24 @@ function normalizeVariantVideo(video) {
   }
 }
 
+function normalizeProductYoutubeVideo(video) {
+  if (!video || typeof video !== 'object') {
+    return {
+      videoId: '',
+      title: '',
+      thumbnailUrl: '',
+      url: '',
+    }
+  }
+
+  return {
+    videoId: ensureString(video.videoId),
+    title: ensureString(video.title),
+    thumbnailUrl: ensureString(video.thumbnailUrl),
+    url: ensureString(video.url),
+  }
+}
+
 function normalizeVariant(variant) {
   const attributes =
     variant?.variantAttributes && typeof variant.variantAttributes === 'object'
@@ -324,6 +342,7 @@ function normalizeProductDetail(payload) {
       minOriginalPrice: ensureNumber(product.minOriginalPrice),
       hasActiveVariants: ensureBoolean(product.hasActiveVariants, false),
       hasInStockVariants: ensureBoolean(product.hasInStockVariants, false),
+      youtubeVideo: normalizeProductYoutubeVideo(product.youtubeVideo),
     },
     variants: ensureArray(source.variants).map((variant) => normalizeVariant(variant)),
   }
@@ -661,6 +680,8 @@ export function createProductPatchDraft(product = {}) {
     tagCodes: ensureArray(product.tags)
       .map((tag) => ensureString(tag?.code))
       .filter(Boolean),
+    youtubeVideoUrl: ensureString(product.youtubeVideo?.url),
+    youtubeVideoPreview: normalizeProductYoutubeVideo(product.youtubeVideo),
   }
 }
 
@@ -681,10 +702,6 @@ export function createEmptyVariantDraft() {
     originalPrice: 0,
     salePrice: 0,
     currency: 'VND',
-    video: {
-      url: '',
-      thumbnailUrl: '',
-    },
     status: 'active',
   }
 }
@@ -706,7 +723,6 @@ export function createVariantDraftFromSource(variant = {}) {
     originalPrice: ensureNumber(variant.originalPrice, 0),
     salePrice: ensureNumber(variant.salePrice, 0),
     currency: ensureString(variant.currency, 'VND'),
-    video: normalizeVariantVideo(variant.video),
     status: ensureString(variant.status, 'active'),
   }
 }
@@ -872,6 +888,19 @@ export const useAdminStore = defineStore('admin', () => {
         data: normalizeProductDetail(unwrapResponseData(response)).product,
       }
     }, 'Unable to update product.')
+  }
+
+  async function previewYoutubeVideo(url) {
+    return runRequest(async () => {
+      const response = await http.post('/admin/catalog/products/youtube/preview', {
+        url,
+      })
+
+      return {
+        success: true,
+        data: normalizeProductYoutubeVideo(unwrapResponseData(response)),
+      }
+    }, 'Unable to preview YouTube video.')
   }
 
   async function cloneProduct(productId, input) {
@@ -1164,6 +1193,7 @@ export const useAdminStore = defineStore('admin', () => {
     importProducts,
     fetchProductDetail,
     updateProduct,
+    previewYoutubeVideo,
     cloneProduct,
     deleteProduct,
     createVariant,

@@ -9,12 +9,14 @@ import {
     resolveProductReferencePatch,
     assertProductNotDeleted,
 } from "./catalog-admin.service-helpers.js";
+import { resolveProductYoutubeVideoPatch } from "./product-youtube-video.helpers.js";
 
 export function createUpdateProductService({
     productRepository,
     referenceRepository,
     validation = createCatalogValidation(),
     rebuildProductDerivedFields,
+    youtubeService,
 } = {}) {
     return async function updateCatalogProduct({
         productId,
@@ -34,8 +36,13 @@ export function createUpdateProductService({
             referenceRepository,
             input: parsedInput,
         });
+        const youtubeVideoPatch = await resolveProductYoutubeVideoPatch({
+            parsedInput,
+            youtubeService,
+        });
         const coreFields = {
             ...referencePatch,
+            ...youtubeVideoPatch,
             updatedBy: normalizeActorId(actorId),
         };
         const titleChanged =

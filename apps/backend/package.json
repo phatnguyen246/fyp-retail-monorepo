@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "nodemon index.js",
     "test": "vitest run",
+    "test:pact": "vitest run tests/pact",
+    "pact:can-i-deploy": "pact-broker can-i-deploy --broker-base-url=\"$PACT_BROKER_URL\" --broker-token=\"$PACT_BROKER_TOKEN\" --pacticipant retail-backend --version \"${PACTICIPANT_VERSION:-dev-local}\" --to-environment \"${TARGET_ENV:-production}\"",
     "dev:test": "pnpm test && pnpm dev",
     "e2e:vnpay:checkout": "node scripts/e2e-vnpay-checkout.js",
     "job:vnpay:reconcile": "node scripts/reconcile-pending-vnpay-payments.js",
@@ -21,6 +23,8 @@
     "seed:e2e:vnpay": "node src/modules/catalog/seeds/seed-e2e-vnpay.js"
   },
   "devDependencies": {
+    "@pact-foundation/pact": "^16.3.0",
+    "@pact-foundation/pact-node": "^10.18.0",
     "nodemon": "^3.1.11",
     "vitest": "^4.0.18"
   },

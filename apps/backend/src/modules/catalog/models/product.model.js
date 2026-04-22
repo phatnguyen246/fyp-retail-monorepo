@@ -203,6 +203,29 @@ export const PRODUCT_LISTING_VARIANT_SNAPSHOT_SHAPE = Object.freeze({
     },
 });
 
+export const PRODUCT_YOUTUBE_VIDEO_SHAPE = Object.freeze({
+    videoId: {
+        type: "string",
+        required: true,
+        description: "YouTube video identifier.",
+    },
+    title: {
+        type: "string",
+        required: true,
+        description: "YouTube video title resolved from API metadata.",
+    },
+    thumbnailUrl: {
+        type: "string",
+        required: true,
+        description: "Resolved thumbnail URL used for preview and gallery thumbnail.",
+    },
+    url: {
+        type: "string",
+        required: true,
+        description: "Canonical source URL used by admin users for editing.",
+    },
+});
+
 export const PRODUCT_DOCUMENT_SHAPE = Object.freeze({
     _id: {
         type: "ObjectId",
@@ -299,6 +322,12 @@ export const PRODUCT_DOCUMENT_SHAPE = Object.freeze({
         required: true,
         default: false,
         description: "Allows the product page to surface contact CTA when variants are unavailable.",
+    },
+    youtubeVideo: {
+        type: "object",
+        required: false,
+        default: null,
+        description: "Optional product-level YouTube highlight shared across all variants.",
     },
     defaultSelectedVariantId: {
         type: "ObjectId",
@@ -474,6 +503,7 @@ export function createProduct(input = {}) {
             "contactWhenOutOfStock",
             false
         ),
+        youtubeVideo: createProductYoutubeVideo(input.youtubeVideo),
         defaultSelectedVariantId: normalizeOptionalObjectId(
             input.defaultSelectedVariantId,
             "defaultSelectedVariantId"
@@ -502,6 +532,24 @@ export function createProduct(input = {}) {
         updatedBy: normalizeAuditActor(input.updatedBy, "updatedBy"),
         isDeleted: softDeleteState.isDeleted,
         deletedAt: softDeleteState.deletedAt,
+    };
+}
+
+export function createProductYoutubeVideo(value) {
+    if (value === undefined || value === null) {
+        return null;
+    }
+
+    const input = normalizeOptionalPlainObject(value, "youtubeVideo");
+
+    return {
+        videoId: normalizeRequiredString(input.videoId, "youtubeVideo.videoId"),
+        title: normalizeRequiredString(input.title, "youtubeVideo.title"),
+        thumbnailUrl: normalizeRequiredString(
+            input.thumbnailUrl,
+            "youtubeVideo.thumbnailUrl"
+        ),
+        url: normalizeRequiredString(input.url, "youtubeVideo.url"),
     };
 }
 

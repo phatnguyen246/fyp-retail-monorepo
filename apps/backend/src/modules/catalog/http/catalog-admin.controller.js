@@ -77,5 +77,15 @@ export function createCatalogAdminController({ services }) {
                 data: product,
             });
         },
+
+        async previewYoutubeVideo(req, res) {
+            const preview = await services.previewYoutubeVideo({
+                input: req.body,
+            });
+
+            return sendCatalogSuccess(res, {
+                data: preview,
+            });
+        },
     };
 }

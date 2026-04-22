@@ -74,6 +74,10 @@ import {
     PRODUCT_DISCOVERY_QUERY_SCHEMA,
 } from "./product-discovery-query.schema.js";
 import {
+    parsePreviewYoutubeVideoInput,
+    PREVIEW_YOUTUBE_VIDEO_INPUT_SCHEMA,
+} from "./preview-youtube-video.schema.js";
+import {
     SEARCH_PRODUCTS_QUERY_SCHEMA,
     parseSearchProductsQuery,
 } from "./search-products.schema.js";
@@ -166,6 +170,10 @@ export {
     parseProductDiscoveryQuery,
 } from "./product-discovery-query.schema.js";
 export {
+    parsePreviewYoutubeVideoInput,
+    PREVIEW_YOUTUBE_VIDEO_INPUT_SCHEMA,
+} from "./preview-youtube-video.schema.js";
+export {
     SEARCH_PRODUCTS_QUERY_SCHEMA,
     parseSearchProductsQuery,
 } from "./search-products.schema.js";
@@ -204,6 +212,7 @@ export function createCatalogValidation() {
         productDiscoverySchema: PRODUCT_DISCOVERY_QUERY_SCHEMA,
         listProductsSchema: LIST_PRODUCTS_QUERY_SCHEMA,
         searchProductsSchema: SEARCH_PRODUCTS_QUERY_SCHEMA,
+        previewYoutubeVideoSchema: PREVIEW_YOUTUBE_VIDEO_INPUT_SCHEMA,
         storefrontProductDetailParamsSchema:
             STOREFRONT_PRODUCT_DETAIL_PARAMS_SCHEMA,
         smartphoneSpecsSchema: SMARTPHONE_SPECS_INPUT_SCHEMA,
@@ -226,6 +235,7 @@ export function createCatalogValidation() {
         parseProductDiscoveryQuery,
         parseListProductsQuery,
         parseSearchProductsQuery,
+        parsePreviewYoutubeVideoInput,
         parseStorefrontProductDetailParams,
         assertVariantPricingInvariant,
         assertVariantPricingPatchInvariant,

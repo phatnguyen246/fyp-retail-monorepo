@@ -18,8 +18,7 @@ Kết luận quan trọng:
 ## Cách đọc repo nhanh nhất
 
 1. đọc [../README.md](../README.md)
-2. đọc [architecture/system-design.md](./architecture/system-design.md)
-3. đọc [architecture/module-boundaries.md](./architecture/module-boundaries.md)
+2. đọc [architecture/backend-architecture.md](./architecture/backend-architecture.md)
 4. đọc [api/overview.md](./api/overview.md)
 5. sau đó đi vào docs của module sở hữu nghiệp vụ bạn đang quan tâm
 
@@ -63,6 +62,5 @@ Giữ các phần:
 
 ## Further Reading
 
-- [system-design.md](./architecture/system-design.md)
-- [module-boundaries.md](./architecture/module-boundaries.md)
+- [backend-architecture.md](./architecture/backend-architecture.md)
 - [api/overview.md](./api/overview.md)

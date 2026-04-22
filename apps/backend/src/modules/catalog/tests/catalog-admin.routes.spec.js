@@ -11,6 +11,7 @@ async function startServer(controller) {
     const app = express();
     const logger = { error: vi.fn() };
 
+    app.use(express.json());
     app.use(createCatalogAdminRouter({ controller }));
     app.use(createGlobalErrorHandler({ logger }));
 
@@ -32,6 +33,7 @@ function createController(overrides = {}) {
         listAdminProducts: vi.fn(),
         createProduct: vi.fn(),
         importProducts: vi.fn(),
+        previewYoutubeVideo: vi.fn(),
         cloneProduct: vi.fn(),
         getProductDetailAdmin: vi.fn(),
         updateProduct: vi.fn(),
@@ -91,6 +93,38 @@ describe("catalog admin routes", () => {
             deleted: "all",
         });
         expect(controller.listAdminProducts).toHaveBeenCalledTimes(1);
+    });
+
+    it("routes YouTube preview requests to the preview controller", async () => {
+        const controller = createController({
+            previewYoutubeVideo: vi.fn((req, res) =>
+                res.status(200).json({
+                    url: req.body.url,
+                })
+            ),
+        });
+
+        runningServer = await startServer(controller);
+
+        const response = await fetch(
+            `${runningServer.url}/products/youtube/preview`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                }),
+            }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body).toEqual({
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        });
+        expect(controller.previewYoutubeVideo).toHaveBeenCalledTimes(1);
     });
 
     it("parses a single multipart image file for the upload route", async () => {

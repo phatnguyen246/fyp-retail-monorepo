@@ -8,11 +8,13 @@ import {
     normalizeActorId,
     resolveProductReferences,
 } from "./catalog-admin.service-helpers.js";
+import { resolveProductYoutubeVideoPatch } from "./product-youtube-video.helpers.js";
 
 export function createCreateProductService({
     productRepository,
     referenceRepository,
     validation = createCatalogValidation(),
+    youtubeService,
 } = {}) {
     return async function createCatalogProduct({ input, actorId } = {}) {
         const parsedInput = validation.parseCreateProductInput(input ?? {});
@@ -37,6 +39,10 @@ export function createCreateProductService({
             categoryCode: parsedInput.categoryCode,
             tagCodes: parsedInput.tagCodes,
         });
+        const youtubeVideoPatch = await resolveProductYoutubeVideoPatch({
+            parsedInput,
+            youtubeService,
+        });
         const normalizedActorId = normalizeActorId(actorId);
         const product = createProduct({
             productGroupCode: parsedInput.productGroupCode,
@@ -51,6 +57,7 @@ export function createCreateProductService({
             specs: parsedInput.specs,
             status: parsedInput.status,
             contactWhenOutOfStock: parsedInput.contactWhenOutOfStock,
+            ...youtubeVideoPatch,
             createdBy: normalizedActorId,
             updatedBy: normalizedActorId,
         });

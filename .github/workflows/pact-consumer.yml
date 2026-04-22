@@ -1,0 +1,36 @@
+name: Pact Consumer
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate pact from frontend consumer tests
+        run: |
+          docker compose run --rm --no-deps frontend /bin/bash -lc \
+            "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/frontend pact:test"
+
+      - name: Publish pact to PactFlow
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          PACTICIPANT_VERSION: ${{ github.sha }}
+          GIT_BRANCH: ${{ github.ref_name }}
+        run: |
+          docker compose run --rm --no-deps \
+            -e PACT_BROKER_URL \
+            -e PACT_BROKER_TOKEN \
+            -e PACTICIPANT_VERSION \
+            -e GIT_BRANCH \
+            frontend /bin/bash -lc \
+            "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/frontend pact:publish"

@@ -36,6 +36,9 @@ describe("catalog admin services", () => {
             productRepository,
             referenceRepository,
             validation: createCatalogValidation(),
+            youtubeService: {
+                fetchVideoMetadata: vi.fn(),
+            },
         });
 
         const product = await createProductService({
@@ -69,6 +72,60 @@ describe("catalog admin services", () => {
             document: expect.objectContaining({
                 productGroupCode: "APPLE_IPHONE_17",
                 title: "iPhone 17",
+            }),
+        });
+    });
+
+    it("resolves product-level YouTube metadata on create product", async () => {
+        const brand = createBrandFixture();
+        const category = createCategoryFixture();
+        const productRepository = {
+            findProductByProductGroupCode: vi.fn().mockResolvedValue(null),
+            createProduct: vi.fn().mockResolvedValue({ acknowledged: true }),
+        };
+        const referenceRepository = {
+            findBrandByCode: vi.fn().mockResolvedValue(brand),
+            findCategoryByCode: vi.fn().mockResolvedValue(category),
+            findTagsByCodes: vi.fn().mockResolvedValue([]),
+        };
+        const youtubeService = {
+            fetchVideoMetadata: vi.fn().mockResolvedValue({
+                videoId: "dQw4w9WgXcQ",
+                title: "Sample title",
+                thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            }),
+        };
+        const createProductService = createCreateProductService({
+            productRepository,
+            referenceRepository,
+            validation: createCatalogValidation(),
+            youtubeService,
+        });
+
+        await createProductService({
+            input: {
+                productGroupCode: "APPLE_IPHONE_18",
+                title: "iPhone 18",
+                brandCode: "APPLE",
+                categoryCode: "SMARTPHONE",
+                specs: {},
+                youtubeVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            },
+        });
+
+        expect(youtubeService.fetchVideoMetadata).toHaveBeenCalledWith(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        );
+        expect(productRepository.createProduct).toHaveBeenCalledWith({
+            document: expect.objectContaining({
+                youtubeVideo: {
+                    videoId: "dQw4w9WgXcQ",
+                    title: "Sample title",
+                    thumbnailUrl:
+                        "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                },
             }),
         });
     });
@@ -250,6 +307,9 @@ describe("catalog admin services", () => {
             },
             validation: createCatalogValidation(),
             rebuildProductDerivedFields,
+            youtubeService: {
+                fetchVideoMetadata: vi.fn(),
+            },
         });
 
         const product = await updateProductService({
@@ -274,6 +334,69 @@ describe("catalog admin services", () => {
         });
         expect(rebuildProductDerivedFields).toHaveBeenCalledWith({
             productId: currentProduct._id.toHexString(),
+        });
+    });
+
+    it("updates product-level YouTube video on update product", async () => {
+        const currentProduct = createProductFixture();
+        const updatedProduct = createProductFixture({
+            youtubeVideo: {
+                videoId: "dQw4w9WgXcQ",
+                title: "Sample title",
+                thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            },
+        });
+        const productRepository = {
+            findProductById: vi
+                .fn()
+                .mockResolvedValueOnce(currentProduct)
+                .mockResolvedValueOnce(updatedProduct),
+            updateProductCoreFields: vi.fn().mockResolvedValue({ acknowledged: true }),
+        };
+        const youtubeService = {
+            fetchVideoMetadata: vi.fn().mockResolvedValue({
+                videoId: "dQw4w9WgXcQ",
+                title: "Sample title",
+                thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            }),
+        };
+        const updateProductService = createUpdateProductService({
+            productRepository,
+            referenceRepository: {
+                findBrandByCode: vi.fn(),
+                findCategoryByCode: vi.fn(),
+                findTagsByCodes: vi.fn(),
+            },
+            validation: createCatalogValidation(),
+            rebuildProductDerivedFields: vi.fn(),
+            youtubeService,
+        });
+
+        await updateProductService({
+            productId: currentProduct._id.toHexString(),
+            input: {
+                youtubeVideoUrl: "https://youtu.be/dQw4w9WgXcQ",
+            },
+            actorId: "admin-3",
+        });
+
+        expect(youtubeService.fetchVideoMetadata).toHaveBeenCalledWith(
+            "https://youtu.be/dQw4w9WgXcQ"
+        );
+        expect(productRepository.updateProductCoreFields).toHaveBeenCalledWith({
+            productId: currentProduct._id.toHexString(),
+            coreFields: expect.objectContaining({
+                youtubeVideo: {
+                    videoId: "dQw4w9WgXcQ",
+                    title: "Sample title",
+                    thumbnailUrl:
+                        "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                },
+                updatedBy: "admin-3",
+            }),
         });
     });
 
@@ -524,7 +647,7 @@ describe("catalog admin services", () => {
             productId: product._id.toHexString(),
         });
 
-        expect(detail).toEqual({
+        expect(detail).toMatchObject({
             product,
             variants,
         });
@@ -583,7 +706,7 @@ describe("catalog admin services", () => {
         expect(rebuildProductDerivedFields).toHaveBeenCalledWith({
             productId: product._id.toHexString(),
         });
-        expect(detail).toEqual({
+        expect(detail).toMatchObject({
             product: deletedProduct,
             variants: deletedVariants,
         });

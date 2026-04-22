@@ -11,21 +11,19 @@ Các tài liệu chi tiết theo module đã được colocate vào:
 - tài liệu shared/cross-cutting ở root
 - tài liệu implementation/business/API cụ thể ở ngay module sở hữu
 
-## Đọc theo thứ tự nếu muốn hiểu toàn dự án
+## Đọc theo thứ tự nếu muốn hiểu backend
 
 1. [../README.md](../README.md)
 2. [project-overview.md](./project-overview.md)
-3. [architecture/system-design.md](./architecture/system-design.md)
-4. [architecture/module-boundaries.md](./architecture/module-boundaries.md)
-5. [api/overview.md](./api/overview.md)
+3. [architecture/backend-architecture.md](./architecture/backend-architecture.md)
+4. [api/overview.md](./api/overview.md)
 
 ## Root Docs Responsibilities
 
 `docs/` hiện chỉ giữ các phần:
 
 - tổng quan dự án
-- kiến trúc hệ thống
-- ranh giới module
+- kiến trúc backend
 - điều hướng API ở mức cross-module
 - conventions dùng chung
 
