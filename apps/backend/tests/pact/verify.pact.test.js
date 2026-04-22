@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Verifier } from '@pact-foundation/pact'
 import { createApp } from '../../src/bootstrap/app.js'
 
-function createDiscoverySeedState() {
+function createStorefrontCatalogSeedState() {
   const appleBrandId = new ObjectId('65f100000000000000000001')
   const samsungBrandId = new ObjectId('65f100000000000000000002')
   const categoryId = new ObjectId('65f100000000000000000003')
@@ -14,6 +14,8 @@ function createDiscoverySeedState() {
   const batteryTagId = new ObjectId('65f100000000000000000005')
   const iphoneProductId = new ObjectId('65f100000000000000000010')
   const galaxyProductId = new ObjectId('65f100000000000000000011')
+  const iphoneVariantId = new ObjectId('65f100000000000000000020')
+  const galaxyVariantId = new ObjectId('65f100000000000000000021')
 
   return {
     brands: [
@@ -50,33 +52,77 @@ function createDiscoverySeedState() {
     products: [
       {
         _id: iphoneProductId,
+        title: 'iPhone 16',
+        slug: 'dien-thoai-iphone-16',
         productType: 'smartphone',
         status: 'active',
         isDeleted: false,
         hasActiveVariants: true,
+        hasInStockVariants: true,
+        shortDescription: 'iPhone 16 storefront contract product',
+        longDescription: 'Contract test product detail',
+        searchTitle: 'iphone 16',
+        badges: ['hot'],
+        contactWhenOutOfStock: false,
         brandId: appleBrandId,
         categoryId,
         tagIds: [cameraTagId],
         minSalePrice: 24990000,
+        minOriginalPrice: 26990000,
+        listingVariantSnapshot: {
+          variantId: iphoneVariantId,
+          sku: 'IP16-BLU-256',
+          color: 'Blue',
+          ram: '8GB',
+          rom: '256GB',
+          salePrice: 24990000,
+          originalPrice: 26990000,
+          currency: 'VND',
+        },
+        specs: {
+          chipset: 'A18',
+          battery: '3561mAh',
+        },
       },
       {
         _id: galaxyProductId,
+        title: 'Samsung S25',
+        slug: 'dien-thoai-samsung-s25',
         productType: 'smartphone',
         status: 'active',
         isDeleted: false,
         hasActiveVariants: true,
+        hasInStockVariants: true,
+        shortDescription: 'Samsung storefront contract product',
+        searchTitle: 'samsung s25',
+        badges: ['new'],
         brandId: samsungBrandId,
         categoryId,
         tagIds: [batteryTagId],
         minSalePrice: 28990000,
+        minOriginalPrice: 30990000,
+        listingVariantSnapshot: {
+          variantId: galaxyVariantId,
+          sku: 'S25-BLK-512',
+          color: 'Black',
+          ram: '12GB',
+          rom: '512GB',
+          salePrice: 28990000,
+          originalPrice: 30990000,
+          currency: 'VND',
+        },
       },
     ],
     variants: [
       {
-        _id: new ObjectId('65f100000000000000000020'),
+        _id: iphoneVariantId,
         productId: iphoneProductId,
+        sku: 'IP16-BLU-256',
         status: 'active',
         isDeleted: false,
+        originalPrice: 26990000,
+        salePrice: 24990000,
+        currency: 'VND',
         variantAttributes: {
           ram: '8GB',
           rom: '256GB',
@@ -84,15 +130,55 @@ function createDiscoverySeedState() {
         },
       },
       {
-        _id: new ObjectId('65f100000000000000000021'),
+        _id: galaxyVariantId,
         productId: galaxyProductId,
+        sku: 'S25-BLK-512',
         status: 'active',
         isDeleted: false,
+        originalPrice: 30990000,
+        salePrice: 28990000,
+        currency: 'VND',
         variantAttributes: {
           ram: '12GB',
           rom: '512GB',
           color: 'Black',
         },
+      },
+    ],
+    inventoryRecords: [
+      {
+        _id: new ObjectId('65f100000000000000000030'),
+        variantId: iphoneVariantId,
+        stockQuantity: 8,
+        lowStockThreshold: 3,
+      },
+      {
+        _id: new ObjectId('65f100000000000000000031'),
+        variantId: galaxyVariantId,
+        stockQuantity: 5,
+        lowStockThreshold: 3,
+      },
+    ],
+    productMediaMetadata: [
+      {
+        _id: new ObjectId('65f100000000000000000040'),
+        productId: iphoneProductId,
+        variantId: iphoneVariantId,
+        url: 'https://cdn.example.com/products/iphone16-blue-front.jpg',
+        fileName: 'iphone16-blue-front.jpg',
+        mimeType: 'image/jpeg',
+        size: 1024,
+        sortOrder: 0,
+      },
+      {
+        _id: new ObjectId('65f100000000000000000041'),
+        productId: galaxyProductId,
+        variantId: galaxyVariantId,
+        url: 'https://cdn.example.com/products/s25-black-front.jpg',
+        fileName: 's25-black-front.jpg',
+        mimeType: 'image/jpeg',
+        size: 1024,
+        sortOrder: 0,
       },
     ],
   }
@@ -353,7 +439,7 @@ function applyUpdate(target, update, isInsert) {
 }
 
 async function startProviderServer() {
-  const db = createInMemoryDb(createDiscoverySeedState())
+  const db = createInMemoryDb(createStorefrontCatalogSeedState())
   const client = { close: async () => undefined }
 
   const app = await createApp({
@@ -364,8 +450,12 @@ async function startProviderServer() {
   app.post('/_pact/provider-states', async (req, res) => {
     const state = req.body?.state
 
-    if (state === 'catalog discovery options exist for smartphone category') {
-      db.reset(createDiscoverySeedState())
+    if (
+      state === 'catalog discovery options exist for smartphone category' ||
+      state === 'catalog product list exists for smartphone storefront' ||
+      state === 'catalog product detail exists for iphone 16'
+    ) {
+      db.reset(createStorefrontCatalogSeedState())
       return res.sendStatus(200)
     }
 

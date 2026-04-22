@@ -2,11 +2,12 @@ name: Pact Consumer
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main]
   pull_request:
+    branches: [dev, main]
 
 jobs:
-  contract:
+  contract-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,6 +20,17 @@ jobs:
         run: |
           docker compose run --rm --no-deps frontend /bin/bash -lc \
             "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @apps/frontend pact:test"
+
+  contract-publish:
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: contract-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Publish pact to PactFlow
         env:
