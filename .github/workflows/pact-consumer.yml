@@ -36,8 +36,8 @@ jobs:
         env:
           PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
           PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
-          PACTICIPANT_VERSION: ${{ github.sha }}
-          GIT_BRANCH: ${{ github.ref_name }}
+          PACTICIPANT_VERSION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          GIT_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
         run: |
           docker compose run --rm --no-deps \
             -e PACT_BROKER_URL \
