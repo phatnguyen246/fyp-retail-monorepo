@@ -35,8 +35,8 @@ function createCatalogState() {
         _id: new ObjectId("65f000000000000000000008"),
         productGroupCode: "SAMSUNG_GALAXY_S25",
         title: "Samsung phone S25",
-        slug: "dien-thoai-samsung-s25",
-        searchTitle: "dien thoai samsung s25",
+        slug: "samsung-phone-s25",
+        searchTitle: "samsung phone s25",
         brandId: samsungBrand._id,
         categoryId: category._id,
         tagIds: [cameraTag._id],
@@ -330,8 +330,8 @@ function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
         _id: new ObjectId("65f0000000000000000000b1"),
         productGroupCode: "SAMSUNG_GALAXY_S24",
         title: "Samsung phone S24",
-        slug: "dien-thoai-samsung-s24",
-        searchTitle: "dien thoai samsung s24",
+        slug: "samsung-phone-s24",
+        searchTitle: "samsung phone s24",
         brandId: samsungBrand._id,
         categoryId: category._id,
         tagIds: [cameraTag._id],
@@ -354,8 +354,8 @@ function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
         _id: new ObjectId("65f0000000000000000000b3"),
         productGroupCode: "SAMSUNG_GALAXY_NOTE_EOL",
         title: "Samsung phone Note EOL",
-        slug: "dien-thoai-samsung-note-eol",
-        searchTitle: "dien thoai samsung note eol",
+        slug: "samsung-phone-note-eol",
+        searchTitle: "samsung phone note eol",
         brandId: samsungBrand._id,
         categoryId: category._id,
         tagIds: [cameraTag._id],
@@ -1144,7 +1144,7 @@ describe("catalog http integration", () => {
 
         expect(searchResponse.status).toBe(200);
         expect(searchBody.data).toHaveLength(1);
-        expect(searchBody.data[0].slug).toBe("dien-thoai-samsung-s25");
+        expect(searchBody.data[0].slug).toBe("samsung-phone-s25");
 
         const invalidSearchResponse = await fetch(
             `${runningServer.url}/catalog/search`
@@ -1169,11 +1169,11 @@ describe("catalog http integration", () => {
         );
         const searchBody = await searchResponse.json();
         const discontinuedDetailResponse = await fetch(
-            `${runningServer.url}/catalog/products/65f0000000000000000000b1/dien-thoai-samsung-s24`
+            `${runningServer.url}/catalog/products/65f0000000000000000000b1/samsung-phone-s24`
         );
         const discontinuedDetailBody = await discontinuedDetailResponse.json();
         const hiddenDiscontinuedDetailResponse = await fetch(
-            `${runningServer.url}/catalog/products/65f0000000000000000000b3/dien-thoai-samsung-note-eol`
+            `${runningServer.url}/catalog/products/65f0000000000000000000b3/samsung-phone-note-eol`
         );
         const hiddenDiscontinuedDetailBody =
             await hiddenDiscontinuedDetailResponse.json();
@@ -1194,7 +1194,7 @@ describe("catalog http integration", () => {
         expect(searchBody.data[0]).toMatchObject({
             id: "65f0000000000000000000b1",
             status: "discontinued",
-            slug: "dien-thoai-samsung-s24",
+            slug: "samsung-phone-s24",
         });
         expect(
             searchBody.data.some((item) => item.id === "65f0000000000000000000b3")

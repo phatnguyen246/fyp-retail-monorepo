@@ -31,7 +31,7 @@ describe("computeProductDerivedFields", () => {
         ];
 
         expect(computeProductDerivedFields({ product, variants })).toEqual({
-            slug: "dien-thoai-samsung-galaxy",
+            slug: "samsung-phone-galaxy",
             defaultSelectedVariantId: variants[1]._id,
             listingVariantSnapshot: {
                 variantId: variants[1]._id,

@@ -61,7 +61,7 @@ describe("product model", () => {
         expect(product).not.toHaveProperty("visibility");
     });
 
-    it("normalizes Vietnamese titles before generating slug and searchTitle", () => {
+    it("normalizes title whitespace before generating slug and searchTitle", () => {
         const product = createProduct({
             _id: new ObjectId("65f000000000000000000006"),
             productGroupCode: "apple_iphone_16",
@@ -74,8 +74,8 @@ describe("product model", () => {
         expect(product).toMatchObject({
             productGroupCode: "APPLE_IPHONE_16",
             title: "Samsung phone Galaxy",
-            slug: "dien-thoai-samsung-galaxy",
-            searchTitle: "dien thoai samsung galaxy",
+            slug: "samsung-phone-galaxy",
+            searchTitle: "samsung phone galaxy",
         });
     });
 

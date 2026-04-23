@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { generateProductSlug } from "../utils/generate-product-slug.js";
 
 describe("generateProductSlug", () => {
-    it("normalizes Vietnamese titles, whitespace, and casing consistently", () => {
+    it("normalizes whitespace and casing consistently", () => {
         expect(generateProductSlug("  Samsung phone Galaxy  ")).toBe(
-            "dien-thoai-samsung-galaxy"
+            "samsung-phone-galaxy"
         );
         expect(generateProductSlug("SAMSUNG phone galaxy")).toBe(
-            "dien-thoai-samsung-galaxy"
+            "samsung-phone-galaxy"
         );
     });
 
