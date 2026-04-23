@@ -13,11 +13,13 @@ const { eachLike, like, integer } = MatchersV3
 
 const pactDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../pacts')
 
-const provider = new PactV3({
-  consumer: 'retail-frontend',
-  provider: 'retail-backend',
-  dir: pactDir,
-})
+function createProvider() {
+  return new PactV3({
+    consumer: 'retail-frontend',
+    provider: 'retail-backend',
+    dir: pactDir,
+  })
+}
 
 describe('catalog discovery contract', () => {
   const originalBaseURL = http.defaults.baseURL
@@ -27,6 +29,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns discovery options for storefront filters', async () => {
+    const provider = createProvider()
+
     provider
       .given('catalog discovery options exist for smartphone category')
       .uponReceiving('a request for smartphone catalog discovery options')
@@ -90,6 +94,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns storefront product listing', async () => {
+    const provider = createProvider()
+
     provider
       .given('catalog product list exists for smartphone storefront')
       .uponReceiving('a request for storefront product listing')
@@ -148,6 +154,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns storefront product detail', async () => {
+    const provider = createProvider()
+
     const productId = '65f100000000000000000010'
     const productSlug = 'dien-thoai-iphone-16'
 
@@ -193,6 +201,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns storefront product detail and canonical slug when request slug mismatches', async () => {
+    const provider = createProvider()
+
     const productId = '65f100000000000000000010'
     const canonicalSlug = 'dien-thoai-iphone-16'
 
@@ -235,6 +245,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns storefront search result', async () => {
+    const provider = createProvider()
+
     provider
       .given('catalog product list exists for smartphone storefront')
       .uponReceiving('a request for storefront search listing')
@@ -295,6 +307,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns storefront compare response', async () => {
+    const provider = createProvider()
+
     provider
       .given('catalog product list exists for smartphone storefront')
       .uponReceiving('a request for storefront compare products')
@@ -357,6 +371,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns validation error when storefront search misses keyword', async () => {
+    const provider = createProvider()
+
     provider
       .given('catalog product list exists for smartphone storefront')
       .uponReceiving('a request for storefront search listing without q')
@@ -416,6 +432,8 @@ describe('catalog discovery contract', () => {
   })
 
   it('returns not found error for missing storefront product detail', async () => {
+    const provider = createProvider()
+
     const missingProductId = '65f100000000000000000099'
 
     provider
