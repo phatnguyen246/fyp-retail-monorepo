@@ -18,6 +18,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      checks: write
 
     steps:
       - name: Checkout
@@ -41,7 +42,16 @@ jobs:
       - name: Run backend Vitest on host
         run: |
           mkdir -p apps/backend/test-results
-          pnpm --filter @apps/backend exec vitest run --reporter=default --reporter=junit --outputFile=test-results/vitest-junit.xml
+          pnpm --filter @apps/backend exec vitest run --config vitest.config.ci.js
+
+      - name: Publish backend Vitest report (JUnit)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Backend Vitest
+          path: apps/backend/test-results/vitest-junit.xml
+          reporter: java-junit
+          fail-on-error: true
 
       - name: Collect backend Vitest artifacts
         if: always()
