@@ -63,7 +63,7 @@ const pages = computed(() => {
       type="button"
       @click="emit('change-page', page + 1)"
     >
-      <span>Sau</span>
+      <span>Next</span>
       <span class="material-symbols-outlined">chevron_right</span>
     </button>
     </div>

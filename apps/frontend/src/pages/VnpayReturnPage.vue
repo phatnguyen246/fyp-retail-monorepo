@@ -165,7 +165,7 @@ onMounted(() => {
         <div class="space-y-6 px-6 py-8 sm:px-8">
           <div class="grid gap-4 sm:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Trang thai page</p>
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Page state</p>
               <p class="mt-2 text-lg font-semibold text-slate-950">{{ pageState }}</p>
             </article>
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -194,7 +194,7 @@ onMounted(() => {
           </div>
 
           <div v-if="paymentResult" class="rounded-[24px] border border-slate-200 bg-white px-5 py-5">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Du lieu callback</p>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Callback data</p>
             <dl class="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
                 <dt class="text-sm text-slate-500">Response code</dt>
@@ -221,7 +221,7 @@ onMounted(() => {
               class="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               @click="handleReturn"
             >
-              Kiem tra lai
+              Check again
             </button>
 
             <RouterLink

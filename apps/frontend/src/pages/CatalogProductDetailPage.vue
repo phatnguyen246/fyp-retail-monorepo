@@ -238,9 +238,9 @@ const specEntries = computed(() => {
   const entries = [
     ['Display', [screen.size, screen.technology, screen.resolution, screen.refreshRate].filter(Boolean).join(' • ')],
     ['Chipset', specs.chipset],
-    ['Camera sau', specs.rearCamera],
+    ['Rear camera', specs.rearCamera],
     ['Front camera', specs.frontCamera],
-    ['Pin', specs.battery],
+    ['Battery', specs.battery],
     ['Operating system', specs.operatingSystem],
     ['SIM', specs.sim],
     ['Network', specs.network],

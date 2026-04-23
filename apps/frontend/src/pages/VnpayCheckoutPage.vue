@@ -16,7 +16,7 @@ const router = useRouter()
 const orderingStore = useOrderingStore()
 
 const status = ref('Preparing payment')
-const message = ref('Vui long doi trong giay lat trong khi chung toi ket noi voi VNPAY.')
+const message = ref('Please wait a moment while we connect you to VNPAY.')
 const isLoading = ref(true)
 const paymentUrl = ref('')
 
@@ -36,7 +36,7 @@ function readStoredContext() {
 async function beginPayment() {
   isLoading.value = true
   status.value = 'Preparing payment'
-  message.value = 'Vui long doi trong giay lat trong khi chung toi ket noi voi VNPAY.'
+  message.value = 'Please wait a moment while we connect you to VNPAY.'
 
   const result = await orderingStore.createVnPayUrl(props.orderId)
 
@@ -95,7 +95,7 @@ onMounted(() => {
 
         <div class="space-y-6 px-6 py-8 sm:px-8">
           <div class="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-5">
-            <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Don hang</p>
+            <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Order</p>
             <p class="mt-2 break-all text-sm font-semibold text-slate-950">{{ props.orderId }}</p>
           </div>
 

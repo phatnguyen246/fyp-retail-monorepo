@@ -47,9 +47,9 @@ function generateSpecsCategories() {
     const smartphoneSpecs = [
         { label: 'Display', keys: ['specs.screen.size', 'specs.screen.technology', 'specs.screen.resolution', 'specs.screen.refreshRate'] },
         { label: 'CPU & Graphics', keys: ['specs.chipset', 'specs.cpu', 'specs.gpu'] },
-        { label: 'Camera sau', keys: ['specs.rearCamera'] },
+        { label: 'Rear camera', keys: ['specs.rearCamera'] },
         { label: 'Front camera', keys: ['specs.frontCamera'] },
-        { label: 'Pin & Charging', keys: ['specs.battery', 'specs.charging'] },
+        { label: 'Battery & Charging', keys: ['specs.battery', 'specs.charging'] },
         { label: 'Operating system', keys: ['specs.operatingSystem'] },
         { label: 'Design & Weight', keys: ['specs.dimensions', 'specs.weight', 'specs.material'] },
         { label: 'Others', keys: ['specs.sim', 'specs.network', 'specs.waterResistance'] }
