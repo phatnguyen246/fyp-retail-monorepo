@@ -76,7 +76,7 @@ jobs:
       contents: read
       packages: read
     env:
-      TEST_IMAGE_TAG: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
+      TEST_IMAGE_TAG: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
     steps:
       - name: Checkout
