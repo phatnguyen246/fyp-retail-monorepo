@@ -146,7 +146,7 @@ export const useCatalogStore = defineStore('catalog', () => {
         key: `search-${filters.search}`,
         type: 'search',
         value: filters.search,
-        label: `Tìm: ${filters.search}`,
+        label: `Search: ${filters.search}`,
       })
     }
 
@@ -207,7 +207,7 @@ export const useCatalogStore = defineStore('catalog', () => {
         key: 'price-range',
         type: 'price',
         value: [appliedSidebarFilters.minPrice, appliedSidebarFilters.maxPrice],
-        label: `Giá: ${formatCurrency(appliedSidebarFilters.minPrice)} - ${formatCurrency(appliedSidebarFilters.maxPrice)}`,
+        label: `Price: ${formatCurrency(appliedSidebarFilters.minPrice)} - ${formatCurrency(appliedSidebarFilters.maxPrice)}`,
       })
     }
 

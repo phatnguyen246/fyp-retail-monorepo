@@ -1,7 +1,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
-const DEFAULT_ROUTE_MESSAGE = 'Bạn có thay đổi chưa lưu. Rời đi?'
+const DEFAULT_ROUTE_MESSAGE = 'You have unsaved changes. Leave this page?'
 
 export function useUnsavedChanges({ isDirty, onRouteAttempt, routeMessage = DEFAULT_ROUTE_MESSAGE } = {}) {
   const bypassGuard = ref(false)

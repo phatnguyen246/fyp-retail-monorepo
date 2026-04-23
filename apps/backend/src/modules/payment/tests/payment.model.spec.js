@@ -15,7 +15,7 @@ describe("payment model", () => {
             currency: "VND",
             status: "pending",
             providerTxnRef: "PAY-20260316-000001",
-            orderInfo: "Thanh toan don hang ORD 20260316 000001",
+            orderInfo: "Order payment ORD 20260316 000001",
             createdAt: new Date("2026-03-16T00:00:00.000Z"),
             updatedAt: new Date("2026-03-16T00:00:00.000Z"),
         });

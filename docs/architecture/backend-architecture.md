@@ -1,181 +1,99 @@
 # Backend Architecture
 
-Tài liệu này mô tả kiến trúc backend hiện tại của `apps/backend` theo code thực tế đang wiring trong `src/bootstrap/modules.js`.
+This document describes the current backend architecture of `apps/backend`, based on real module wiring in `src/bootstrap/modules.js`.
 
-## Runtime Topology
+## Runtime Components (Docker Compose)
+- `backend` (`Express`, default port `3000`)
+- `mongo` (`MongoDB` persistence)
+- `VNPAY` external payment gateway integration
+- `SMTP/Mailtrap` email provider integration
+- `Firebase Storage` (optional media storage adapter)
 
-Khi chạy bằng Docker Compose, backend hoạt động với các thành phần chính:
+## Backend Startup Flow
+1. `index.js` loads environment variables and calls `createApp()`.
+2. `createApp()` connects MongoDB and initializes optional adapters.
+3. Global middlewares are mounted (`express.json()`, `cookie-parser()`, etc.).
+4. `registerModules()` wires domain modules and cross-module dependencies.
+5. Routes are mounted and the app starts listening.
 
-- `backend` (`Express`, chạy cổng mặc định `3000`)
-- `mongo` (`MongoDB`, persistence chính)
-- external systems:
-- `VNPAY` (cổng thanh toán)
-- `SMTP/Mailtrap` (gửi email)
-- `Firebase Storage` (lưu ảnh biến thể sản phẩm, optional)
+## Module Responsibilities
 
-## Bootstrap Pipeline
+## Account
+- Owns account persistence and account-level services.
+- Does not own auth session/token lifecycle.
 
-Luồng khởi động backend:
+## Auth
+- Handles register/login/logout/current-user.
+- Uses Account services for profile binding.
+- Supports guest-to-customer cart merge after registration/login.
 
-1. `index.js` load env (`dotenv/config`) và gọi `createApp()`.
-2. `createApp()` kết nối MongoDB, khởi tạo storage adapter (nếu có cấu hình).
-3. Mount middlewares nền tảng: `express.json()`, `cookie-parser()`.
-4. `registerModules()` đăng ký module và wiring liên module.
-5. Mount global error handler.
+## Catalog
+- Owns product, variant, and reference data.
+- Integrates inventory read models for availability display.
+- Integrates media storage adapter for variant images.
 
-## Architecture Diagram
+## Cart
+- Manages guest/customer carts.
+- Validates purchasable lines using Catalog and Inventory.
+- Reconciles stale cart lines against current product/stock states.
 
-```mermaid
-flowchart LR
-    Client[Storefront/Admin Client] --> API[Express API]
+## Inventory
+- Tracks stock by `variantId`.
+- Exposes admin stock update APIs and read APIs.
 
-    subgraph Bootstrap[Bootstrap Layer]
-      API --> AuthMW[optionalAuth Middleware]
-      AuthMW --> Auth[Auth Module]
-      AuthMW --> Catalog[Catalog Module]
-      AuthMW --> Cart[Cart Module]
-      AuthMW --> Inventory[Inventory Module]
-      AuthMW --> Ordering[Ordering Module]
-      AuthMW --> Payment[Payment Module]
-      AuthMW --> AdminOverview[Admin Overview Module]
-      AuthMW --> Account[Account Module]
-      AuthMW --> Notification[Notification Module]
-    end
+## Ordering
+- Orchestrates order lifecycle.
+- Creates orders from checkout/cart context.
+- Handles status transitions and cancellation.
+- Coordinates with Payment and Notification modules.
 
-    Account --> Mongo[(MongoDB)]
-    Auth --> Account
-    Auth --> Cart
+## Payment
+- Manages payment records.
+- Generates VNPAY checkout URLs.
+- Handles return/IPN callbacks, signature verification, and reconciliation.
 
-    Catalog --> Mongo
-    Catalog --> Inventory
-    Catalog --> Storage[(Firebase Storage)]
+## Notification
+- Sends outbound transactional emails.
+- Used for order confirmation and related events.
 
-    Cart --> Mongo
-    Cart --> Catalog
-    Cart --> Inventory
+## Dashboard
+- Provides read-only admin metrics and reporting aggregates.
 
-    Inventory --> Mongo
-    Inventory --> Catalog
+## Core Business Flows
 
-    Ordering --> Mongo
-    Ordering --> Cart
-    Ordering --> Catalog
-    Ordering --> Inventory
-    Ordering --> Payment
-    Ordering --> Notification
+## Register/Login
+1. User signs up or signs in.
+2. Auth issues JWT/cookie credentials.
+3. Guest cart can be merged into customer ownership.
 
-    Payment --> Mongo
-    Payment --> Ordering
-    Payment --> Inventory
-    Payment --> VNPAY[VNPAY Gateway]
+## Add to Cart + Reconcile
+1. Cart validates product/variant and stock availability.
+2. Cart line is stored in MongoDB.
+3. Reconcile updates line states (`active`, `insufficient_stock`, `out_of_stock`, etc.).
 
-    Notification --> SMTP[SMTP / Mailtrap]
+## COD Checkout
+1. Ordering builds checkout snapshot from cart/catalog/inventory.
+2. Stock is committed for COD orders.
+3. Order and payment records are created.
+4. Checked-out lines are removed from cart.
+5. Confirmation email is sent in non-blocking mode.
+6. Best-effort rollback applies on intermediate failures.
 
-    AdminOverview --> Mongo
-```
+## VNPAY Checkout
+1. Ordering creates `pending` order with deferred stock commit.
+2. Payment module creates signed VNPAY URL.
+3. Client is redirected to VNPAY.
+4. Return callback supports user experience; IPN is reconciliation source of truth.
+5. Payment/order status and stock commit/release are updated from IPN outcome.
 
-## Module Boundaries
+## Cancel Order
+1. Customer/admin requests cancellation under allowed transitions.
+2. Ordering validates transition rules.
+3. Stock is restored when required.
+4. Order timeline and payment state are reconciled.
 
-### `account`
-
-- Sở hữu persistence và dịch vụ account.
-- Không xử lý auth session/token.
-
-### `auth`
-
-- Xử lý register/login/logout/current-user.
-- Sử dụng `account` để đọc/ghi user.
-- Tái gán guest cart sang customer cart sau đăng ký thông qua `cartServices`.
-
-### `catalog`
-
-- Quản lý sản phẩm/biến thể/reference data cho storefront và admin.
-- Tích hợp inventory read model để hiển thị tồn kho live.
-- Tích hợp Firebase Storage để upload/delete ảnh variant.
-
-### `cart`
-
-- Quản lý giỏ hàng guest/customer.
-- Validate purchasable bằng dữ liệu từ `catalog` + `inventory`.
-- Reconcile cart định kỳ theo trạng thái catalog/inventory mới nhất.
-
-### `inventory`
-
-- Quản lý tồn kho theo `variantId`.
-- Cấp API admin chỉnh tồn kho và API đọc tồn kho.
-
-### `ordering`
-
-- Điều phối vòng đời đơn hàng.
-- Tạo đơn từ cart, cập nhật trạng thái đơn, hủy đơn.
-- Kết nối payment checkout adapter + notification email.
-
-### `payment`
-
-- Quản lý payment record.
-- Tạo URL thanh toán VNPAY.
-- Nhận `return` + `IPN`, verify chữ ký, reconcile trạng thái payment/order.
-
-### `notification`
-
-- Gửi email (SMTP/Mailtrap adapter).
-- Đang được dùng cho email xác nhận đơn hàng.
-
-### `admin-overview`
-
-- Tổng hợp số liệu dashboard admin (read-only).
-
-## Core Operational Flows
-
-### 1. Authentication + Cart Ownership Handover
-
-1. User login/register qua `auth`.
-2. `auth` phát hành JWT cookie.
-3. Nếu đăng ký từ guest session, `mergeGuestCartToCustomer` đổi ownership cart từ `guest` sang `customer`.
-
-### 2. Add-to-Cart / Reconcile Cart
-
-1. `cart` parse + validate input.
-2. `cart` đọc `catalog` + `inventory` để xác nhận variant còn bán và đủ tồn.
-3. Ghi cart vào MongoDB.
-4. Chạy reconcile để loại bỏ item invalid/outdated và cập nhật snapshot hiển thị.
-
-### 3. Checkout COD (Commit Stock Ngay)
-
-1. `ordering/createOrder` đọc checkout items từ cart.
-2. Đọc song song catalog + inventory để build order item snapshot.
-3. Với `paymentMethod=cod`, giảm tồn kho ngay (`decrement...IfAvailable`).
-4. Tạo order `pending`, tạo payment record ban đầu, dọn item đã checkout khỏi cart.
-5. Gửi email xác nhận đơn hàng theo cơ chế non-blocking.
-6. Nếu lỗi giữa chừng: rollback stock và rollback order.
-
-### 4. Checkout Online qua VNPAY
-
-1. `ordering/createOrder` tạo order `pending` với `stockCommitStatus=not_committed`.
-2. `payment/create-vnpay-url` kiểm tra order đủ điều kiện thanh toán.
-3. Tạo/đọc payment record, ký URL VNPAY và trả cho client redirect.
-4. VNPAY callback:
-- `return` phục vụ UX client (kết quả redirect).
-- `ipn` là nguồn sự thật để reconcile bền vững.
-5. `ipn` verify checksum, tìm payment + order, cập nhật trạng thái và commit/release stock theo kết quả giao dịch.
-
-### 5. Cancel Order và Hoàn Trả Tồn Kho
-
-1. Customer/admin gửi lệnh hủy theo quyền.
-2. `ordering` kiểm tra transition hợp lệ.
-3. Nếu order đã commit stock thì tăng trả tồn (`incrementStock...`).
-4. Cập nhật order status logs; đồng bộ payment pending sang `cancelled` khi cần.
-
-### 6. Admin Catalog/Inventory Operations
-
-1. Admin đi qua `requireAdmin` middleware.
-2. Catalog admin CRUD sản phẩm/variant, import, media upload.
-3. Inventory admin đọc/chỉnh tồn kho và danh sách low-stock.
-4. Storefront đọc dữ liệu đã được hydrate tồn kho để hiển thị khả dụng theo thời gian thực gần.
-
-## Consistency and Failure Handling
-
-- Payment flow dùng IPN làm kênh reconcile chính để giảm lệ thuộc vào redirect của client.
-- Các flow có side effects nhiều bước (ordering/payment) có rollback best-effort cho stock/order.
-- Email gửi non-blocking: không làm fail giao dịch chính nếu gửi mail lỗi.
-- Error handler global chuẩn hóa lỗi trả về từ toàn bộ module.
+## Operational Principles
+- IPN is the primary reconciliation channel for payment finality.
+- Multi-step side effects use best-effort rollback.
+- Email sending is non-blocking and should not fail the core transaction.
+- Global error handling normalizes API error responses across modules.

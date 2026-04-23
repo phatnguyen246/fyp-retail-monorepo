@@ -1,11 +1,5 @@
-# Cart Module Docs
+# Cart Module
 
-Tài liệu của `cart` module.
+English documentation for cart APIs.
 
-## Purpose
-
-`cart` sở hữu guest/customer cart và các thao tác add/update/remove/clear item.
-
-## Docs
-
-- [api.md](./api.md)
+- API reference: `api.md`

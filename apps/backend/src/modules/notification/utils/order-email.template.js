@@ -26,26 +26,26 @@ export function generateOrderConfirmationHtml({ order }) {
     return `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
         <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; color: #1a1a1a;">Xác nhận đơn hàng</h1>
-            <p style="margin: 5px 0 0; color: #666;">Cảm ơn bạn đã mua sắm tại Retail System</p>
+            <h1 style="margin: 0; color: #1a1a1a;">Order confirmation</h1>
+            <p style="margin: 5px 0 0; color: #666;">Thank you for shopping at Retail System</p>
         </div>
         
         <div style="padding: 30px; border: 1px solid #eee; border-top: none; border-radius: 0 0 10px 10px;">
-            <p>Chào <strong>${order.recipientName}</strong>,</p>
-            <p>Đơn hàng của bạn đã được tiếp nhận thành công. Dưới đây là thông tin chi tiết:</p>
+            <p>Hello <strong>${order.recipientName}</strong>,</p>
+            <p>Your order has been received successfully. Details are below:</p>
             
             <div style="background-color: #fff9f0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0;">Mã đơn hàng: <strong style="color: #d97706;">${order.orderCode}</strong></p>
-                <p style="margin: 5px 0 0;">Ngày đặt: ${new Date(order.createdAt).toLocaleString("vi-VN")}</p>
-                <p style="margin: 5px 0 0;">Phương thức thanh toán: ${order.paymentMethod === "vnpay" ? "VNPAY" : "Thanh toán khi nhận hàng (COD)"}</p>
+                <p style="margin: 0;">Order code: <strong style="color: #d97706;">${order.orderCode}</strong></p>
+                <p style="margin: 5px 0 0;">Placed at: ${new Date(order.createdAt).toLocaleString("en-US")}</p>
+                <p style="margin: 5px 0 0;">Payment method: ${order.paymentMethod === "vnpay" ? "VNPAY" : "Cash on Delivery (COD)"}</p>
             </div>
             
             <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                 <thead>
                     <tr style="background-color: #fcfcfc;">
-                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #eee;">Sản phẩm</th>
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #eee;">Product</th>
                         <th style="padding: 10px; text-align: center; border-bottom: 2px solid #eee;">SL</th>
-                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #eee;">Thành tiền</th>
+                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #eee;">Line total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,28 +53,28 @@ export function generateOrderConfirmationHtml({ order }) {
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="2" style="padding: 20px 10px 5px; text-align: right;"><strong>Tạm tính:</strong></td>
+                        <td colspan="2" style="padding: 20px 10px 5px; text-align: right;"><strong>Subtotal:</strong></td>
                         <td style="padding: 20px 10px 5px; text-align: right;">${formatCurrency(order.subtotal, order.currency || "VND")}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="padding: 5px 10px; text-align: right;"><strong>Phí vận chuyển:</strong></td>
+                        <td colspan="2" style="padding: 5px 10px; text-align: right;"><strong>Shipping fee:</strong></td>
                         <td style="padding: 5px 10px; text-align: right;">${formatCurrency(order.shippingFee, order.currency || "VND")}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="padding: 10px; text-align: right;"><h3 style="margin: 0;">Tổng cộng:</h3></td>
+                        <td colspan="2" style="padding: 10px; text-align: right;"><h3 style="margin: 0;">Total:</h3></td>
                         <td style="padding: 10px; text-align: right;"><h3 style="margin: 0; color: #1a1a1a;">${formatCurrency(order.grandTotal, order.currency || "VND")}</h3></td>
                     </tr>
                 </tfoot>
             </table>
             
             <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                <p style="margin: 0; font-size: 14px; color: #666;">Địa chỉ nhận hàng:</p>
+                <p style="margin: 0; font-size: 14px; color: #666;">Shipping address:</p>
                 <p style="margin: 5px 0 0; font-weight: bold;">${order.recipientName} - ${order.phoneNumber}</p>
                 <p style="margin: 5px 0 0;">${order.shippingAddressLine}</p>
             </div>
             
             <div style="margin-top: 40px; text-align: center; font-size: 13px; color: #999;">
-                <p>Đây là email tự động, vui lòng không phản hồi email này.</p>
+                <p>This is an automated email. Please do not reply.</p>
                 <p>&copy; 2026 Retail System. All rights reserved.</p>
             </div>
         </div>

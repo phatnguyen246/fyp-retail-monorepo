@@ -35,12 +35,12 @@ const paymentOptions = [
   {
     value: 'cod',
     title: 'COD',
-    description: 'Thanh toan khi nhan hang sau khi don duoc xac nhan.',
+    description: 'Pay on delivery after the order is confirmed.',
   },
   {
     value: 'vnpay',
     title: 'VNPAY',
-    description: 'Ban se duoc chuyen sang VNPAY de hoan tat thanh toan.',
+    description: 'You will be redirected to VNPAY to complete payment.',
   },
 ]
 
@@ -91,10 +91,10 @@ const shippingAddressLine = computed(() => composeShippingAddressLine(shippingIn
 
 const submitButtonLabel = computed(() => {
   if (orderingStore.loading) {
-    return paymentMethod.value === 'vnpay' ? 'Dang tao lenh thanh toan...' : 'Dang dat hang...'
+    return paymentMethod.value === 'vnpay' ? 'Creating payment request...' : 'Placing order...'
   }
 
-  return paymentMethod.value === 'vnpay' ? 'Tiep tuc den VNPAY' : 'Dat hang COD'
+  return paymentMethod.value === 'vnpay' ? 'Continue to VNPAY' : 'Place COD order'
 })
 
 onMounted(() => {
@@ -190,7 +190,7 @@ function mapOrderingError(error) {
     : []
 
   if (missingVariantIds.length > 0) {
-    return `Mot so san pham khong con hop le trong gio hang (${missingVariantIds.length} line). Hay tai lai gio hang va thu lai.`
+    return `Some items in your cart are no longer valid ( lines). Please refresh the cart and try again.`
   }
 
   if (Array.isArray(error?.meta?.issues) && error.meta.issues.length > 0) {
@@ -235,7 +235,7 @@ function mapOrderingError(error) {
     }
   }
 
-  return error?.message || 'Khong the tao don hang. Vui long thu lai.'
+  return error?.message || 'Unable to create order. Please try again.'
 }
 
 function persistVnpayContext(order) {
@@ -301,7 +301,7 @@ async function handlePlaceOrder() {
   }
 
   submitMessageTone.value = 'success'
-  submitMessage.value = 'Don hang COD da duoc tao. Dang chuyen sang trang chi tiet don hang.'
+  submitMessage.value = 'Your COD order has been created. Redirecting to order detail page.'
   await router.push({ name: 'order-detail', params: { orderId: order.id } })
 }
 </script>
@@ -317,7 +317,7 @@ async function handlePlaceOrder() {
               <h1 class="catalog-display-title mt-2 text-4xl leading-tight lg:text-5xl">Checkout</h1>
             </div>
             <RouterLink class="catalog-reset-button inline-flex items-center justify-center" :to="{ name: 'cart' }">
-              Quay lai gio hang
+              Back to cart
             </RouterLink>
           </div>
 
@@ -326,13 +326,13 @@ async function handlePlaceOrder() {
             class="rounded-[2rem] border border-[rgba(186,26,26,0.18)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)]"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-danger)]">
-              Khong the tai checkout
+              Unable to load checkout
             </p>
             <h2 class="mt-3 text-3xl font-semibold text-[var(--catalog-text)]">
-              Du lieu gio hang hien chua san sang.
+              Cart data is not ready yet.
             </h2>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Checkout can doc du lieu cart truoc khi tao don hang. Hay thu dong bo lai cart va thu tiep.
+              Checkout needs cart data before creating an order. Please refresh cart and try again.
             </p>
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
@@ -341,10 +341,10 @@ async function handlePlaceOrder() {
                 :disabled="cartStore.loading"
                 @click="refreshCheckoutContext"
               >
-                {{ cartStore.loading ? 'Dang tai lai cart...' : 'Thu tai lai cart' }}
+                {{ cartStore.loading ? 'Reloading cart...' : 'Retry loading cart' }}
               </button>
               <RouterLink class="catalog-reset-button inline-flex items-center justify-center" :to="{ name: 'cart' }">
-                Quay ve gio hang
+                Go back to cart
               </RouterLink>
             </div>
           </section>
@@ -366,18 +366,18 @@ async function handlePlaceOrder() {
             class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-10"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-              Chua co du lieu checkout
+              No checkout data available
             </p>
-            <h2 class="catalog-display-title mt-3 text-3xl">Gio hang dang trong.</h2>
+            <h2 class="catalog-display-title mt-3 text-3xl">Cart is empty.</h2>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Hay quay lai cart hoac catalog de chon san pham truoc khi tiep tuc thanh toan.
+              Please go back to cart or catalog and select products before continuing checkout.
             </p>
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
               <RouterLink class="catalog-primary-button inline-flex items-center justify-center" :to="{ name: 'cart' }">
-                Mo gio hang
+                Open cart
               </RouterLink>
               <RouterLink class="catalog-reset-button inline-flex items-center justify-center" :to="{ name: 'catalog-products' }">
-                Tiep tuc mua sam
+                Continue shopping
               </RouterLink>
             </div>
           </section>
@@ -387,17 +387,17 @@ async function handlePlaceOrder() {
               <div class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] sm:p-7">
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                    Nguoi nhan
+                    Recipient
                   </p>
-                  <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Thong tin giao hang</h2>
+                  <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Shipping information</h2>
                   <p class="mt-2 max-w-2xl text-sm leading-6 text-[var(--catalog-text-muted)]">
-                    Dien so dien thoai va dia chi chi tiet de viec giao hang duoc dien ra nhanh va chinh xac.
+                    Enter your phone number and full address details so delivery can be processed quickly and accurately.
                   </p>
                 </div>
 
                 <form class="mt-8 grid gap-5 md:grid-cols-2" autocomplete="off" @submit.prevent="handlePlaceOrder">
                   <label class="flex flex-col gap-3 md:col-span-2">
-                    <span class="text-sm font-medium text-[var(--catalog-text)]">Ten nguoi nhan</span>
+                    <span class="text-sm font-medium text-[var(--catalog-text)]">Recipient name</span>
                     <input
                       v-model="shippingInfo.recipientName"
                       id="checkout-recipient-name"
@@ -413,7 +413,7 @@ async function handlePlaceOrder() {
                   </label>
 
                   <label class="flex flex-col gap-3 md:col-span-1">
-                    <span class="text-sm font-medium text-[var(--catalog-text)]">Email xac nhan</span>
+                    <span class="text-sm font-medium text-[var(--catalog-text)]">Confirmation email</span>
                     <input
                       v-model="shippingInfo.email"
                       id="checkout-recipient-email"
@@ -469,7 +469,7 @@ async function handlePlaceOrder() {
 
                   <div class="md:col-span-2">
                     <div class="flex flex-col gap-2">
-                      <span class="text-sm font-medium text-[var(--catalog-text)]">Tinh/Thanh pho, Quan/Huyen, Phuong/Xa</span>
+                      <span class="text-sm font-medium text-[var(--catalog-text)]">Province/City, District, Ward</span>
                       <AddressSelector
                         :model-value="shippingInfo.shippingAddress"
                         :disabled="orderingStore.loading"
@@ -483,16 +483,16 @@ async function handlePlaceOrder() {
                       v-if="shippingAddressLine"
                       class="mt-3 rounded-[1rem] bg-[rgba(244,237,216,0.48)] px-4 py-3 text-sm leading-6 text-[var(--catalog-text-muted)]"
                     >
-                      Dia chi se giao toi: <span class="font-semibold text-[var(--catalog-text)]">{{ shippingAddressLine }}</span>
+                      Delivery address: <span class="font-semibold text-[var(--catalog-text)]">{{ shippingAddressLine }}</span>
                     </p>
                   </div>
 
                   <div class="md:col-span-2">
                     <div>
                       <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                        Thanh toan
+                        Payment
                       </p>
-                      <h3 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Chon phuong thuc thanh toan</h3>
+                      <h3 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Choose payment method</h3>
                     </div>
 
                     <div class="mt-5 grid gap-4 lg:grid-cols-2">
@@ -533,17 +533,16 @@ async function handlePlaceOrder() {
                     <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-primary-deep)]">
                       Truoc khi dat hang
                     </p>
-                    <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Co line dang bi loai khoi checkout</h2>
+                    <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Some lines are excluded from checkout</h2>
                     <p class="mt-2 max-w-2xl text-sm leading-6 text-[var(--catalog-text-muted)]">
-                      Mot so san pham trong gio hang hien chua san sang de dat mua. Ban co the quay lai gio hang de cap
-                      nhat so luong hoac loai bo nhung san pham nay.
+                      Some cart items are not ready for purchase. You can return to cart to adjust quantity or remove these items.
                     </p>
                   </div>
                   <RouterLink
                     :to="{ name: 'cart' }"
                     class="catalog-reset-button inline-flex items-center justify-center"
                   >
-                    Mo gio hang de xu ly
+                    Open cart de xu ly
                   </RouterLink>
                 </div>
 
@@ -559,11 +558,11 @@ async function handlePlaceOrder() {
                         <p class="mt-1 text-sm text-[var(--catalog-text-muted)]">{{ item.variantLabel }}</p>
                       </div>
                       <div class="rounded-full bg-[rgba(139,117,0,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-primary-deep)]">
-                        {{ item.isAvailable === false ? 'Khong hop le' : 'Chua duoc chon' }}
+                        {{ item.isAvailable === false ? 'Invalid' : 'Not selected' }}
                       </div>
                     </div>
                     <p class="mt-3 text-sm leading-6 text-[var(--catalog-text-muted)]">
-                      {{ item.availabilityMessage || 'Line nay khong duoc dua vao checkout hien tai.' }}
+                      {{ item.availabilityMessage || 'This line is currently excluded from checkout.' }}
                     </p>
                   </li>
                 </ul>
@@ -577,9 +576,9 @@ async function handlePlaceOrder() {
                   Order summary
                 </p>
                 <div class="mt-4">
-                  <h2 class="catalog-display-title text-3xl">Tom tat don hang</h2>
+                  <h2 class="catalog-display-title text-3xl">Order summary</h2>
                   <p class="mt-2 text-sm leading-6 text-[var(--catalog-text-muted)]">
-                    Xem lai cac san pham ban sap dat mua truoc khi tiep tuc thanh toan.
+                    Review the products you are about to order before continuing payment.
                   </p>
                 </div>
 
@@ -605,7 +604,7 @@ async function handlePlaceOrder() {
                         </div>
                         <div class="mt-3 flex items-center justify-between text-sm text-[var(--catalog-text-muted)]">
                           <span>So luong {{ formatNumber(item.quantity) }}</span>
-                          <span>Don gia {{ formatCurrency(item.unitPrice) }}</span>
+                          <span>Unit price {{ formatCurrency(item.unitPrice) }}</span>
                         </div>
                       </div>
                     </div>
@@ -616,18 +615,18 @@ async function handlePlaceOrder() {
                   v-else
                   class="mt-6 rounded-[1.5rem] border border-dashed border-[var(--catalog-border-soft)] bg-[var(--catalog-surface-muted)] px-4 py-5 text-sm leading-6 text-[var(--catalog-text-muted)]"
                 >
-                  Chua co san pham nao san sang de checkout. Hay quay lai gio hang va kich hoat cac san pham kha dung.
+                  No products are ready for checkout. Please return to cart and activate available products.
                 </div>
 
                 <dl class="mt-6 space-y-3 border-t border-[var(--catalog-border-soft)] pt-5 text-sm">
                   <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Nguoi nhan</dt>
-                    <dd class="font-semibold text-[var(--catalog-text)]">{{ shippingInfo.recipientName || 'Chua nhap' }}</dd>
+                    <dt class="text-[var(--catalog-text-muted)]">Recipient</dt>
+                    <dd class="font-semibold text-[var(--catalog-text)]">{{ shippingInfo.recipientName || 'Not provided' }}</dd>
                   </div>
                   <div class="flex items-start justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Dia chi giao hang</dt>
+                    <dt class="text-[var(--catalog-text-muted)]">Shipping address</dt>
                     <dd class="max-w-[16rem] text-right font-semibold text-[var(--catalog-text)]">
-                      {{ shippingAddressLine || 'Chua chon dia chi' }}
+                      {{ shippingAddressLine || 'No address selected' }}
                     </dd>
                   </div>
                   <div class="flex items-center justify-between gap-4">
@@ -639,7 +638,7 @@ async function handlePlaceOrder() {
                     <dd class="font-semibold text-[var(--catalog-text)]">{{ formatNumber(selectedQuantity) }}</dd>
                   </div>
                   <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Phuong thuc</dt>
+                    <dt class="text-[var(--catalog-text-muted)]">Payment method</dt>
                     <dd class="font-semibold uppercase text-[var(--catalog-text)]">{{ paymentMethod }}</dd>
                   </div>
                   <div class="flex items-center justify-between gap-4 border-t border-[var(--catalog-border-soft)] pt-4">

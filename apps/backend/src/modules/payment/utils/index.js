@@ -42,18 +42,18 @@ export function sanitizeVnpayOrderInfo(value) {
     const baseValue =
         typeof value === "string" && value.trim().length > 0
             ? value
-            : "Thanh toan don hang";
+            : "Order payment";
 
     const normalized = removeAccents(baseValue)
         .replace(/[^A-Za-z0-9 ]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
 
-    return normalized.length > 0 ? normalized : "Thanh toan don hang";
+    return normalized.length > 0 ? normalized : "Order payment";
 }
 
 export function buildVnpayOrderInfo(order) {
-    return sanitizeVnpayOrderInfo(`Thanh toan don hang ${order?.orderCode ?? ""}`);
+    return sanitizeVnpayOrderInfo(`Order payment ${order?.orderCode ?? ""}`);
 }
 
 export function isSuccessfulVnpayPayload(payload = {}) {

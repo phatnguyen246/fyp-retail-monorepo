@@ -32,6 +32,9 @@ lerna-debug.log*
 # Testing
 .nyc_output/
 vitest-report/
+playwright-report/
+test-results/
+blob-report/
 
 # Editor / IDE
 .idea/
@@ -53,3 +56,4 @@ apps/backend/credentials/
 .codex
 GEMINI.md
 AGENTS.md
+tmp-e2e-debug/

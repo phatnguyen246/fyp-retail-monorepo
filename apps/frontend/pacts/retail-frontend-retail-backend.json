@@ -4,6 +4,59 @@
   },
   "interactions": [
     {
+      "description": "a request for missing storefront product detail",
+      "providerStates": [
+        {
+          "name": "catalog product detail exists for iphone 16"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/catalog/products/65f100000000000000000099/not-found-slug"
+      },
+      "response": {
+        "body": {
+          "code": "CATALOG_NOT_FOUND",
+          "message": "Catalog storefront product not found: 65f100000000000000000099",
+          "meta": {
+            "productId": "65f100000000000000000099"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "matchingRules": {
+          "body": {
+            "$.code": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.message": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.meta.productId": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 404
+      }
+    },
+    {
       "description": "a request for smartphone catalog discovery options",
       "providerStates": [
         {
@@ -56,7 +109,7 @@
             ],
             "sortModes": [
               {
-                "label": "Mới nhất",
+                "label": "Newest",
                 "value": "newest"
               }
             ],
@@ -253,6 +306,181 @@
       }
     },
     {
+      "description": "a request for storefront compare products",
+      "providerStates": [
+        {
+          "name": "catalog product list exists for smartphone storefront"
+        }
+      ],
+      "request": {
+        "body": {
+          "productIds": [
+            "65f100000000000000000010"
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/catalog/compare"
+      },
+      "response": {
+        "body": {
+          "data": {
+            "items": [
+              {
+                "defaultVariant": {
+                  "availableQuantity": 8,
+                  "id": "65f100000000000000000020",
+                  "isInStock": true,
+                  "media": [
+                    {
+                      "id": "65f100000000000000000040",
+                      "url": "https://cdn.example.com/products/iphone16-blue-front.jpg"
+                    }
+                  ],
+                  "sku": "IP16-BLU-256"
+                },
+                "product": {
+                  "hasInStockVariants": true,
+                  "id": "65f100000000000000000010",
+                  "minSalePrice": 24990000,
+                  "slug": "dien-thoai-iphone-16",
+                  "specs": {
+                    "battery": "3561mAh",
+                    "chipset": "A18"
+                  },
+                  "title": "iPhone 16"
+                }
+              }
+            ]
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "matchingRules": {
+          "body": {
+            "$.data.items": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.availableQuantity": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.isInStock": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.media": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.media[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.media[*].url": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].defaultVariant.sku": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].product.hasInStockVariants": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].product.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].product.minSalePrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.data.items[*].product.slug": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].product.specs": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.items[*].product.title": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    },
+    {
       "description": "a request for storefront product detail",
       "providerStates": [
         {
@@ -345,6 +573,92 @@
               ]
             },
             "$.data.variants[*].sku": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.meta.canonicalSlug": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a request for storefront product detail with non-canonical slug",
+      "providerStates": [
+        {
+          "name": "catalog product detail exists for iphone 16"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/catalog/products/65f100000000000000000010/wrong-slug"
+      },
+      "response": {
+        "body": {
+          "data": {
+            "id": "65f100000000000000000010",
+            "slug": "dien-thoai-iphone-16",
+            "variants": [
+              {
+                "id": "65f100000000000000000020",
+                "isInStock": true
+              }
+            ]
+          },
+          "meta": {
+            "canonicalSlug": "dien-thoai-iphone-16"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "matchingRules": {
+          "body": {
+            "$.data.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.slug": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.variants": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.data.variants[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data.variants[*].isInStock": {
               "combine": "AND",
               "matchers": [
                 {
@@ -500,6 +814,256 @@
           }
         },
         "status": 200
+      }
+    },
+    {
+      "description": "a request for storefront search listing",
+      "providerStates": [
+        {
+          "name": "catalog product list exists for smartphone storefront"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/catalog/search",
+        "query": {
+          "categoryCode": [
+            "SMARTPHONE"
+          ],
+          "limit": [
+            "12"
+          ],
+          "page": [
+            "1"
+          ],
+          "productType": [
+            "smartphone"
+          ],
+          "q": [
+            "iphone"
+          ],
+          "sortMode": [
+            "newest"
+          ]
+        }
+      },
+      "response": {
+        "body": {
+          "data": [
+            {
+              "hasInStockVariants": true,
+              "id": "65f100000000000000000010",
+              "minSalePrice": 24990000,
+              "slug": "dien-thoai-iphone-16",
+              "status": "active",
+              "title": "iPhone 16"
+            }
+          ],
+          "meta": {
+            "limit": 12,
+            "page": 1,
+            "total": 1,
+            "totalPages": 1
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "matchingRules": {
+          "body": {
+            "$.data": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.data[*].hasInStockVariants": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].minSalePrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.data[*].slug": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].status": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.data[*].title": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.meta.limit": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.meta.page": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.meta.total": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.meta.totalPages": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a request for storefront search listing without q",
+      "providerStates": [
+        {
+          "name": "catalog product list exists for smartphone storefront"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/catalog/search",
+        "query": {
+          "categoryCode": [
+            "SMARTPHONE"
+          ],
+          "limit": [
+            "12"
+          ],
+          "page": [
+            "1"
+          ],
+          "productType": [
+            "smartphone"
+          ],
+          "sortMode": [
+            "newest"
+          ]
+        }
+      },
+      "response": {
+        "body": {
+          "code": "VALIDATION_ERROR",
+          "message": "Request validation failed",
+          "meta": {
+            "issues": [
+              {
+                "code": "custom",
+                "message": "Catalog search query requires q or keyword",
+                "path": "q"
+              }
+            ]
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "matchingRules": {
+          "body": {
+            "$.code": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.message": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.meta.issues": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.meta.issues[*].code": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.meta.issues[*].message": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.meta.issues[*].path": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 422
       }
     }
   ],

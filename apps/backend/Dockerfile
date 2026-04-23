@@ -8,9 +8,10 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/backend/package.json apps/backend/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
-COPY apps/backend apps/backend
 
 RUN pnpm install --filter @apps/backend --frozen-lockfile
+
+COPY apps/backend apps/backend
 
 EXPOSE 3000
 

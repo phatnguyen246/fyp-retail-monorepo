@@ -40,7 +40,7 @@ jobs:
               - 'pnpm-workspace.yaml'
 
   verify:
-    if: needs.detect-changes.outputs.backend_changed == 'true' || needs.detect-changes.outputs.shared_changed == 'true'
+    if: needs.detect-changes.outputs.backend_changed == 'true' || needs.detect-changes.outputs.frontend_changed == 'true' || needs.detect-changes.outputs.shared_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

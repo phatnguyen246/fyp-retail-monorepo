@@ -144,7 +144,7 @@ export function createCreateOrderService({
             if (typeof sendEmail === "function" && orderDocument.email) {
                 sendEmail({
                     to: orderDocument.email,
-                    subject: `[Retail System] Xác nhận đơn hàng #${orderDocument.orderCode}`,
+                    subject: `[Retail System] Order confirmation #${orderDocument.orderCode}`,
                     html: generateOrderConfirmationHtml({ order: orderDocument }),
                 })
                     .then((emailResult) => {

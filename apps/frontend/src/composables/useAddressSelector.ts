@@ -55,7 +55,7 @@ export function useAddressSelector(options: { locationService?: LocationService 
       provinces.value = await locationService.getProvinces()
     } catch (_error) {
       provinces.value = []
-      errorMessage.value = 'Khong the tai danh sach tinh/thanh pho. Vui long thu lai.'
+      errorMessage.value = 'Unable to load provinces/cities. Please try again.'
     } finally {
       loadingProvinces.value = false
     }
@@ -76,7 +76,7 @@ export function useAddressSelector(options: { locationService?: LocationService 
       districts.value = await locationService.getDistricts(selectedProvince.value)
     } catch (_error) {
       districts.value = []
-      errorMessage.value = 'Khong the tai danh sach quan/huyen. Vui long thu lai.'
+      errorMessage.value = 'Unable to load districts. Please try again.'
     } finally {
       loadingDistricts.value = false
     }
@@ -97,7 +97,7 @@ export function useAddressSelector(options: { locationService?: LocationService 
       wards.value = await locationService.getWards(selectedDistrict.value)
     } catch (_error) {
       wards.value = []
-      errorMessage.value = 'Khong the tai danh sach phuong/xa. Vui long thu lai.'
+      errorMessage.value = 'Unable to load wards. Please try again.'
     } finally {
       loadingWards.value = false
     }

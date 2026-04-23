@@ -8,9 +8,12 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/backend/package.json apps/backend/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
-COPY apps/frontend apps/frontend
+COPY packages/location-client/package.json packages/location-client/package.json
 
 RUN pnpm install --filter @apps/frontend --frozen-lockfile
+
+COPY apps/frontend apps/frontend
+COPY packages/location-client packages/location-client
 
 EXPOSE 5173
 

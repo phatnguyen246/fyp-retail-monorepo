@@ -97,7 +97,7 @@ onMounted(async () => {
 <template>
   <div class="grid gap-5 md:grid-cols-3">
     <label class="flex flex-col gap-3">
-      <span class="text-sm font-medium text-[var(--catalog-text)]">Tinh/Thanh pho</span>
+      <span class="text-sm font-medium text-[var(--catalog-text)]">Province/City</span>
       <select
         :value="provinceSelectValue"
         class="checkout-input"
@@ -105,7 +105,7 @@ onMounted(async () => {
         @change="handleProvinceChange"
       >
         <option value="">
-          {{ loadingProvinces ? 'Dang tai tinh/thanh pho...' : 'Chon tinh/thanh pho' }}
+          {{ loadingProvinces ? 'Loading provinces/cities...' : 'Select province/city' }}
         </option>
         <option v-for="province in provinces" :key="province.code" :value="province.code">
           {{ province.name }}
@@ -114,7 +114,7 @@ onMounted(async () => {
     </label>
 
     <label class="flex flex-col gap-3">
-      <span class="text-sm font-medium text-[var(--catalog-text)]">Quan/Huyen</span>
+      <span class="text-sm font-medium text-[var(--catalog-text)]">District</span>
       <select
         :value="districtSelectValue"
         class="checkout-input"
@@ -122,7 +122,7 @@ onMounted(async () => {
         @change="handleDistrictChange"
       >
         <option value="">
-          {{ loadingDistricts ? 'Dang tai quan/huyen...' : 'Chon quan/huyen' }}
+          {{ loadingDistricts ? 'Loading districts...' : 'Select district' }}
         </option>
         <option v-for="district in districts" :key="district.code" :value="district.code">
           {{ district.name }}
@@ -131,7 +131,7 @@ onMounted(async () => {
     </label>
 
     <label class="flex flex-col gap-3">
-      <span class="text-sm font-medium text-[var(--catalog-text)]">Phuong/Xa</span>
+      <span class="text-sm font-medium text-[var(--catalog-text)]">Ward</span>
       <select
         :value="wardSelectValue"
         class="checkout-input"
@@ -139,7 +139,7 @@ onMounted(async () => {
         @change="handleWardChange"
       >
         <option value="">
-          {{ loadingWards ? 'Dang tai phuong/xa...' : 'Chon phuong/xa' }}
+          {{ loadingWards ? 'Loading wards...' : 'Select ward' }}
         </option>
         <option v-for="ward in wards" :key="ward.code" :value="ward.code">
           {{ ward.name }}

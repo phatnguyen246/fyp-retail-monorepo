@@ -10,8 +10,8 @@ const router = useRouter()
 const orderingStore = useOrderingStore()
 
 const pageState = ref('loading')
-const heading = ref('Dang xac nhan thanh toan')
-const message = ref('Vui long doi trong giay lat trong khi he thong cap nhat ket qua thanh toan cua ban.')
+const heading = ref('Verifying payment')
+const message = ref('Please wait while we update your payment result.')
 const orderId = ref(null)
 const orderCode = ref(null)
 const paymentResult = ref(null)
@@ -101,8 +101,8 @@ async function handleReturn() {
 
   if (!result.success) {
     pageState.value = 'error'
-    heading.value = 'Khong the xu ly callback'
-    message.value = result.error?.message || 'Da co loi khi kiem tra ket qua thanh toan. Vui long thu lai sau it phut.'
+    heading.value = 'Unable to process callback'
+    message.value = result.error?.message || 'An error occurred while checking the payment result. Please try again in a few minutes.'
     return
   }
 
@@ -114,8 +114,8 @@ async function handleReturn() {
 
   if (result.data?.code === '97') {
     pageState.value = 'invalid'
-    heading.value = 'Callback khong hop le'
-    message.value = 'Thong tin tra ve tu cong thanh toan khong hop le. Neu ban da bi tru tien, hay kiem tra lai don hang.'
+    heading.value = 'Invalid callback'
+    message.value = 'Returned data from the payment gateway is invalid. If you were charged, please verify your order.'
     return
   }
 
@@ -125,8 +125,8 @@ async function handleReturn() {
 
       if (orderCheck.resolved && orderCheck.order?.paymentStatus === 'paid') {
         pageState.value = 'paid'
-        heading.value = 'Thanh toan da duoc ghi nhan'
-        message.value = 'Don hang cua ban da duoc cap nhat thanh cong. Ban co the mo chi tiet don hang de theo doi tiep.'
+        heading.value = 'Payment da duoc ghi nhan'
+        message.value = 'Your order was updated successfully. You can open order details to continue tracking.'
         clearStoredContext()
         await redirectToOrderDetail()
         return
@@ -134,16 +134,16 @@ async function handleReturn() {
     }
 
     pageState.value = 'pending'
-    heading.value = 'Da nhan ket qua thanh toan'
-    message.value = 'He thong dang hoan tat cap nhat don hang. Neu can, ban co the kiem tra lai sau giay lat.'
+    heading.value = 'Payment result received'
+    message.value = 'The system is finalizing your order update. You can check again shortly if needed.'
     await redirectToOrderDetail()
     return
   }
 
   pageState.value = 'failed'
-  heading.value = 'Thanh toan chua thanh cong'
+  heading.value = 'Payment chua thanh cong'
   message.value =
-    'Giao dich chua hoan tat. Ban co the mo chi tiet don hang de kiem tra va thu lai neu can.'
+    'Transaction is not completed. You can open order details to check and retry if needed.'
   await redirectToOrderDetail()
 }
 
@@ -157,7 +157,7 @@ onMounted(() => {
     <div class="mx-auto max-w-3xl">
       <section class="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
         <div class="bg-[linear-gradient(135deg,#082f49_0%,#0f172a_58%,#164e63_100%)] px-6 py-8 text-white sm:px-8">
-          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">Ket qua thanh toan</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">Payment result</p>
           <h1 class="mt-4 text-3xl font-semibold tracking-tight">{{ heading }}</h1>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200">{{ message }}</p>
         </div>
@@ -165,16 +165,16 @@ onMounted(() => {
         <div class="space-y-6 px-6 py-8 sm:px-8">
           <div class="grid gap-4 sm:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Trang thai page</p>
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Page state</p>
               <p class="mt-2 text-lg font-semibold text-slate-950">{{ pageState }}</p>
             </article>
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Order ID</p>
-              <p class="mt-2 break-all text-sm font-medium text-slate-950">{{ orderId || 'Khong co context' }}</p>
+              <p class="mt-2 break-all text-sm font-medium text-slate-950">{{ orderId || 'No context' }}</p>
             </article>
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Order code</p>
-              <p class="mt-2 break-all text-sm font-medium text-slate-950">{{ orderCode || 'Khong co context' }}</p>
+              <p class="mt-2 break-all text-sm font-medium text-slate-950">{{ orderCode || 'No context' }}</p>
             </article>
           </div>
 
@@ -190,11 +190,11 @@ onMounted(() => {
                     : 'border-slate-200 bg-slate-50'
             "
           >
-            Chung toi khuyen ban mo chi tiet don hang de theo doi trang thai moi nhat va cac buoc tiep theo.
+            We recommend opening order details to follow the latest status and next steps.
           </div>
 
           <div v-if="paymentResult" class="rounded-[24px] border border-slate-200 bg-white px-5 py-5">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Du lieu callback</p>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Callback data</p>
             <dl class="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
                 <dt class="text-sm text-slate-500">Response code</dt>
@@ -213,7 +213,7 @@ onMounted(() => {
               :to="{ name: 'order-detail', params: { orderId } }"
               class="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              Mo chi tiet don hang
+              Open order details
             </RouterLink>
 
             <button
@@ -221,14 +221,14 @@ onMounted(() => {
               class="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               @click="handleReturn"
             >
-              Kiem tra lai
+              Check again
             </button>
 
             <RouterLink
               :to="{ name: 'catalog-products' }"
               class="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Tiep tuc mua sam
+              Continue shopping
             </RouterLink>
           </div>
         </div>

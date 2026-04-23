@@ -1,11 +1,5 @@
-# Payment Module Docs
+# Payment Module
 
-Tài liệu của `payment` module.
+English documentation for payment APIs.
 
-## Purpose
-
-`payment` sở hữu payment records, VNPAY URL creation, và callback handling.
-
-## Docs
-
-- [api.md](./api.md)
+- API reference: `api.md`

@@ -9,7 +9,7 @@ import {
 describe("computeProductDerivedFields", () => {
     it("computes all derived fields when active in-stock variants exist", () => {
         const product = createProductFixture({
-            title: "  Điện   thoại   Samsung Galaxy  ",
+            title: "  Samsung phone Galaxy  ",
         });
         const variants = [
             createVariantFixture({
@@ -31,7 +31,7 @@ describe("computeProductDerivedFields", () => {
         ];
 
         expect(computeProductDerivedFields({ product, variants })).toEqual({
-            slug: "dien-thoai-samsung-galaxy",
+            slug: "samsung-phone-galaxy",
             defaultSelectedVariantId: variants[1]._id,
             listingVariantSnapshot: {
                 variantId: variants[1]._id,

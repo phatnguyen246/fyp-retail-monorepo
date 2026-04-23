@@ -2,9 +2,9 @@ import axios from 'axios'
 import http from './http'
 
 const defaultSortModes = [
-  { label: 'Mới nhất', value: 'newest' },
-  { label: 'Giá tăng dần', value: 'price_asc' },
-  { label: 'Giá giảm dần', value: 'price_desc' },
+  { label: 'Newest', value: 'newest' },
+  { label: 'Price: Low to High', value: 'price_asc' },
+  { label: 'Price: High to Low', value: 'price_desc' },
 ]
 const primaryColorDefinitions = [
   { value: 'Black', keywords: ['black', 'graphite', 'obsidian', 'midnight', 'shadow'] },
@@ -246,9 +246,9 @@ export function getCatalogErrorMessage(error) {
       error.response?.data?.message ||
       error.response?.data?.code ||
       error.message ||
-      'Không thể tải danh mục sản phẩm.'
+      'Unable to load product catalog.'
     )
   }
 
-  return error instanceof Error ? error.message : 'Không thể tải danh mục sản phẩm.'
+  return error instanceof Error ? error.message : 'Unable to load product catalog.'
 }

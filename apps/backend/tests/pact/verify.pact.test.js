@@ -389,6 +389,31 @@ function matchesField(actual, expected) {
 
     if (operatorKeys.length > 0) {
       return operatorKeys.every((operator) => {
+        if (operator === '$regex') {
+          const source = expected.$regex
+          const flags = typeof expected.$options === 'string' ? expected.$options : ''
+
+          if (typeof actual !== 'string') {
+            return false
+          }
+
+          if (source instanceof RegExp) {
+            const mergedFlags = `${source.flags}${flags}`
+            const uniqueFlags = [...new Set(mergedFlags.split(''))].join('')
+            return new RegExp(source.source, uniqueFlags).test(actual)
+          }
+
+          if (typeof source === 'string') {
+            return new RegExp(source, flags).test(actual)
+          }
+
+          return false
+        }
+
+        if (operator === '$options') {
+          return true
+        }
+
         if (operator === '$in') {
           const values = Array.isArray(expected.$in) ? expected.$in : []
           return values.some((candidate) => toComparable(actual) === toComparable(candidate))
@@ -572,6 +597,7 @@ async function publishVerificationResultToBroker({
   publishUrl,
   brokerToken,
   providerVersion,
+  providerVersionBranch,
 }) {
   if (!publishUrl) {
     return
@@ -591,6 +617,8 @@ async function publishVerificationResultToBroker({
     body: JSON.stringify({
       success: true,
       providerApplicationVersion: providerVersion,
+      providerVersionBranch,
+      providerVersionTags: providerVersionBranch ? [providerVersionBranch] : [],
       buildUrl: resolveBuildUrlFromEnv(),
       testResults: {
         tests: [],
@@ -681,6 +709,7 @@ describe('Pact provider verification', () => {
         publishUrl: publishVerificationUrl,
         brokerToken: process.env.PACT_BROKER_TOKEN,
         providerVersion,
+        providerVersionBranch,
       })
     }
   })

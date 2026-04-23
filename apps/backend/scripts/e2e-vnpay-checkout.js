@@ -87,7 +87,7 @@ async function main() {
     const quantity = Number(process.env.E2E_VNPAY_QUANTITY ?? 1);
     const phoneNumber = process.env.E2E_PHONE_NUMBER ?? "0900000000";
     const shippingAddressLine =
-        process.env.E2E_SHIPPING_ADDRESS ?? "123 Nguyen Trai, Quan 1, TP.HCM";
+        process.env.E2E_SHIPPING_ADDRESS ?? "123 Nguyen Trai, District 1, Ho Chi Minh City";
     const bankCode = process.env.E2E_VNPAY_BANK_CODE ?? "";
 
     assert(Number.isInteger(quantity) && quantity >= 1, "Quantity must be >= 1");

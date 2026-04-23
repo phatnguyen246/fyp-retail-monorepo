@@ -27,7 +27,7 @@ describe("catalog validation", () => {
     it("parses create product input and rejects computed persistence fields", () => {
         const parsed = parseCreateProductInput({
             productGroupCode: " apple_iphone_16 ",
-            title: "  Điện   thoại   Samsung  ",
+            title: "  Samsung phone  ",
             brandCode: " apple ",
             categoryCode: " smartphone ",
             tagCodes: ["Camera-Phone", "battery-phone"],
@@ -40,7 +40,7 @@ describe("catalog validation", () => {
 
         expect(parsed).toMatchObject({
             productGroupCode: "APPLE_IPHONE_16",
-            title: "Điện thoại Samsung",
+            title: "Samsung phone",
             brandCode: "APPLE",
             categoryCode: "SMARTPHONE",
             tagCodes: ["camera-phone", "battery-phone"],
@@ -324,7 +324,7 @@ describe("catalog validation", () => {
             sortOrder: "asc",
         });
         const searchQuery = parseSearchProductsQuery({
-            q: "  Điện   thoại   Samsung  ",
+            q: "  Samsung phone  ",
             brand: "apple",
             category: "smartphone",
             tags: ["camera-phone", "battery-phone"],
@@ -336,7 +336,7 @@ describe("catalog validation", () => {
             sortMode: "price_desc",
         });
         const discoveryQuery = parseProductDiscoveryQuery({
-            keyword: "  Điện   thoại   Samsung  ",
+            keyword: "  Samsung phone  ",
             brand: "apple",
             category: "smartphone",
             tags: "camera-phone,battery-phone",
@@ -376,8 +376,8 @@ describe("catalog validation", () => {
             sortOrder: "asc",
         });
         expect(searchQuery).toMatchObject({
-            q: "Điện thoại Samsung",
-            keyword: "Điện thoại Samsung",
+            q: "Samsung phone",
+            keyword: "Samsung phone",
             brandCode: "APPLE",
             categoryCode: "SMARTPHONE",
             tagCodes: ["camera-phone", "battery-phone"],
@@ -394,8 +394,8 @@ describe("catalog validation", () => {
             includeDeleted: false,
         });
         expect(discoveryQuery).toMatchObject({
-            q: "Điện thoại Samsung",
-            keyword: "Điện thoại Samsung",
+            q: "Samsung phone",
+            keyword: "Samsung phone",
             brandCode: "APPLE",
             categoryCode: "SMARTPHONE",
             ram: ["8GB", "12GB"],

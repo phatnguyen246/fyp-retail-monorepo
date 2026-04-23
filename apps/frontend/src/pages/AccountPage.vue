@@ -32,10 +32,10 @@ const pendingOrders = computed(() =>
 
 function getRoleLabel(role) {
   if (role === 'admin') {
-    return 'Quản trị viên'
+    return 'Administrator'
   }
 
-  return 'Khách hàng'
+  return 'Customer'
 }
 
 onMounted(async () => {
@@ -64,31 +64,30 @@ onMounted(async () => {
                   Customer account
                 </p>
                 <h1 class="catalog-display-title mt-3 text-4xl leading-tight lg:text-5xl">
-                  Tài khoản của tôi
+                  My account
                 </h1>
                 <p class="mt-4 max-w-2xl text-sm leading-7 text-[var(--catalog-text-muted)] sm:text-base">
-                  Quản lý thông tin phiên đăng nhập hiện tại, theo dõi tổng quan đơn hàng và truy cập nhanh tới các thao
-                  tác customer quan trọng.
+                  Manage your current signed-in session, track order overview, and quickly access key customer actions.
                 </p>
               </div>
 
               <div class="grid gap-4 sm:grid-cols-3">
                 <article class="account-stat-card">
-                  <p class="account-stat-label">Tổng đơn</p>
+                  <p class="account-stat-label">Total orders</p>
                   <p class="account-stat-value">{{ loadingOrders ? '...' : formatNumber(orders.length) }}</p>
-                  <p class="account-stat-note">Lấy từ `GET /orders`</p>
+                  <p class="account-stat-note">Fetched from `GET /orders`</p>
                 </article>
                 <article class="account-stat-card account-stat-card--accent">
-                  <p class="account-stat-label">Đang xử lý</p>
+                  <p class="account-stat-label">In progress</p>
                   <p class="account-stat-value">{{ loadingOrders ? '...' : formatNumber(pendingOrders) }}</p>
-                  <p class="account-stat-note">Đơn cần theo dõi thêm</p>
+                  <p class="account-stat-note">Orders requiring follow-up</p>
                 </article>
                 <article class="account-stat-card account-stat-card--warm">
-                  <p class="account-stat-label">Tổng chi tiêu</p>
+                  <p class="account-stat-label">Total spending</p>
                   <p class="account-stat-value account-stat-value--compact">
                     {{ loadingOrders ? '...' : formatCurrency(totalSpent) }}
                   </p>
-                  <p class="account-stat-note">Theo giá trị đơn đã tạo</p>
+                  <p class="account-stat-note">Based on created orders</p>
                 </article>
               </div>
             </div>
@@ -101,51 +100,50 @@ onMounted(async () => {
                   <div class="account-avatar">{{ userInitials }}</div>
                   <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--catalog-text-soft)]">
-                      Hồ sơ
+                      Profile
                     </p>
                     <h2 class="mt-2 text-3xl font-semibold text-[var(--catalog-text)]">
                       {{ user?.email }}
                     </h2>
                     <p class="mt-2 text-sm text-[var(--catalog-text-muted)]">
-                      Phiên hiện tại đã được hydrate từ cookie auth của backend.
+                      Current session is hydrated from backend auth cookie.
                     </p>
                   </div>
                 </div>
 
                 <RouterLink class="catalog-primary-button inline-flex items-center justify-center" :to="{ name: 'order-history' }">
-                  Xem lịch sử đơn
+                  View order history
                 </RouterLink>
               </div>
 
               <dl class="mt-8 grid gap-4 md:grid-cols-2">
                 <div class="account-meta-card">
                   <dt class="account-meta-label">Email</dt>
-                  <dd class="account-meta-value">{{ user?.email || 'Chưa có dữ liệu' }}</dd>
+                  <dd class="account-meta-value">{{ user?.email || 'No data available' }}</dd>
                 </div>
                 <div class="account-meta-card">
-                  <dt class="account-meta-label">Vai trò</dt>
+                  <dt class="account-meta-label">Role</dt>
                   <dd class="account-meta-value">{{ getRoleLabel(user?.role) }}</dd>
                 </div>
                 <div class="account-meta-card">
                   <dt class="account-meta-label">Account ID</dt>
-                  <dd class="account-meta-value account-meta-value--mono">{{ user?.accountId || 'Không xác định' }}</dd>
+                  <dd class="account-meta-value account-meta-value--mono">{{ user?.accountId || 'Unknown' }}</dd>
                 </div>
                 <div class="account-meta-card">
-                  <dt class="account-meta-label">Trạng thái phiên</dt>
-                  <dd class="account-meta-value">{{ authStore.isAuthenticated ? 'Đang đăng nhập' : 'Chưa xác thực' }}</dd>
+                  <dt class="account-meta-label">Session status</dt>
+                  <dd class="account-meta-value">{{ authStore.isAuthenticated ? 'Signed in' : 'Not authenticated' }}</dd>
                 </div>
               </dl>
 
               <div class="account-note-box mt-8">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Trạng thái tính năng
+                  Feature status
                 </p>
                 <h3 class="mt-3 text-2xl font-semibold text-[var(--catalog-text)]">
-                  Đổi mật khẩu và chỉnh sửa hồ sơ chưa sẵn sàng.
+                  Password change and profile editing are not available yet.
                 </h3>
                 <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--catalog-text-muted)]">
-                  Backend hiện mới có `register`, `login`, `logout`, `me`. Nếu muốn page này đầy đủ hơn, bước tiếp theo
-                  là bổ sung API cập nhật profile hoặc đổi mật khẩu.
+                  Backend currently provides `register`, `login`, `logout`, `me`. To make this page complete, add profile update or password-change APIs.
                 </p>
               </div>
             </section>
@@ -153,27 +151,27 @@ onMounted(async () => {
             <aside class="space-y-6">
               <section class="account-panel">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Lối tắt
+                  Shortcuts
                 </p>
                 <div class="mt-5 grid gap-3">
                   <RouterLink class="account-shortcut-card" :to="{ name: 'order-history' }">
-                    <strong>Lịch sử đơn hàng</strong>
-                    <span>Theo dõi tất cả đơn đã tạo trong tài khoản này.</span>
+                    <strong>Order history</strong>
+                    <span>Track all orders created by this account.</span>
                   </RouterLink>
                   <RouterLink class="account-shortcut-card" :to="{ name: 'cart' }">
-                    <strong>Giỏ hàng</strong>
-                    <span>Quay lại các sản phẩm đang chuẩn bị checkout.</span>
+                    <strong>Cart</strong>
+                    <span>Return to products prepared for checkout.</span>
                   </RouterLink>
                   <RouterLink class="account-shortcut-card" :to="{ name: 'catalog-products' }">
-                    <strong>Tiếp tục mua sắm</strong>
-                    <span>Mở lại catalog để xem các sản phẩm mới nhất.</span>
+                    <strong>Continue shopping</strong>
+                    <span>Open catalog again to view latest products.</span>
                   </RouterLink>
                 </div>
               </section>
 
               <section class="account-panel">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Đơn gần nhất
+                  Latest order
                 </p>
 
                 <div v-if="loadingOrders" class="mt-5 space-y-3">
@@ -189,19 +187,19 @@ onMounted(async () => {
                     {{ formatCurrency(recentOrder.grandTotal) }}
                   </h3>
                   <p class="mt-3 text-sm leading-7 text-[var(--catalog-text-muted)]">
-                    Đặt lúc {{ formatDate(recentOrder.createdAt) }} cho {{ recentOrder.recipientName }}.
+                    Placed at {{ formatDate(recentOrder.createdAt) }} cho {{ recentOrder.recipientName }}.
                   </p>
                   <RouterLink
                     class="catalog-reset-button mt-6 inline-flex items-center justify-center"
                     :to="{ name: 'order-detail', params: { orderId: recentOrder.id } }"
                   >
-                    Mở chi tiết đơn
+                    Open order details
                   </RouterLink>
                 </div>
 
                 <div v-else class="account-empty-state mt-5">
                   <p class="text-sm leading-7 text-[var(--catalog-text-muted)]">
-                    Tài khoản này chưa có đơn hàng nào. Sau khi checkout thành công, dữ liệu sẽ xuất hiện tại đây.
+                    This account has no orders yet. Data will appear here after a successful checkout.
                   </p>
                 </div>
               </section>

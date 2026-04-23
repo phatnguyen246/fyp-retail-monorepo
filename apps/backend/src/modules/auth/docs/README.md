@@ -1,11 +1,6 @@
-# Auth Module Docs
+# Auth Module
 
-Tài liệu của `auth` module.
+English documentation for authentication APIs and domain behavior.
 
-## Purpose
-
-`auth` sở hữu register, login, logout, current-user, và auth middleware.
-
-## Docs
-
-- [api.md](./api.md)
+- API reference: `api.md`
+- Scope: register, login, token refresh, and logout

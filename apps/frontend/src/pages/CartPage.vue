@@ -77,44 +77,44 @@ function getAvailabilityBadge(item) {
   switch (availabilityStatus) {
     case 'available':
       return {
-        label: 'Catalog + tồn kho hợp lệ',
+        label: 'Catalog + inventory valid',
         className: 'cart-status-chip cart-status-chip--ready',
       }
     case 'insufficient_stock':
       return {
-        label: 'Vượt quá tồn kho thực tế',
+        label: 'Exceeds actual stock',
         className: 'cart-status-chip cart-status-chip--warning',
       }
     case 'out_of_stock':
       return {
-        label: 'Tạm hết hàng',
+        label: 'Out of stock',
         className: 'cart-status-chip cart-status-chip--danger',
       }
     case 'variant_missing':
     case 'variant_deleted':
       return {
-        label: 'Biến thể không còn khả dụng',
+        label: 'Variant unavailable',
         className: 'cart-status-chip cart-status-chip--danger',
       }
     case 'product_missing':
     case 'product_deleted':
       return {
-        label: 'Sản phẩm không còn khả dụng',
+        label: 'Product unavailable',
         className: 'cart-status-chip cart-status-chip--danger',
       }
     case 'variant_inactive':
       return {
-        label: 'Biến thể đã ngừng bán',
+        label: 'Variant discontinued',
         className: 'cart-status-chip cart-status-chip--danger',
       }
     case 'product_inactive':
       return {
-        label: 'Sản phẩm đã ngừng bán',
+        label: 'Product discontinued',
         className: 'cart-status-chip cart-status-chip--danger',
       }
     default:
       return {
-        label: 'Đang kiểm tra',
+        label: 'Checking',
         className: 'cart-status-chip cart-status-chip--muted',
       }
   }
@@ -123,13 +123,13 @@ function getAvailabilityBadge(item) {
 function getCheckoutBadge(item) {
   if (item?.selected === true && item?.isAvailable === true) {
     return {
-      label: 'Được tính vào checkout',
+      label: 'Included in checkout',
       className: 'cart-status-chip cart-status-chip--ready',
     }
   }
 
   return {
-    label: 'Đang bị loại khỏi checkout',
+    label: 'Excluded from checkout',
     className:
       item?.isAvailable === false
         ? 'cart-status-chip cart-status-chip--danger-soft'
@@ -142,19 +142,19 @@ function getItemStateText(item) {
     if (item?.availabilityStatus === 'insufficient_stock') {
       const availableQuantity = Number(item?.availableQuantity)
       if (Number.isFinite(availableQuantity) && availableQuantity > 0) {
-        return `Chỉ còn ${formatNumber(availableQuantity)} sản phẩm. Line vẫn được giữ trong cart nhưng đang bị loại khỏi checkout.`
+        return `Only ${formatNumber(availableQuantity)} products remain. This line stays in the cart but is excluded from checkout.`
       }
     }
 
     if (item?.availabilityStatus === 'out_of_stock') {
-      return 'Sản phẩm đang hết hàng. Line vẫn được giữ trong cart để bạn quyết định cập nhật hoặc xóa.'
+      return 'This product is out of stock. The line stays in cart so you can update or remove it.'
     }
 
-    return 'Line này không còn hợp lệ theo catalog hiện tại nên backend đã tự loại khỏi phần checkout.'
+    return 'This line is no longer valid in the current catalog, so backend excluded it from checkout.'
   }
 
   if (item?.selected === false) {
-    return 'Line hiện đã hợp lệ trở lại, nhưng chưa được backend đưa lại vào checkout. Hãy cập nhật line để kích hoạt lại.'
+    return 'This line is valid again but not yet re-included in checkout. Update the line to reactivate it.'
   }
 
   return ''
@@ -266,7 +266,7 @@ async function clearCart() {
     return
   }
 
-  if (!window.confirm('Xóa toàn bộ giỏ hàng hiện tại?')) {
+  if (!window.confirm('Clear the current cart?')) {
     return
   }
 
@@ -293,7 +293,7 @@ async function clearCart() {
                 Storefront Cart
               </p>
               <h1 class="catalog-display-title mt-2 text-4xl leading-tight lg:text-5xl">
-                Giỏ hàng
+                Cart
               </h1>
             </div>
 
@@ -304,13 +304,13 @@ async function clearCart() {
             class="rounded-[2rem] border border-[rgba(186,26,26,0.18)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)]"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-danger)]">
-              Không thể tải cart
+              Unable to load cart
             </p>
             <h2 class="mt-3 text-3xl font-semibold text-[var(--catalog-text)]">
-              Không lấy được dữ liệu cart hiện tại.
+              Unable to fetch current cart data.
             </h2>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Hãy thử đồng bộ lại. Nếu lỗi còn lặp lại, kiểm tra kết nối API storefront tới backend cart.
+              Try syncing again. If the issue persists, check the storefront-to-backend cart API connection.
             </p>
             <div class="mt-8">
               <button
@@ -319,7 +319,7 @@ async function clearCart() {
                 :disabled="isRefreshingCart"
                 @click="refreshCart"
               >
-                {{ isRefreshingCart ? 'Đang thử lại...' : 'Thử tải lại cart' }}
+                {{ isRefreshingCart ? 'Retrying...' : 'Retry loading cart' }}
               </button>
             </div>
           </section>
@@ -340,15 +340,15 @@ async function clearCart() {
             class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-10"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-              Chưa có sản phẩm
+              No products yet
             </p>
-            <h2 class="catalog-display-title mt-3 text-3xl">Giỏ hàng của bạn đang trống.</h2>
+            <h2 class="catalog-display-title mt-3 text-3xl">Your cart is empty.</h2>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Hãy quay lại catalog để chọn cấu hình phù hợp. Cart guest chỉ được tạo sau lần add đầu tiên thành công.
+              Go back to catalog and choose a suitable configuration. Guest cart is created after the first successful add.
             </p>
             <div class="mt-8">
               <RouterLink class="catalog-primary-button inline-flex" :to="{ name: 'catalog-products' }">
-                Tiếp tục mua sắm
+                Continue shopping
               </RouterLink>
             </div>
           </section>
@@ -365,7 +365,7 @@ async function clearCart() {
                   :disabled="isRefreshingCart"
                   @click="refreshCart"
                 >
-                  {{ isRefreshingCart ? 'Đang đồng bộ...' : 'Đồng bộ lại cart' }}
+                  {{ isRefreshingCart ? 'Syncing...' : 'Sync cart' }}
                 </button>
 
                 <button
@@ -374,7 +374,7 @@ async function clearCart() {
                   :disabled="!cartStore.items.length || isClearingCart"
                   @click="clearCart"
                 >
-                  {{ isClearingCart ? 'Đang xóa...' : 'Xóa toàn bộ giỏ' }}
+                  {{ isClearingCart ? 'Clearing...' : 'Clear cart' }}
                 </button>
               </div>
 
@@ -383,10 +383,10 @@ async function clearCart() {
                 class="rounded-[1.6rem] border border-[rgba(139,117,0,0.2)] bg-[rgba(255,249,235,0.72)] p-5"
               >
                 <p class="font-semibold text-[var(--catalog-text)]">
-                  Có lỗi khi đồng bộ cart.
+                  Error while syncing cart.
                 </p>
                 <p class="mt-2 text-sm text-[var(--catalog-text-muted)]">
-                  Dữ liệu đang hiển thị có thể chưa phải trạng thái mới nhất. Hãy đồng bộ lại để lấy cart view vừa được reconcile từ backend.
+                  Displayed data may be stale. Sync again to get the latest reconciled cart view.
                 </p>
               </section>
 
@@ -429,13 +429,13 @@ async function clearCart() {
                             :to="`/products/${item.productId}`"
                             class="transition-colors hover:text-[var(--catalog-primary)]"
                           >
-                            {{ item.productName || 'Sản phẩm không còn dữ liệu' }}
+                            {{ item.productName || 'Product data unavailable' }}
                           </RouterLink>
-                          <span v-else>{{ item.productName || 'Sản phẩm không còn dữ liệu' }}</span>
+                          <span v-else>{{ item.productName || 'Product data unavailable' }}</span>
                         </h3>
 
                         <p class="mt-2 text-sm text-[var(--catalog-text-muted)]">
-                          {{ item.variantLabel || 'Biến thể không còn khả dụng' }}
+                          {{ item.variantLabel || 'Variant unavailable' }}
                         </p>
                         <p
                           v-if="getItemStateText(item)"
@@ -448,7 +448,7 @@ async function clearCart() {
                       <button
                         type="button"
                         class="cart-remove-button"
-                        title="Xóa sản phẩm"
+                        title="Remove item"
                         :disabled="isItemRemoving(item)"
                         @click="removeItem(item)"
                       >
@@ -461,7 +461,7 @@ async function clearCart() {
                     <div class="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
                       <div>
                         <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                          Số lượng
+                          Quantity
                         </p>
                         <div class="cart-quantity-control">
                           <button
@@ -502,20 +502,20 @@ async function clearCart() {
                           v-if="item.availabilityStatus === 'insufficient_stock' && getItemQuantityCap(item) > 0"
                           class="mt-2 text-sm text-[var(--catalog-text-muted)]"
                         >
-                          Có thể phục hồi line bằng cách giảm về {{ formatNumber(getItemQuantityCap(item)) }}.
+                          Recover this line by reducing to {{ formatNumber(getItemQuantityCap(item)) }}.
                         </p>
                         <p
                           v-else-if="item.isAvailable === true && item.selected === false"
                           class="mt-2 text-sm text-[var(--catalog-text-muted)]"
                         >
-                          Cập nhật line hiện tại để backend đưa lại item vào checkout.
+                          Update this line to have backend include the item in checkout again.
                         </p>
                       </div>
 
                       <div class="cart-pricing-panel">
                         <div class="cart-pricing-card">
                           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                            Đơn giá
+                            Unit price
                           </p>
                           <p class="cart-pricing-value cart-pricing-value--unit">
                             {{ formatCurrency(item.unitPrice, item.currency || cartStore.summary.currency) }}
@@ -526,7 +526,7 @@ async function clearCart() {
 
                         <div class="cart-pricing-card cart-pricing-card--total">
                           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                            Thành tiền line
+                            Line total
                           </p>
                           <p class="cart-pricing-value cart-pricing-value--total">
                             {{ formatCurrency(item.lineTotal, item.currency || cartStore.summary.currency) }}
@@ -546,7 +546,7 @@ async function clearCart() {
                         :disabled="isItemReactivating(item) || isItemQuantityPending(item)"
                         @click="reactivateItem(item)"
                       >
-                        {{ isItemReactivating(item) ? 'Đang kích hoạt...' : 'Đưa lại vào checkout' }}
+                        {{ isItemReactivating(item) ? 'Reactivating...' : 'Re-include in checkout' }}
                       </button>
 
                       <button
@@ -556,7 +556,7 @@ async function clearCart() {
                         :disabled="isItemReactivating(item) || isItemQuantityPending(item)"
                         @click="reactivateItem(item, getItemQuantityCap(item))"
                       >
-                        Giảm về {{ formatNumber(getItemQuantityCap(item)) }} để phục hồi
+                        Reduce to {{ formatNumber(getItemQuantityCap(item)) }} to recover
                       </button>
                     </div>
                   </div>
@@ -567,25 +567,25 @@ async function clearCart() {
             <aside class="space-y-5">
               <section class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-8">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Tóm tắt đơn hàng
+                  Order summary
                 </p>
                 <h2 class="catalog-display-title mt-2 text-3xl">Order Summary</h2>
 
                 <dl class="mt-6 space-y-4">
                   <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Line đang sẵn sàng</dt>
+                    <dt class="text-[var(--catalog-text-muted)]">Ready lines</dt>
                     <dd class="font-semibold text-[var(--catalog-text)]">{{ readyItems.length }}</dd>
                   </div>
                   <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Tổng số lượng trong cart</dt>
+                    <dt class="text-[var(--catalog-text-muted)]">Total quantity in cart</dt>
                     <dd class="font-semibold text-[var(--catalog-text)]">{{ cartStore.summary.totalQuantity }}</dd>
                   </div>
                   <div class="flex items-center justify-between gap-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Được chọn checkout</dt>
+                    <dt class="text-[var(--catalog-text-muted)]">Selected for checkout</dt>
                     <dd class="font-semibold text-[var(--catalog-text)]">{{ cartStore.summary.selectedQuantity }}</dd>
                   </div>
                   <div class="flex items-center justify-between gap-4 border-t border-[var(--catalog-border-soft)] pt-4">
-                    <dt class="text-[var(--catalog-text-muted)]">Tổng tiền checkout</dt>
+                    <dt class="text-[var(--catalog-text-muted)]">Checkout total</dt>
                     <dd class="text-2xl font-semibold text-[var(--catalog-primary)]">
                       {{ formatCurrency(cartStore.summary.totalAmount, cartStore.summary.currency) }}
                     </dd>
@@ -597,21 +597,21 @@ async function clearCart() {
                   class="catalog-primary-button mt-8 flex w-full items-center justify-center"
                   :class="{ 'pointer-events-none opacity-50': cartStore.summary.selectedQuantity === 0 }"
                 >
-                  Tiến hành thanh toán
+                  Proceed to checkout
                 </RouterLink>
 
                 <p
                   v-if="cartStore.summary.selectedQuantity === 0"
                   class="mt-3 text-sm text-[var(--catalog-text-muted)]"
                 >
-                  Hiện chưa có line nào đủ điều kiện để sang checkout.
+                  No lines are currently eligible for checkout.
                 </p>
 
                 <RouterLink
                   :to="{ name: 'catalog-products' }"
                   class="catalog-reset-button mt-3 flex w-full items-center justify-center"
                 >
-                  Tiếp tục mua sắm
+                  Continue shopping
                 </RouterLink>
               </section>
 
@@ -620,10 +620,10 @@ async function clearCart() {
                 class="rounded-[2rem] border border-[rgba(139,117,0,0.2)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)]"
               >
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-primary-deep)]">
-                  Đang bị loại khỏi checkout
+                  Excluded from checkout
                 </p>
                 <p class="mt-3 text-[var(--catalog-text-muted)]">
-                  Có {{ excludedItems.length }} line hiện chưa được tính vào checkout. Một số line có thể phục hồi bằng cách cập nhật quantity hợp lệ.
+                  There are {{ excludedItems.length }} lines currently excluded from checkout. Some lines can be reactivated by setting a valid quantity.
                 </p>
               </section>
 
@@ -632,10 +632,10 @@ async function clearCart() {
                 class="rounded-[2rem] border border-[rgba(186,26,26,0.18)] bg-white p-6 shadow-[0_20px_60px_rgba(26,28,28,0.05)]"
               >
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-danger)]">
-                  Cần xử lý
+                  Needs attention
                 </p>
                 <p class="mt-3 text-[var(--catalog-text-muted)]">
-                  Có {{ unavailableItems.length }} line không còn hợp lệ theo catalog hoặc inventory. Hãy giảm số lượng, phục hồi line nếu còn stock, hoặc xóa khỏi cart.
+                  There are {{ unavailableItems.length }} line are no longer valid based on catalog or inventory. Reduce quantity, recover line if stock exists, or remove from cart.
                 </p>
               </section>
             </aside>

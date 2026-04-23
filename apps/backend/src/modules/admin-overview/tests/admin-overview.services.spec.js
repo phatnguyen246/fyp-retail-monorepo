@@ -67,7 +67,7 @@ describe("admin overview services", () => {
             ]),
         };
         const inventoryRepository = {
-            countInventoryRecords: vi.fn().mockResolvedValue(18),
+            countInventoryRecordsByFilter: vi.fn().mockResolvedValue(18),
             countLowStockInventoryRecords: vi.fn().mockResolvedValue(6),
             countOutOfStockInventoryRecords: vi.fn().mockResolvedValue(2),
             findLowStockInventoryRecords: vi.fn().mockResolvedValue([
@@ -250,7 +250,9 @@ describe("admin overview services", () => {
             },
             limit: 5,
         });
-        expect(inventoryRepository.countInventoryRecords).toHaveBeenCalledWith();
+        expect(
+            inventoryRepository.countInventoryRecordsByFilter
+        ).toHaveBeenCalledWith();
         expect(inventoryRepository.findLowStockInventoryRecords).toHaveBeenCalledWith({
             limit: 6,
         });

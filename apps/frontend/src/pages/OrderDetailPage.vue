@@ -37,7 +37,7 @@ async function handlePayNow() {
   if (result.success && result.paymentUrl) {
     window.open(result.paymentUrl, '_blank')
   } else {
-    alert(result.error?.message || 'Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.')
+    alert(result.error?.message || 'Unable to create the payment link. Please try again later.')
   }
   
   isOpeningPayment.value = false
@@ -45,10 +45,10 @@ async function handlePayNow() {
 
 const paymentMethodLabel = computed(() => {
   if (!order.value?.paymentMethod) {
-    return 'Chưa xác định'
+    return 'Unknown'
   }
 
-  return order.value.paymentMethod === 'vnpay' ? 'VNPAY' : 'Thanh toán khi nhận hàng'
+  return order.value.paymentMethod === 'vnpay' ? 'VNPAY' : 'Cash on delivery'
 })
 
 const canCancelOrder = computed(() => {
@@ -66,7 +66,7 @@ const shouldShowCancelOrderButton = computed(() => {
 
 function formatTimelineActor(actor) {
   if (typeof actor !== 'string' || actor.trim().length === 0) {
-    return 'hệ thống'
+    return 'system'
   }
 
   const normalizedActor = actor.trim().toLowerCase()
@@ -76,32 +76,32 @@ function formatTimelineActor(actor) {
   }
 
   if (normalizedActor.startsWith('customer:')) {
-    return 'khách hàng'
+    return 'customer'
   }
 
-  return normalizedActor === 'guest' ? 'khách' : actor.trim()
+  return normalizedActor === 'guest' ? 'guest' : actor.trim()
 }
 
 function getOrderStatusMeta(status) {
   switch (status) {
     case 'completed':
       return {
-        label: 'Đã hoàn tất',
+        label: 'Completed',
         className: 'detail-chip detail-chip--success',
       }
     case 'confirmed':
       return {
-        label: 'Đã xác nhận',
+        label: 'Confirmed',
         className: 'detail-chip detail-chip--info',
       }
     case 'cancelled':
       return {
-        label: 'Đã hủy',
+        label: 'Cancelled',
         className: 'detail-chip detail-chip--danger',
       }
     default:
       return {
-        label: 'Đang chờ xử lý',
+        label: 'Pending',
         className: 'detail-chip detail-chip--warning',
       }
   }
@@ -111,22 +111,22 @@ function getPaymentStatusMeta(status) {
   switch (status) {
     case 'paid':
       return {
-        label: 'Đã thanh toán',
+        label: 'Paid',
         className: 'detail-chip detail-chip--success-soft',
       }
     case 'failed':
       return {
-        label: 'Thanh toán lỗi',
+        label: 'Payment failed',
         className: 'detail-chip detail-chip--danger-soft',
       }
     case 'cancelled':
       return {
-        label: 'Thanh toán đã hủy',
+        label: 'Payment cancelled',
         className: 'detail-chip detail-chip--danger-soft',
       }
     default:
       return {
-        label: 'Chờ thanh toán',
+        label: 'Pending payment',
         className: 'detail-chip detail-chip--muted',
       }
   }
@@ -134,10 +134,10 @@ function getPaymentStatusMeta(status) {
 
 function getTimelineLabel(log) {
   if (!log?.toStatus) {
-    return 'Đã cập nhật trạng thái'
+    return 'Status updated'
   }
 
-  return `Đơn hàng chuyển sang trạng thái ${getOrderStatusMeta(log.toStatus).label.toLowerCase()}`
+  return `Order moved to status ${getOrderStatusMeta(log.toStatus).label.toLowerCase()}`
 }
 
 async function handleCancelOrder() {
@@ -145,7 +145,7 @@ async function handleCancelOrder() {
     return
   }
 
-  const shouldCancel = window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')
+  const shouldCancel = window.confirm('Are you sure you want to cancel this order?')
   if (!shouldCancel) {
     return
   }
@@ -155,9 +155,9 @@ async function handleCancelOrder() {
   const result = await orderingStore.cancelOrder(props.orderId)
   if (result.success) {
     order.value = result.data
-    alert('Đơn hàng đã được hủy thành công.')
+    alert('Order cancelled successfully.')
   } else {
-    alert(result.error?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại sau.')
+    alert(result.error?.message || 'Unable to cancel the order. Please try again later.')
   }
 
   isCancellingOrder.value = false
@@ -197,15 +197,15 @@ onMounted(async () => {
             class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-10"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-              Không tìm thấy dữ liệu
+              Data not found
             </p>
-            <h1 class="catalog-display-title mt-3 text-3xl">Không tìm thấy đơn hàng.</h1>
+            <h1 class="catalog-display-title mt-3 text-3xl">Order not found.</h1>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Đơn hàng có thể không thuộc tài khoản hiện tại, hoặc mã `orderId` trên route không còn hợp lệ.
+              This order may not belong to the current account, or the `orderId` in the route is no longer valid.
             </p>
             <div class="mt-8">
               <RouterLink class="catalog-primary-button inline-flex" :to="{ name: 'order-history' }">
-                Quay lại lịch sử đơn hàng
+                Back to order history
               </RouterLink>
             </div>
           </section>
@@ -216,7 +216,7 @@ onMounted(async () => {
                 :to="{ name: 'order-history' }"
                 class="catalog-reset-button inline-flex items-center justify-center"
               >
-                Quay lại danh sách đơn
+                Back to orders list
               </RouterLink>
             </div>
 
@@ -226,14 +226,14 @@ onMounted(async () => {
                 <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                      Chi tiết đơn hàng
+                      Order details
                     </p>
                     <h1 class="catalog-display-title mt-2 text-4xl leading-tight lg:text-5xl">
                       {{ order.orderCode }}
                     </h1>
                     <p class="mt-4 text-sm leading-7 text-[var(--catalog-text-muted)]">
-                      Đặt lúc {{ formatDate(order.createdAt) }}. Trang này phản ánh trực tiếp dữ liệu backend cho order,
-                      payment status và timeline trạng thái.
+                      Placed at {{ formatDate(order.createdAt) }}. This page reflects backend data for the order,
+                      payment status, and status timeline.
                     </p>
                   </div>
 
@@ -246,10 +246,10 @@ onMounted(async () => {
                     >
                       {{
                         isCancellingOrder
-                          ? 'Đang hủy đơn...'
+                          ? 'Cancelling order...'
                           : canCancelOrder
-                            ? 'Hủy đơn hàng'
-                            : 'Không thể hủy đơn'
+                            ? 'Cancel order'
+                            : 'Cannot cancel order'
                       }}
                     </button>
                   </div>
@@ -257,9 +257,9 @@ onMounted(async () => {
 
                 <div class="mt-8 border-t border-[var(--catalog-border-soft)] pt-6">
                   <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                    Lịch sử trạng thái
+                    Status history
                   </p>
-                  <h2 class="catalog-display-title mt-2 text-3xl">Timeline xử lý</h2>
+                  <h2 class="catalog-display-title mt-2 text-3xl">Processing timeline</h2>
 
                   <ol class="mt-8 space-y-5">
                     <li
@@ -277,7 +277,7 @@ onMounted(async () => {
                               {{ getTimelineLabel(log) }}
                             </p>
                             <p class="mt-1 text-sm text-[var(--catalog-text-muted)]">
-                              Cập nhật bởi {{ formatTimelineActor(log.changedBy) }}
+                              Updated by {{ formatTimelineActor(log.changedBy) }}
                             </p>
                           </div>
                           <time class="text-sm text-[var(--catalog-text-soft)]" :datetime="log.changedAt">
@@ -294,12 +294,12 @@ onMounted(async () => {
                 <div class="flex items-start justify-between gap-4">
                   <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                      Sản phẩm trong đơn
+                      Products in this order
                     </p>
                     <h2 class="catalog-display-title mt-2 text-3xl">Order items</h2>
                   </div>
                   <div class="rounded-full bg-[var(--catalog-surface-muted)] px-4 py-2 text-sm text-[var(--catalog-text-muted)]">
-                    {{ formatNumber(order.itemCount) }} sản phẩm
+                    {{ formatNumber(order.itemCount) }} products
                   </div>
                 </div>
 
@@ -332,7 +332,7 @@ onMounted(async () => {
 
                           <div class="text-left lg:text-right">
                             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                              Thành tiền
+                              Line total
                             </p>
                             <p class="mt-2 text-xl font-semibold text-[var(--catalog-text)]">
                               {{ formatCurrency(item.lineTotal) }}
@@ -342,16 +342,16 @@ onMounted(async () => {
 
                         <dl class="mt-5 grid gap-3 sm:grid-cols-3">
                           <div class="detail-line-card">
-                            <dt class="detail-line-label">Đơn giá</dt>
+                            <dt class="detail-line-label">Unit price</dt>
                             <dd class="detail-line-value">{{ formatCurrency(item.unitPrice) }}</dd>
                           </div>
                           <div class="detail-line-card">
-                            <dt class="detail-line-label">Số lượng</dt>
+                            <dt class="detail-line-label">Quantity</dt>
                             <dd class="detail-line-value">{{ formatNumber(item.quantity) }}</dd>
                           </div>
                           <div class="detail-line-card">
-                            <dt class="detail-line-label">Biến thể</dt>
-                            <dd class="detail-line-value">{{ item.variantLabel || 'Không có nhãn biến thể' }}</dd>
+                            <dt class="detail-line-label">Variant</dt>
+                            <dd class="detail-line-value">{{ item.variantLabel || 'No variant label' }}</dd>
                           </div>
                         </dl>
                       </div>
@@ -369,10 +369,10 @@ onMounted(async () => {
               >
                 <div class="flex items-center gap-3">
                   <span class="material-symbols-outlined text-[var(--catalog-primary)]">payments</span>
-                  <h2 class="text-xl font-bold text-[var(--catalog-text)]">Thanh toán ngay</h2>
+                  <h2 class="text-xl font-bold text-[var(--catalog-text)]">Pay now</h2>
                 </div>
                 <p class="mt-3 text-sm leading-6 text-[var(--catalog-text-muted)]">
-                  Đơn hàng của bạn đang chờ thanh toán qua VNPAY. Hãy hoàn tất giao dịch để chúng tôi có thể xác nhận đơn hàng sớm nhất.
+                  Your order is waiting for VNPAY payment. Please complete the transaction so we can confirm your order.
                 </p>
                 <button
                   type="button"
@@ -381,7 +381,7 @@ onMounted(async () => {
                   @click="handlePayNow"
                 >
                   <span v-if="isOpeningPayment" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent"></span>
-                  {{ isOpeningPayment ? 'Đang mở VNPAY...' : 'Tiếp tục thanh toán' }}
+                  {{ isOpeningPayment ? 'Opening VNPAY...' : 'Continue payment' }}
                 </button>
               </section>
 
@@ -389,11 +389,11 @@ onMounted(async () => {
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
                   Payment
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Thông tin thanh toán</h2>
+                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Payment information</h2>
 
                 <dl class="mt-6 space-y-5">
                   <div>
-                    <dt class="detail-side-label">Trạng thái thanh toán</dt>
+                    <dt class="detail-side-label">Payment status</dt>
                     <dd class="mt-3">
                       <span :class="getPaymentStatusMeta(order.paymentStatus).className">
                         {{ getPaymentStatusMeta(order.paymentStatus).label }}
@@ -401,23 +401,23 @@ onMounted(async () => {
                     </dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Phương thức thanh toán</dt>
+                    <dt class="detail-side-label">Payment method</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ paymentMethodLabel }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Tạm tính</dt>
+                    <dt class="detail-side-label">Subtotal</dt>
                     <dd class="mt-2 text-sm leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.subtotal) }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Giảm giá</dt>
+                    <dt class="detail-side-label">Discount</dt>
                     <dd class="mt-2 text-sm leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.discountTotal) }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Phí vận chuyển</dt>
+                    <dt class="detail-side-label">Shipping fee</dt>
                     <dd class="mt-2 text-sm leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.shippingFee) }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Tổng cộng</dt>
+                    <dt class="detail-side-label">Grand total</dt>
                     <dd class="mt-2 text-lg leading-7 font-semibold text-[var(--catalog-text)]">{{ formatCurrency(order.grandTotal) }}</dd>
                   </div>
                 </dl>
@@ -427,35 +427,35 @@ onMounted(async () => {
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
                   Delivery + payment
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Thông tin vận hành</h2>
+                <h2 class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">Operational info</h2>
 
                 <dl class="mt-6 space-y-5">
                   <div>
-                    <dt class="detail-side-label">Mã đơn hàng</dt>
+                    <dt class="detail-side-label">Order code</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.orderCode }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Thời gian đặt</dt>
+                    <dt class="detail-side-label">Order time</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ formatDate(order.createdAt) }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Người nhận</dt>
+                    <dt class="detail-side-label">Recipient</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.recipientName }}</dd>
                   </div>
                    <div>
-                    <dt class="detail-side-label">Email đặt hàng</dt>
-                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.email || 'Không có' }}</dd>
+                    <dt class="detail-side-label">Order email</dt>
+                    <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.email || 'N/A' }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Số điện thoại</dt>
+                    <dt class="detail-side-label">Phone number</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.phoneNumber }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Địa chỉ giao hàng</dt>
+                    <dt class="detail-side-label">Shipping address</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ order.shippingAddressLine }}</dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Trạng thái đơn hàng</dt>
+                    <dt class="detail-side-label">Order status</dt>
                     <dd class="mt-3">
                       <span :class="getOrderStatusMeta(order.orderStatus).className">
                         {{ getOrderStatusMeta(order.orderStatus).label }}
@@ -463,7 +463,7 @@ onMounted(async () => {
                     </dd>
                   </div>
                   <div>
-                    <dt class="detail-side-label">Số sản phẩm</dt>
+                    <dt class="detail-side-label">Item count</dt>
                     <dd class="mt-2 text-sm leading-7 text-[var(--catalog-text)]">{{ formatNumber(order.itemCount) }}</dd>
                   </div>
                 </dl>

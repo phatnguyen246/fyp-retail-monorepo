@@ -15,8 +15,8 @@ const props = defineProps({
 const router = useRouter()
 const orderingStore = useOrderingStore()
 
-const status = ref('Dang chuan bi thanh toan')
-const message = ref('Vui long doi trong giay lat trong khi chung toi ket noi voi VNPAY.')
+const status = ref('Preparing payment')
+const message = ref('Please wait a moment while we connect you to VNPAY.')
 const isLoading = ref(true)
 const paymentUrl = ref('')
 
@@ -35,23 +35,23 @@ function readStoredContext() {
 
 async function beginPayment() {
   isLoading.value = true
-  status.value = 'Dang chuan bi thanh toan'
-  message.value = 'Vui long doi trong giay lat trong khi chung toi ket noi voi VNPAY.'
+  status.value = 'Preparing payment'
+  message.value = 'Please wait a moment while we connect you to VNPAY.'
 
   const result = await orderingStore.createVnPayUrl(props.orderId)
 
   if (!result.success || !result.paymentUrl) {
     isLoading.value = false
-    status.value = 'Khong the mo cong thanh toan'
+    status.value = 'Unable to open payment gateway'
     message.value =
-      result.error?.message || 'Lien ket thanh toan tam thoi chua san sang. Ban co the thu lai hoac xem chi tiet don hang.'
+      result.error?.message || 'Payment link is temporarily unavailable. You can retry or view order details.'
     paymentUrl.value = ''
     return
   }
 
   paymentUrl.value = result.paymentUrl
-  status.value = 'Dang chuyen sang VNPAY'
-  message.value = 'Neu trinh duyet chua tu mo, ban co the bam nut ben duoi de tiep tuc thanh toan.'
+  status.value = 'Redirecting to VNPAY'
+  message.value = 'If your browser does not open automatically, use the button below to continue payment.'
   window.location.href = result.paymentUrl
 }
 
@@ -88,14 +88,14 @@ onMounted(() => {
     <div class="mx-auto max-w-2xl">
       <section class="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
         <div class="bg-[linear-gradient(135deg,#082f49_0%,#0f172a_58%,#164e63_100%)] px-6 py-8 text-white sm:px-8">
-          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">Thanh toan VNPAY</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">Payment VNPAY</p>
           <h1 class="mt-4 text-3xl font-semibold tracking-tight">{{ status }}</h1>
           <p class="mt-3 text-sm leading-6 text-slate-200">{{ message }}</p>
         </div>
 
         <div class="space-y-6 px-6 py-8 sm:px-8">
           <div class="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-5">
-            <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Don hang</p>
+            <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Order</p>
             <p class="mt-2 break-all text-sm font-semibold text-slate-950">{{ props.orderId }}</p>
           </div>
 
@@ -104,8 +104,8 @@ onMounted(() => {
             :class="isLoading ? 'border-sky-200 bg-sky-50 text-sky-900' : 'border-slate-200 bg-white text-slate-700'"
           >
             {{ isLoading
-              ? 'He thong dang tao lien ket thanh toan cho don hang cua ban.'
-              : 'Neu ban chua duoc chuyen huong, hay bam tiep tuc thanh toan hoac quay ve chi tiet don hang.' }}
+              ? 'The system is creating a payment link for your order.'
+              : 'If you were not redirected, click continue payment or return to order details.' }}
           </div>
 
           <div class="flex flex-col gap-3 sm:flex-row">
@@ -115,7 +115,7 @@ onMounted(() => {
               :disabled="!paymentUrl"
               @click="openPaymentUrl"
             >
-              Tiep tuc thanh toan
+              Continue payment
             </button>
 
             <button
@@ -123,14 +123,14 @@ onMounted(() => {
               class="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               @click="goToOrderDetail"
             >
-              Xem chi tiet don hang
+              View order details
             </button>
 
             <RouterLink
               :to="{ name: 'catalog-products' }"
               class="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Tiep tuc mua sam
+              Continue shopping
             </RouterLink>
           </div>
         </div>

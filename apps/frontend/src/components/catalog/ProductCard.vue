@@ -409,14 +409,14 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
         <RouterLink
           :to="`/products/${product.id}/${product.slug}`"
           class="catalog-card-action-button flex-1 justify-center"
-          title="Chi tiết sản phẩm"
+          title="Product details"
         >
           <span class="material-symbols-outlined">visibility</span>
         </RouterLink>
         <button
           class="catalog-card-action-button"
           :class="{ 'bg-yellow-200': isCompared }"
-          title="So sánh"
+          title="Compare"
           type="button"
           :disabled="compareStore.count >= 3 && !isCompared"
           @click="handleCompareToggle"
@@ -425,7 +425,7 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
         </button>
         <button
           class="catalog-card-action-button"
-          title="Thêm vào giỏ hàng"
+          title="Add item to cart"
           type="button"
           :disabled="!selectedVariantIsInStock || isAddingToCart"
           @click="handleAddToCart"
@@ -473,12 +473,12 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
             :disabled="!option.selectable && !option.active"
             :title="
               !option.selectable && !option.active
-                ? `${option.label} • Không có với màu đang chọn`
+                ? `${option.label} • Not available for selected color`
                 : option.pairingState === 'changes-color'
-                  ? `${option.label} • Chọn cấu hình này sẽ đổi sang màu khả dụng khác`
+                  ? `${option.label} • Selecting this configuration switches to another available color`
                 : option.inStock
                   ? option.label
-                  : `${option.label} • Tạm hết hàng`
+                  : `${option.label} • Out of stock`
             "
             type="button"
             @click="handleMemorySelect(option.key)"
@@ -497,12 +497,12 @@ const isCompared = computed(() => compareStore.isCompared(props.product.id))
             :disabled="!option.selectable && !option.active"
             :title="
               !option.selectable && !option.active
-                ? `${option.fullName} • Không có với cấu hình đang chọn`
+                ? `${option.fullName} • Not available for selected configuration`
                 : option.pairingState === 'changes-memory'
-                  ? `${option.fullName} • Chọn màu này sẽ đổi sang cấu hình khả dụng khác`
+                  ? `${option.fullName} • Selecting this color switches to another available configuration`
                 : option.inStock
                   ? option.fullName
-                  : `${option.fullName} • Tạm hết hàng`
+                  : `${option.fullName} • Out of stock`
             "
             type="button"
             @click="handleColorSelect(option.key)"

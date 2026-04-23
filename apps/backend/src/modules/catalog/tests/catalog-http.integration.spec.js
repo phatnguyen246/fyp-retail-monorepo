@@ -34,9 +34,9 @@ function createCatalogState() {
     const galaxyProduct = createProductReadModelFixture({
         _id: new ObjectId("65f000000000000000000008"),
         productGroupCode: "SAMSUNG_GALAXY_S25",
-        title: "Điện thoại Samsung S25",
-        slug: "dien-thoai-samsung-s25",
-        searchTitle: "dien thoai samsung s25",
+        title: "Samsung phone S25",
+        slug: "samsung-phone-s25",
+        searchTitle: "samsung phone s25",
         brandId: samsungBrand._id,
         categoryId: category._id,
         tagIds: [cameraTag._id],
@@ -329,9 +329,9 @@ function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
     const searchVisibleDiscontinuedProduct = createProductReadModelFixture({
         _id: new ObjectId("65f0000000000000000000b1"),
         productGroupCode: "SAMSUNG_GALAXY_S24",
-        title: "Điện thoại Samsung S24",
-        slug: "dien-thoai-samsung-s24",
-        searchTitle: "dien thoai samsung s24",
+        title: "Samsung phone S24",
+        slug: "samsung-phone-s24",
+        searchTitle: "samsung phone s24",
         brandId: samsungBrand._id,
         categoryId: category._id,
         tagIds: [cameraTag._id],
@@ -353,9 +353,9 @@ function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
     const hiddenDiscontinuedProduct = createProductReadModelFixture({
         _id: new ObjectId("65f0000000000000000000b3"),
         productGroupCode: "SAMSUNG_GALAXY_NOTE_EOL",
-        title: "Điện thoại Samsung Note EOL",
-        slug: "dien-thoai-samsung-note-eol",
-        searchTitle: "dien thoai samsung note eol",
+        title: "Samsung phone Note EOL",
+        slug: "samsung-phone-note-eol",
+        searchTitle: "samsung phone note eol",
         brandId: samsungBrand._id,
         categoryId: category._id,
         tagIds: [cameraTag._id],
@@ -1138,13 +1138,13 @@ describe("catalog http integration", () => {
         });
 
         const searchResponse = await fetch(
-            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+            `${runningServer.url}/catalog/search?q=samsung phone`
         );
         const searchBody = await searchResponse.json();
 
         expect(searchResponse.status).toBe(200);
         expect(searchBody.data).toHaveLength(1);
-        expect(searchBody.data[0].slug).toBe("dien-thoai-samsung-s25");
+        expect(searchBody.data[0].slug).toBe("samsung-phone-s25");
 
         const invalidSearchResponse = await fetch(
             `${runningServer.url}/catalog/search`
@@ -1165,15 +1165,15 @@ describe("catalog http integration", () => {
         );
         const listBody = await listResponse.json();
         const searchResponse = await fetch(
-            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+            `${runningServer.url}/catalog/search?q=samsung phone`
         );
         const searchBody = await searchResponse.json();
         const discontinuedDetailResponse = await fetch(
-            `${runningServer.url}/catalog/products/65f0000000000000000000b1/dien-thoai-samsung-s24`
+            `${runningServer.url}/catalog/products/65f0000000000000000000b1/samsung-phone-s24`
         );
         const discontinuedDetailBody = await discontinuedDetailResponse.json();
         const hiddenDiscontinuedDetailResponse = await fetch(
-            `${runningServer.url}/catalog/products/65f0000000000000000000b3/dien-thoai-samsung-note-eol`
+            `${runningServer.url}/catalog/products/65f0000000000000000000b3/samsung-phone-note-eol`
         );
         const hiddenDiscontinuedDetailBody =
             await hiddenDiscontinuedDetailResponse.json();
@@ -1194,7 +1194,7 @@ describe("catalog http integration", () => {
         expect(searchBody.data[0]).toMatchObject({
             id: "65f0000000000000000000b1",
             status: "discontinued",
-            slug: "dien-thoai-samsung-s24",
+            slug: "samsung-phone-s24",
         });
         expect(
             searchBody.data.some((item) => item.id === "65f0000000000000000000b3")
@@ -1204,7 +1204,7 @@ describe("catalog http integration", () => {
         expect(discontinuedDetailBody.data).toMatchObject({
             id: "65f0000000000000000000b1",
             status: "discontinued",
-            title: "Điện thoại Samsung S24",
+            title: "Samsung phone S24",
             variants: [
                 expect.objectContaining({
                     sku: "S24-GRY-256",
@@ -1224,7 +1224,7 @@ describe("catalog http integration", () => {
         );
         const listBody = await listResponse.json();
         const searchResponse = await fetch(
-            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+            `${runningServer.url}/catalog/search?q=samsung phone`
         );
         const searchBody = await searchResponse.json();
 
@@ -1414,15 +1414,15 @@ describe("catalog http integration", () => {
             ],
             sortModes: [
                 {
-                    label: "Mới nhất",
+                    label: "Newest",
                     value: "newest",
                 },
                 {
-                    label: "Giá tăng dần",
+                    label: "Price: Low to High",
                     value: "price_asc",
                 },
                 {
-                    label: "Giá giảm dần",
+                    label: "Price: High to Low",
                     value: "price_desc",
                 },
             ],
@@ -1598,7 +1598,7 @@ describe("catalog http integration", () => {
                 fetch(
                     `${runningServer.url}/catalog/products/65f000000000000000000006/iphone-16`
                 ),
-                fetch(`${runningServer.url}/catalog/search?q=điện thoại samsung`),
+                fetch(`${runningServer.url}/catalog/search?q=samsung phone`),
                 fetch(`${runningServer.url}/catalog/compare`, {
                     method: "POST",
                     headers: {
