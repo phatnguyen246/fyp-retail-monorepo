@@ -83,7 +83,7 @@ function getSuggestionMeta(product) {
     variantLabel,
   ]
     .filter(Boolean)
-    .join(' • ') || 'Xem chi tiết sản phẩm'
+    .join(' • ') || 'View details products'
 }
 
 function getSuggestionPrice(product) {
@@ -118,7 +118,7 @@ async function loadSearchSuggestions(keyword) {
     }
 
     searchResults.value = []
-    searchErrorMessage.value = 'Không thể tải gợi ý sản phẩm.'
+    searchErrorMessage.value = 'Unable to load product suggestions.'
   } finally {
     if (requestId === latestSearchRequestId) {
       isSearching.value = false
@@ -248,19 +248,19 @@ cartStore.fetchCart()
           :class="getNavLinkClass('catalog')"
           :to="{ name: 'catalog-products' }"
         >
-          Sản phẩm
+          Products
         </RouterLink>
         <RouterLink
           :to="{ name: 'order-lookup' }"
           :class="getNavLinkClass('orders')"
         >
-          Tìm đơn hàng
+          Find order
         </RouterLink>
         <RouterLink
           :to="{ name: 'compare' }"
           :class="`${getNavLinkClass('compare')} relative`"
         >
-          So sánh sản phẩm
+          Compare products
           <span
             v-if="compareStore.count > 0"
             class="absolute -right-4 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--catalog-primary)] px-1 text-[10px] font-medium text-white"
@@ -284,7 +284,7 @@ cartStore.fetchCart()
         <form @submit.prevent="handleSearchSubmit">
           <input
             class="h-11 w-72 border border-transparent bg-[var(--catalog-surface-muted)] pl-10 pr-4 text-sm text-[var(--catalog-text)] outline-none transition focus:border-[var(--catalog-primary)]"
-            placeholder="Tìm sản phẩm..."
+            placeholder="Search products..."
             type="text"
             :value="searchQuery"
             @focus="handleSearchFocus"
@@ -297,7 +297,7 @@ cartStore.fetchCart()
           class="search-menu"
         >
           <div v-if="isSearching" class="search-menu-status">
-            Đang tìm sản phẩm...
+            Searching products...
           </div>
 
           <div v-else-if="searchErrorMessage" class="search-menu-status search-menu-status--error">
@@ -305,7 +305,7 @@ cartStore.fetchCart()
           </div>
 
           <div v-else-if="searchResults.length === 0" class="search-menu-status">
-            Không tìm thấy sản phẩm phù hợp.
+            No matching products found.
           </div>
 
           <div v-else class="search-menu-list">
@@ -318,7 +318,7 @@ cartStore.fetchCart()
             >
               <div class="min-w-0">
                 <p class="truncate text-sm font-semibold text-[var(--catalog-text)]">
-                  {{ product.title || 'Sản phẩm' }}
+                  {{ product.title || 'Products' }}
                 </p>
                 <p class="mt-1 truncate text-xs text-[var(--catalog-text-muted)]">
                   {{ getSuggestionMeta(product) }}
@@ -332,7 +332,7 @@ cartStore.fetchCart()
         </div>
       </div>
 
-      <RouterLink :to="{ name: 'cart' }" class="catalog-icon-button relative" title="Giỏ hàng">
+      <RouterLink :to="{ name: 'cart' }" class="catalog-icon-button relative" title="Cart">
         <span class="material-symbols-outlined text-[var(--catalog-primary)]">shopping_bag</span>
         <span
           v-if="cartStore.summary.totalQuantity > 0"
@@ -365,7 +365,7 @@ cartStore.fetchCart()
           class="user-menu"
         >
           <div class="border-b border-[var(--catalog-border-soft)] px-4 py-3">
-            <p class="text-sm">Đăng nhập với</p>
+            <p class="text-sm">Signed in as</p>
             <p class="truncate text-sm font-medium text-[var(--catalog-text)]">
               {{ authStore.user.email }}
             </p>
@@ -373,15 +373,15 @@ cartStore.fetchCart()
           <div class="p-1">
             <RouterLink :to="{ name: 'account' }" class="user-menu-item">
               <span class="material-symbols-outlined">account_circle</span>
-              Thông tin tài khoản
+              Account information
             </RouterLink>
             <RouterLink :to="{ name: 'order-history' }" class="user-menu-item">
               <span class="material-symbols-outlined">history</span>
-              Lịch sử đơn hàng
+              Order history
             </RouterLink>
             <button class="user-menu-item" @click="openLogoutConfirm">
               <span class="material-symbols-outlined">logout</span>
-              Đăng xuất
+              Sign out
             </button>
           </div>
         </div>
@@ -391,10 +391,10 @@ cartStore.fetchCart()
 
   <ConfirmDialog
     :open="isLogoutConfirmOpen"
-    title="Xác nhận đăng xuất"
-    message="Bạn có chắc muốn đăng xuất khỏi phiên hiện tại không?"
-    confirm-label="Đăng xuất"
-    cancel-label="Ở lại"
+    title="Confirm sign out"
+    message="Are you sure you want to sign out of the current session?"
+    confirm-label="Sign out"
+    cancel-label="Stay"
     :loading="authStore.loading"
     @cancel="closeLogoutConfirm"
     @confirm="handleLogout"

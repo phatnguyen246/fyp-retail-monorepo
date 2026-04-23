@@ -4,9 +4,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "SAMSUNG_GALAXY_S25",
         title: "Samsung Galaxy S25",
         shortDescription:
-            "Flagship Android nhỏ gọn với Snapdragon 8 Elite for Galaxy, One UI 7 và cụm camera 50MP linh hoạt.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Galaxy S25 là mẫu flagship cỡ nhỏ tập trung vào hiệu năng cao, trải nghiệm AI và camera cân bằng cho nhu cầu chụp ảnh, quay video, làm việc và giải trí hàng ngày.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "ai-phone", "compact", "all-rounder"],
         badges: ["new", "hot"],
         releaseDate: "2025-01-22T00:00:00.000Z",
@@ -62,9 +62,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "SAMSUNG_GALAXY_S25_PLUS",
         title: "Samsung Galaxy S25+",
         shortDescription:
-            "Bản flagship màn hình lớn hơn của S25 với pin 4900mAh, Snapdragon 8 Elite for Galaxy và AI trải rộng trong hệ Galaxy.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Galaxy S25+ phù hợp người dùng muốn màn hình lớn hơn bản tiêu chuẩn nhưng vẫn giữ trải nghiệm flagship cân bằng, camera tốt và pin bền bỉ.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "ai-phone", "battery-phone", "all-rounder"],
         badges: ["new", "installment"],
         releaseDate: "2025-01-22T00:00:00.000Z",
@@ -119,9 +119,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "SAMSUNG_GALAXY_S25_ULTRA",
         title: "Samsung Galaxy S25 Ultra",
         shortDescription:
-            "Flagship Ultra có S Pen, camera 200MP, Snapdragon 8 Elite for Galaxy và hệ zoom đa tiêu cự cho nhu cầu chụp ảnh cao cấp.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Galaxy S25 Ultra là mẫu đầu bảng thiên về camera, năng suất và trải nghiệm AI, phù hợp người dùng cần thiết bị Android cao cấp cho công việc lẫn sáng tạo nội dung.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "camera-phone", "ai-phone", "creator-phone"],
         badges: ["new", "hot"],
         releaseDate: "2025-01-22T00:00:00.000Z",
@@ -178,9 +178,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "SAMSUNG_GALAXY_A56_5G",
         title: "Samsung Galaxy A56 5G",
         shortDescription:
-            "Máy tầm trung cân bằng với màn AMOLED 120Hz, pin lớn, chống nước IP67 và trải nghiệm One UI hiện đại.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Galaxy A56 5G hướng tới người dùng cần smartphone bền bỉ, giao diện ổn định và camera đủ tốt cho nhu cầu hàng ngày trong tầm giá trung cao.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["budget", "ai-phone", "all-rounder"],
         badges: ["best_seller", "installment"],
         releaseDate: "2025-03-02T00:00:00.000Z",
@@ -234,9 +234,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "GOOGLE_PIXEL_9",
         title: "Google Pixel 9",
         shortDescription:
-            "Pixel 9 tập trung vào camera, AI của Google và trải nghiệm Android gọn gàng trong thân máy 6.3 inch.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Pixel 9 phù hợp người dùng cần camera point-and-shoot tốt, các tính năng AI của Google và phần mềm Android thuần tối ưu lâu dài.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["camera-phone", "ai-phone", "compact"],
         badges: ["hot"],
         releaseDate: "2024-08-13T00:00:00.000Z",
@@ -291,9 +291,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "GOOGLE_PIXEL_9_PRO",
         title: "Google Pixel 9 Pro",
         shortDescription:
-            "Flagship Pixel nhỏ gọn với màn LTPO, Tensor G4, 16GB RAM và camera tele 5x phục vụ chụp ảnh chuyên sâu hơn.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Pixel 9 Pro đem lại trải nghiệm camera cao cấp và bộ tính năng AI mạnh nhất của Google trong thân máy 6.3 inch gọn hơn đa số flagship cùng tầm.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "camera-phone", "ai-phone", "compact"],
         badges: ["hot", "installment"],
         releaseDate: "2024-08-13T00:00:00.000Z",
@@ -349,9 +349,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "ONEPLUS_13",
         title: "OnePlus 13",
         shortDescription:
-            "Flagship hiệu năng cao với Snapdragon 8 Elite, pin 6000mAh, sạc 100W và màn LTPO QHD+ 120Hz.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "OnePlus 13 tập trung vào hiệu năng đầu bảng, pin lớn, sạc nhanh và trải nghiệm OxygenOS mượt, phù hợp người dùng ưu tiên sức mạnh và thời lượng pin.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "battery-phone", "fast-charging"],
         badges: ["new", "hot"],
         releaseDate: "2025-01-07T00:00:00.000Z",
@@ -407,9 +407,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "ONEPLUS_13R",
         title: "OnePlus 13R",
         shortDescription:
-            "OnePlus 13R thiên về hiệu năng với Snapdragon 8 Gen 3, pin 6000mAh và màn LTPO 120Hz.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "OnePlus 13R là lựa chọn value flagship cho người dùng cần hiệu năng mạnh, pin lớn, màn hình đẹp và giao diện tối ưu cho chơi game lẫn sử dụng dài lâu.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["gaming", "battery-phone", "all-rounder"],
         badges: ["hot", "installment"],
         releaseDate: "2025-01-07T00:00:00.000Z",
@@ -455,9 +455,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "ONEPLUS_NORD_4",
         title: "OnePlus Nord 4",
         shortDescription:
-            "Nord 4 nổi bật với khung kim loại nguyên khối, AMOLED 120Hz và sạc nhanh 100W trong phân khúc cận cao cấp.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "OnePlus Nord 4 hướng tới người dùng muốn máy tầm trung mạnh, hoàn thiện khác biệt, màn hình đẹp và pin sạc nhanh cho nhu cầu hàng ngày.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["fast-charging", "all-rounder"],
         badges: ["best_seller"],
         releaseDate: "2024-07-16T00:00:00.000Z",
@@ -512,9 +512,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "OPPO_FIND_X8",
         title: "OPPO Find X8",
         shortDescription:
-            "Flagship cân bằng của OPPO với Dimensity 9400, pin silicon-carbon lớn và hệ camera Hasselblad gọn gàng.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Find X8 mang tới cấu hình mạnh, thân máy gọn hơn dòng Pro và cụm camera cao cấp cho người dùng cần flagship chụp đẹp, pin tốt và thiết kế sang.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "camera-phone", "all-rounder"],
         badges: ["new", "hot"],
         releaseDate: "2024-10-24T00:00:00.000Z",
@@ -570,9 +570,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "OPPO_FIND_X8_PRO",
         title: "OPPO Find X8 Pro",
         shortDescription:
-            "Find X8 Pro là flagship camera cao cấp của OPPO với zoom xa, chống nước mạnh và pin lớn cho trải nghiệm all-in-one.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Find X8 Pro hướng đến người dùng ưu tiên camera, pin và thiết kế flagship, đặc biệt là các nhu cầu chụp ảnh tele, chân dung và sử dụng cường độ cao.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "camera-phone", "creator-phone"],
         badges: ["new", "installment"],
         releaseDate: "2024-10-24T00:00:00.000Z",
@@ -620,9 +620,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "OPPO_RENO13_F_5G",
         title: "OPPO Reno13 F 5G",
         shortDescription:
-            "Reno13 F 5G là máy tầm trung mỏng nhẹ với AMOLED 120Hz, camera chống rung quang học và pin lớn 5800mAh.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Reno13 F 5G phù hợp người dùng cần thiết kế đẹp, pin tốt, sạc nhanh và cụm camera đủ linh hoạt trong phân khúc tầm trung.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["budget", "fast-charging", "all-rounder"],
         badges: ["best_seller", "installment"],
         releaseDate: "2025-01-04T00:00:00.000Z",
@@ -685,9 +685,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "VIVO_X200",
         title: "vivo X200",
         shortDescription:
-            "vivo X200 cân bằng giữa hiệu năng Dimensity 9400, camera ZEISS và pin 5800mAh trong thân máy mỏng nhẹ hơn bản Pro.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "X200 là flagship thiên camera và thiết kế gọn gàng của vivo, phù hợp người dùng cần thiết bị cao cấp chụp đẹp, pin tốt và sử dụng lâu dài.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "camera-phone", "all-rounder"],
         badges: ["new", "hot"],
         releaseDate: "2024-10-14T00:00:00.000Z",
@@ -748,9 +748,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "VIVO_X200_PRO",
         title: "vivo X200 Pro",
         shortDescription:
-            "Flagship camera của vivo với ZEISS APO tele 200MP, Dimensity 9400 và pin 6000mAh.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "X200 Pro được thiết kế cho người dùng ưu tiên camera tele, chụp đêm, quay video và thời lượng pin dài trong nhóm flagship cao cấp.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: [
             "flagship",
             "camera-phone",
@@ -809,9 +809,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "VIVO_V50",
         title: "vivo V50",
         shortDescription:
-            "vivo V50 nhấn mạnh chân dung ZEISS, pin lớn, thân máy mỏng và sạc nhanh cho phân khúc cận cao cấp.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "V50 là lựa chọn nổi bật cho người dùng thích chụp chân dung, selfie, pin bền và thiết kế thời trang, đồng thời vẫn có cấu hình đủ tốt cho nhu cầu đa dụng.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["camera-phone", "battery-phone", "fast-charging"],
         badges: ["best_seller", "installment"],
         releaseDate: "2025-02-17T00:00:00.000Z",
@@ -864,9 +864,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "VIVO_V50_LITE_5G",
         title: "vivo V50 Lite 5G",
         shortDescription:
-            "Mẫu máy pin 6500mAh của vivo với AMOLED 120Hz, Dimensity 6300 và sạc nhanh 90W.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "V50 Lite 5G hướng đến người dùng cần smartphone pin rất trâu, sạc nhanh và thiết kế đẹp trong tầm giá dễ tiếp cận.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["battery-phone", "budget", "fast-charging"],
         badges: ["best_seller"],
         releaseDate: "2025-03-20T00:00:00.000Z",
@@ -921,9 +921,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "XIAOMI_15",
         title: "Xiaomi 15",
         shortDescription:
-            "Flagship nhỏ gọn của Xiaomi với Snapdragon 8 Elite, Leica camera và pin silicon-carbon lớn trong thân máy 6.36 inch.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Xiaomi 15 phù hợp người dùng muốn flagship Android nhỏ gọn nhưng vẫn có màn hình đẹp, hiệu năng mạnh và camera Leica cao cấp.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["flagship", "compact", "all-rounder"],
         badges: ["new", "hot"],
         releaseDate: "2025-03-02T00:00:00.000Z",
@@ -977,9 +977,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "REDMI_NOTE_14_5G",
         title: "Redmi Note 14 5G",
         shortDescription:
-            "Máy tầm trung của Redmi có AMOLED 120Hz, camera 108MP OIS và pin 5110mAh.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Redmi Note 14 5G là mẫu máy phổ thông 5G cân bằng với pin tốt, màn hình đẹp và camera chính độ phân giải cao, phù hợp nhu cầu học tập và làm việc hàng ngày.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["budget", "all-rounder"],
         badges: ["best_seller"],
         releaseDate: "2025-01-10T00:00:00.000Z",
@@ -1034,9 +1034,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "REDMI_NOTE_14_PRO_PLUS_5G",
         title: "Redmi Note 14 Pro+ 5G",
         shortDescription:
-            "Mẫu Redmi cao cấp nhất dòng Note với camera 200MP OIS, màn cong 1.5K và HyperCharge 120W.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "Redmi Note 14 Pro+ 5G đem lại cấu hình cân bằng, camera độ phân giải rất cao, thiết kế bền và sạc siêu nhanh trong phân khúc cận trung cao.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["camera-phone", "fast-charging", "all-rounder"],
         badges: ["hot", "installment"],
         releaseDate: "2025-01-10T00:00:00.000Z",
@@ -1091,9 +1091,9 @@ export const STOREFRONT_SMARTPHONE_SEED_DATA = [
         productGroupCode: "POCO_F6",
         title: "POCO F6",
         shortDescription:
-            "POCO F6 tập trung vào hiệu năng với Snapdragon 8s Gen 3, AMOLED 1.5K 120Hz và sạc 90W.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         longDescription:
-            "POCO F6 nhắm đến người dùng thích chơi game và hiệu năng cao trong tầm giá vừa phải, đồng thời vẫn có màn hình đẹp và sạc nhanh mạnh.",
+            "High-performance smartphone with balanced camera quality, smooth software, and all-day battery life.",
         tagCodes: ["gaming", "fast-charging", "all-rounder"],
         badges: ["hot", "best_seller"],
         releaseDate: "2024-05-23T00:00:00.000Z",

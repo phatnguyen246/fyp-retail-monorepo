@@ -8,39 +8,39 @@ const nonNegativeNumber = (message: string) =>
   }).finite(message).min(0, message)
 
 export const loginFormSchema = z.object({
-  email: requiredString('Nhap dia chi email.').email('Email khong hop le.'),
-  password: requiredString('Nhap mat khau.'),
+  email: requiredString('Please enter your email address.').email('Invalid email address.'),
+  password: requiredString('Please enter your password.'),
 })
 
 export const registerFormSchema = loginFormSchema
   .extend({
-    password: requiredString('Nhap mat khau.').min(6, 'Mat khau phai co it nhat 6 ky tu.'),
-    confirmPassword: requiredString('Nhap xac nhan mat khau.'),
+    password: requiredString('Please enter your password.').min(6, 'Password must be at least 6 characters.'),
+    confirmPassword: requiredString('Please confirm your password.'),
   })
   .refine((value) => value.password === value.confirmPassword, {
-    message: 'Mat khau khong khop.',
+    message: 'Passwords do not match.',
     path: ['confirmPassword'],
   })
 
 export const orderLookupFormSchema = z.object({
-  orderCode: requiredString('Nhập mã đơn hàng.'),
+  orderCode: requiredString('Please enter the order code.'),
 })
 
 export const checkoutShippingSchema = z.object({
-  recipientName: requiredString('Nhap ten nguoi nhan.'),
-  email: requiredString('Nhap dia chi email.').email('Email khong hop le.'),
-  phoneNumber: requiredString('Nhap so dien thoai nguoi nhan.'),
-  street: requiredString('Nhap so nha va ten duong.'),
-  provinceCode: requiredString('Chon tinh/thanh pho giao hang.'),
+  recipientName: requiredString('Please enter the recipient name.'),
+  email: requiredString('Please enter your email address.').email('Invalid email address.'),
+  phoneNumber: requiredString('Please enter the recipient phone number.'),
+  street: requiredString('Please enter street and house number.'),
+  provinceCode: requiredString('Please select a province/city.'),
   provinceName: z.string().trim(),
-  districtCode: requiredString('Chon quan/huyen giao hang.'),
+  districtCode: requiredString('Please select a district.'),
   districtName: z.string().trim(),
-  wardCode: requiredString('Chon phuong/xa giao hang.'),
+  wardCode: requiredString('Please select a ward.'),
   wardName: z.string().trim(),
   paymentMethod: z.enum(['cod', 'vnpay']),
   cartVariantIds: z.array(z.string().trim().min(1)).min(
     1,
-    'Khong co san pham hop le de checkout. Hay quay lai gio hang de xu ly cac line dang bi loai.',
+    'No valid items available for checkout. Please go back to cart and resolve excluded lines.',
   ),
 })
 

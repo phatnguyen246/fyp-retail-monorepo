@@ -53,7 +53,7 @@ export const useCompareStore = defineStore('compare', () => {
     if (productIds.value.includes(id)) return
 
     if (productIds.value.length >= 3) {
-      alert('Bạn chỉ có thể so sánh tối đa 3 sản phẩm.')
+      alert('You can compare up to 3 products only.')
       return
     }
 
@@ -61,7 +61,7 @@ export const useCompareStore = defineStore('compare', () => {
     if (productIds.value.length > 0) {
       const existingTypes = Object.values(productTypes.value)
       if (existingTypes.length > 0 && !existingTypes.includes(type)) {
-        alert('Chỉ có thể so sánh các sản phẩm cùng loại.')
+        alert('You can only compare products of the same type.')
         return
       }
     }

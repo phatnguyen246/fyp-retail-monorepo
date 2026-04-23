@@ -9,7 +9,7 @@ import {
 describe("computeProductDerivedFields", () => {
     it("computes all derived fields when active in-stock variants exist", () => {
         const product = createProductFixture({
-            title: "  Điện   thoại   Samsung Galaxy  ",
+            title: "  Samsung phone Galaxy  ",
         });
         const variants = [
             createVariantFixture({

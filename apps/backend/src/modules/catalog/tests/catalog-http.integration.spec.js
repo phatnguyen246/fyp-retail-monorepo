@@ -34,7 +34,7 @@ function createCatalogState() {
     const galaxyProduct = createProductReadModelFixture({
         _id: new ObjectId("65f000000000000000000008"),
         productGroupCode: "SAMSUNG_GALAXY_S25",
-        title: "Điện thoại Samsung S25",
+        title: "Samsung phone S25",
         slug: "dien-thoai-samsung-s25",
         searchTitle: "dien thoai samsung s25",
         brandId: samsungBrand._id,
@@ -329,7 +329,7 @@ function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
     const searchVisibleDiscontinuedProduct = createProductReadModelFixture({
         _id: new ObjectId("65f0000000000000000000b1"),
         productGroupCode: "SAMSUNG_GALAXY_S24",
-        title: "Điện thoại Samsung S24",
+        title: "Samsung phone S24",
         slug: "dien-thoai-samsung-s24",
         searchTitle: "dien thoai samsung s24",
         brandId: samsungBrand._id,
@@ -353,7 +353,7 @@ function createCatalogStateWithSearchVisibleDiscontinuedProduct() {
     const hiddenDiscontinuedProduct = createProductReadModelFixture({
         _id: new ObjectId("65f0000000000000000000b3"),
         productGroupCode: "SAMSUNG_GALAXY_NOTE_EOL",
-        title: "Điện thoại Samsung Note EOL",
+        title: "Samsung phone Note EOL",
         slug: "dien-thoai-samsung-note-eol",
         searchTitle: "dien thoai samsung note eol",
         brandId: samsungBrand._id,
@@ -1138,7 +1138,7 @@ describe("catalog http integration", () => {
         });
 
         const searchResponse = await fetch(
-            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+            `${runningServer.url}/catalog/search?q=samsung phone`
         );
         const searchBody = await searchResponse.json();
 
@@ -1165,7 +1165,7 @@ describe("catalog http integration", () => {
         );
         const listBody = await listResponse.json();
         const searchResponse = await fetch(
-            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+            `${runningServer.url}/catalog/search?q=samsung phone`
         );
         const searchBody = await searchResponse.json();
         const discontinuedDetailResponse = await fetch(
@@ -1204,7 +1204,7 @@ describe("catalog http integration", () => {
         expect(discontinuedDetailBody.data).toMatchObject({
             id: "65f0000000000000000000b1",
             status: "discontinued",
-            title: "Điện thoại Samsung S24",
+            title: "Samsung phone S24",
             variants: [
                 expect.objectContaining({
                     sku: "S24-GRY-256",
@@ -1224,7 +1224,7 @@ describe("catalog http integration", () => {
         );
         const listBody = await listResponse.json();
         const searchResponse = await fetch(
-            `${runningServer.url}/catalog/search?q=điện thoại samsung`
+            `${runningServer.url}/catalog/search?q=samsung phone`
         );
         const searchBody = await searchResponse.json();
 
@@ -1414,15 +1414,15 @@ describe("catalog http integration", () => {
             ],
             sortModes: [
                 {
-                    label: "Mới nhất",
+                    label: "Newest",
                     value: "newest",
                 },
                 {
-                    label: "Giá tăng dần",
+                    label: "Price: Low to High",
                     value: "price_asc",
                 },
                 {
-                    label: "Giá giảm dần",
+                    label: "Price: High to Low",
                     value: "price_desc",
                 },
             ],
@@ -1598,7 +1598,7 @@ describe("catalog http integration", () => {
                 fetch(
                     `${runningServer.url}/catalog/products/65f000000000000000000006/iphone-16`
                 ),
-                fetch(`${runningServer.url}/catalog/search?q=điện thoại samsung`),
+                fetch(`${runningServer.url}/catalog/search?q=samsung phone`),
                 fetch(`${runningServer.url}/catalog/compare`, {
                     method: "POST",
                     headers: {

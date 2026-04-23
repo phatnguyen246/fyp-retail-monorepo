@@ -172,7 +172,7 @@ function createPaymentFixture({
         currency: "VND",
         status,
         providerTxnRef: paymentCode,
-        orderInfo: "Thanh toan don hang ORD 20260316 010101",
+        orderInfo: "Order payment ORD 20260316 010101",
         createdAt,
         updatedAt,
     });

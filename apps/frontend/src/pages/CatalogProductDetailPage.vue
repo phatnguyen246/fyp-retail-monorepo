@@ -202,7 +202,7 @@ const productBadges = computed(() => {
   if (product.value?.status === 'discontinued') {
     badges.push({
       key: 'status-discontinued',
-      label: 'Ngừng kinh doanh',
+      label: 'Discontinued',
       classes: 'catalog-product-badge-warm',
     })
   }
@@ -218,13 +218,13 @@ const productBadges = computed(() => {
   if (product.value?.hasInStockVariants) {
     badges.push({
       key: 'stock-ready',
-      label: 'Sẵn hàng',
+      label: 'In stock',
       classes: 'catalog-product-badge-soft',
     })
   } else if (product.value?.contactWhenOutOfStock) {
     badges.push({
       key: 'stock-contact',
-      label: 'Liên hệ tư vấn',
+      label: 'Contact support',
       classes: 'catalog-product-badge-neutral',
     })
   }
@@ -236,24 +236,24 @@ const specEntries = computed(() => {
   const specs = product.value?.specs ?? {}
   const screen = specs.screen ?? {}
   const entries = [
-    ['Màn hình', [screen.size, screen.technology, screen.resolution, screen.refreshRate].filter(Boolean).join(' • ')],
+    ['Display', [screen.size, screen.technology, screen.resolution, screen.refreshRate].filter(Boolean).join(' • ')],
     ['Chipset', specs.chipset],
     ['Camera sau', specs.rearCamera],
-    ['Camera trước', specs.frontCamera],
+    ['Front camera', specs.frontCamera],
     ['Pin', specs.battery],
-    ['Hệ điều hành', specs.operatingSystem],
+    ['Operating system', specs.operatingSystem],
     ['SIM', specs.sim],
-    ['Mạng', specs.network],
-    ['Sạc', specs.charging],
-    ['Kích thước', specs.dimensions],
-    ['Khối lượng', specs.weight],
-    ['Vật liệu', specs.material],
-    ['Kháng nước', specs.waterResistance],
+    ['Network', specs.network],
+    ['Charging', specs.charging],
+    ['Dimensions', specs.dimensions],
+    ['Weight', specs.weight],
+    ['Material', specs.material],
+    ['Water resistance', specs.waterResistance],
   ]
 
   return entries.map(([label, value]) => ({
     label,
-    value: value || 'Chưa cập nhật',
+    value: value || 'Not updated',
     isEmpty: !value,
   }))
 })
@@ -285,7 +285,7 @@ const longDescriptionHtml = computed(() =>
 )
 
 const fallbackDescription = computed(
-  () => product.value?.shortDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.',
+  () => product.value?.shortDescription || 'No detailed description available for this product.',
 )
 const descriptionBodyStyle = computed(() => {
   if (isDescriptionExpanded.value || descriptionCollapsedContentMaxHeight.value <= 0) {
@@ -451,7 +451,7 @@ function toggleDescriptionExpanded() {
 async function loadProductDetail() {
   if (!productId.value) {
     product.value = null
-    errorMessage.value = 'Không tìm thấy mã sản phẩm.'
+    errorMessage.value = 'Product ID not found.'
     return
   }
 
@@ -685,7 +685,7 @@ onBeforeUnmount(() => {
           <span class="material-symbols-outlined text-[12px]">chevron_right</span>
           <span>Smartphones</span>
           <span class="material-symbols-outlined text-[12px]">chevron_right</span>
-          <span class="font-medium text-[var(--catalog-text)]">{{ product?.title || 'Chi tiết sản phẩm' }}</span>
+          <span class="font-medium text-[var(--catalog-text)]">{{ product?.title || 'Product details' }}</span>
         </div>
 
         <section
@@ -707,16 +707,16 @@ onBeforeUnmount(() => {
           class="rounded-[2rem] border border-[rgba(186,26,26,0.18)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)]"
         >
           <p class="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--catalog-danger)]">
-            Không thể tải product detail
+            Unable to load product details
           </p>
           <h1 class="catalog-display-title mb-3 text-4xl">Storefront Product Detail</h1>
           <p class="max-w-2xl text-[var(--catalog-text-muted)]">{{ errorMessage }}</p>
           <div class="mt-6 flex flex-wrap gap-3">
             <button class="catalog-primary-button" type="button" @click="loadProductDetail">
-              Thử lại
+              Retry
             </button>
             <RouterLink class="catalog-reset-button" :to="{ name: 'catalog-products' }">
-              Quay về catalog
+              Back to catalog
             </RouterLink>
           </div>
         </section>
@@ -756,7 +756,7 @@ onBeforeUnmount(() => {
                       v-else
                       class="flex h-full w-full items-center justify-center text-center text-sm uppercase tracking-[0.2em] text-[var(--catalog-text-soft)]"
                     >
-                      Chưa có hình ảnh
+                      No images available
                     </div>
 
                     <button
@@ -832,17 +832,17 @@ onBeforeUnmount(() => {
                 <div class="mt-6">
                   <div class="mb-3 flex items-center justify-between gap-3">
                     <h2 class="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                      Chọn biến thể
+                      Choose variant
                     </h2>
                     <span class="text-sm text-[var(--catalog-text-muted)]">
-                      {{ variants.length }} lựa chọn
+                      {{ variants.length }} options
                     </span>
                   </div>
 
                   <div class="grid gap-4">
                     <div v-if="memoryOptions.length > 0">
                       <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                        Cấu hình RAM / ROM
+                        RAM / ROM configuration
                       </p>
                       <div class="flex flex-wrap gap-2">
                         <button
@@ -854,12 +854,12 @@ onBeforeUnmount(() => {
                           :disabled="!option.selectable && !option.active"
                           :title="
                             !option.selectable && !option.active
-                              ? `${option.label} • Không có với màu đang chọn`
+                              ? `${option.label} • Not available for selected color`
                               : option.pairingState === 'changes-color'
-                                ? `${option.label} • Chọn cấu hình này sẽ đổi sang màu khả dụng khác`
+                                ? `${option.label} • Selecting this configuration switches to another available color`
                               : option.inStock
                                 ? option.label
-                                : `${option.label} • Tạm hết hàng`
+                                : `${option.label} • Out of stock`
                           "
                           type="button"
                           @click="handleMemorySelect(option.key)"
@@ -871,7 +871,7 @@ onBeforeUnmount(() => {
 
                     <div v-if="colorOptions.length > 0">
                       <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                        Màu sắc
+                        Color
                       </p>
                       <div class="flex flex-wrap gap-2">
                         <button
@@ -883,12 +883,12 @@ onBeforeUnmount(() => {
                           :disabled="!option.selectable && !option.active"
                           :title="
                             !option.selectable && !option.active
-                              ? `${option.fullName} • Không có với cấu hình đang chọn`
+                              ? `${option.fullName} • Not available for selected configuration`
                               : option.pairingState === 'changes-memory'
-                                ? `${option.fullName} • Chọn màu này sẽ đổi sang cấu hình khả dụng khác`
+                                ? `${option.fullName} • Selecting this color switches to another available configuration`
                               : option.inStock
                                 ? option.fullName
-                                : `${option.fullName} • Tạm hết hàng`
+                                : `${option.fullName} • Out of stock`
                           "
                           type="button"
                           @click="handleColorSelect(option.key)"
@@ -902,10 +902,10 @@ onBeforeUnmount(() => {
 
                 <div class="mt-6 rounded-[1.5rem] bg-[var(--catalog-surface-muted)] p-5">
                   <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                    Biến thể đang chọn
+                    Selected variant
                   </p>
                   <p class="mt-2 text-2xl font-semibold text-[var(--catalog-text)]">
-                    {{ selectedVariantLabel || 'Chọn biến thể' }}
+                    {{ selectedVariantLabel || 'Choose variant' }}
                   </p>
                   <div class="mt-3 flex flex-wrap items-end gap-3">
                     <span class="text-3xl font-semibold text-[var(--catalog-primary)]">
@@ -925,7 +925,7 @@ onBeforeUnmount(() => {
                           : 'bg-[rgba(186,26,26,0.1)] text-[var(--catalog-danger)]'
                       "
                     >
-                      {{ selectedVariant?.isInStock ? 'Còn hàng' : 'Tạm hết hàng' }}
+                      {{ selectedVariant?.isInStock ? 'In stock' : 'Out of stock' }}
                     </span>
                   </div>
                 </div>
@@ -933,7 +933,7 @@ onBeforeUnmount(() => {
                 <div class="mt-6 flex flex-wrap items-end gap-3">
                   <div class="detail-quantity-block">
                     <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--catalog-text-soft)]">
-                      Số lượng
+                      Quantity
                     </p>
                     <div class="detail-quantity-control">
                       <button
@@ -972,7 +972,7 @@ onBeforeUnmount(() => {
                     :disabled="!selectedVariant?.isInStock || isAddingToCart"
                     @click="handleAddToCart"
                   >
-                    {{ isAddingToCart ? 'Đang thêm...' : 'Thêm vào giỏ' }}
+                    {{ isAddingToCart ? 'Adding...' : 'Add to cart' }}
                   </button>
                   <button
                     class="catalog-reset-button"
@@ -980,7 +980,7 @@ onBeforeUnmount(() => {
                     :disabled="!product.id"
                     @click="handleCompareToggle"
                   >
-                    {{ isCompared ? 'Bỏ so sánh' : 'Thêm vào so sánh' }}
+                    {{ isCompared ? 'Remove from compare' : 'Add to compare' }}
                   </button>
                 </div>
 
@@ -1014,7 +1014,7 @@ onBeforeUnmount(() => {
                 ref="descriptionHeadingRef"
                 class="detail-description-heading mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]"
               >
-                Mô tả chi tiết
+                Detailed description
               </p>
               <div
                 ref="descriptionBodyRef"
@@ -1036,7 +1036,7 @@ onBeforeUnmount(() => {
                   class="detail-description-expand-overlay"
                 >
                   <button class="catalog-reset-button" type="button" @click="toggleDescriptionExpanded">
-                    Xem chi tiết
+                    View details
                   </button>
                 </div>
               </div>
@@ -1046,7 +1046,7 @@ onBeforeUnmount(() => {
                 class="detail-description-actions mt-5 text-center"
               >
                 <button class="catalog-reset-button" type="button" @click="toggleDescriptionExpanded">
-                  Thu gọn
+                  Collapse
                 </button>
               </div>
             </article>
@@ -1058,7 +1058,7 @@ onBeforeUnmount(() => {
               <div class="mb-5 flex items-center justify-between gap-4">
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                    Thông số
+                    Specifications
                   </p>
                   <h2 class="catalog-display-title mt-2 text-3xl">Product Specifications</h2>
                 </div>

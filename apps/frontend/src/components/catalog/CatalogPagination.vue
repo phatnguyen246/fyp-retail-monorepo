@@ -37,7 +37,7 @@ const pages = computed(() => {
       @click="emit('change-page', page - 1)"
     >
       <span class="material-symbols-outlined">chevron_left</span>
-      <span>Trước</span>
+      <span>Previous</span>
     </button>
 
     <div class="catalog-pagination-pages">

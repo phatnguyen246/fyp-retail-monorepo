@@ -1,11 +1,5 @@
-# Ordering Module Docs
+# Ordering Module
 
-Tài liệu của `ordering` module.
+English documentation for ordering APIs.
 
-## Purpose
-
-`ordering` sở hữu create/list/detail/cancel order và các admin order operations.
-
-## Docs
-
-- [api.md](./api.md)
+- API reference: `api.md`

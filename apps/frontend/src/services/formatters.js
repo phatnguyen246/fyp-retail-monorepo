@@ -24,7 +24,7 @@ export function formatCurrency(value, currency = 'VND') {
   const amount = Number(value)
 
   if (!Number.isFinite(amount)) {
-    return 'Liên hệ'
+    return 'Contact us'
   }
 
   return getCurrencyFormatter(currency).format(amount)

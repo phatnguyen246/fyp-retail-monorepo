@@ -65,7 +65,7 @@ describe("product model", () => {
         const product = createProduct({
             _id: new ObjectId("65f000000000000000000006"),
             productGroupCode: "apple_iphone_16",
-            title: "  Điện   thoại   Samsung Galaxy  ",
+            title: "  Samsung phone Galaxy  ",
             brandId: new ObjectId("65f000000000000000000001"),
             categoryId: new ObjectId("65f000000000000000000002"),
             specs: {},
@@ -73,7 +73,7 @@ describe("product model", () => {
 
         expect(product).toMatchObject({
             productGroupCode: "APPLE_IPHONE_16",
-            title: "Điện thoại Samsung Galaxy",
+            title: "Samsung phone Galaxy",
             slug: "dien-thoai-samsung-galaxy",
             searchTitle: "dien thoai samsung galaxy",
         });

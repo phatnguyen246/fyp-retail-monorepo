@@ -18,7 +18,7 @@ import { RouterLink } from 'vue-router'
       <button class="catalog-footer-link" type="button">Terms of Service</button>
       <button class="catalog-footer-link" type="button">Shipping</button>
       <button class="catalog-footer-link" type="button">Returns</button>
-      <RouterLink class="catalog-footer-link" :to="{ name: 'order-lookup' }">Tìm đơn hàng</RouterLink>
+      <RouterLink class="catalog-footer-link" :to="{ name: 'order-lookup' }">Find order</RouterLink>
     </div>
   </footer>
 </template>

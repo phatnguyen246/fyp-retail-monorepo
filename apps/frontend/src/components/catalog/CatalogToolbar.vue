@@ -100,9 +100,9 @@ function selectSortOption(option) {
             type="button"
             @click="toggleSortMenu"
           >
-          <span class="catalog-sort-label">Sắp xếp</span>
+          <span class="catalog-sort-label">Sort</span>
           <span class="catalog-sort-trigger-text">
-            {{ activeSortOption?.label ?? 'Chọn kiểu sắp xếp' }}
+            {{ activeSortOption?.label ?? 'Choose sort mode' }}
           </span>
           <span class="material-symbols-outlined catalog-sort-icon">expand_more</span>
           </button>
@@ -148,7 +148,7 @@ function selectSortOption(option) {
       <span
         class="mr-2 text-[0.6875rem] uppercase tracking-[0.3em] text-[var(--catalog-text-soft)]"
       >
-        Đang lọc:
+        Filtering:
       </span>
 
       <span

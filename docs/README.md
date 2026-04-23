@@ -1,46 +1,28 @@
-# Docs Index
+# Documentation Guide
 
-Thư mục `docs/` chỉ chứa tài liệu ở mức repository hoặc system-level.
+The `docs/` directory contains only repository-level and cross-cutting documentation.
 
-Các tài liệu chi tiết theo module đã được colocate vào:
+Detailed module documentation is colocated with module source code under:
+`apps/backend/src/modules/*/docs/`
 
-- `apps/backend/src/modules/*/docs/`
+This structure keeps ownership clear:
+- Shared/system architecture docs at repository root
+- Business/API implementation details near the owning module
 
-Điều này giúp ownership rõ ràng hơn:
+## Recommended Reading Order (Backend Focus)
+1. `../README.md`
+2. `./project-overview.md`
+3. `./architecture/backend-architecture.md`
+4. `./api/overview.md`
+5. Module docs under `apps/backend/src/modules/*/docs/`
 
-- tài liệu shared/cross-cutting ở root
-- tài liệu implementation/business/API cụ thể ở ngay module sở hữu
+## What Belongs in `docs/`
+- Project overview
+- Backend architecture
+- Cross-module API navigation
+- Shared conventions
 
-## Đọc theo thứ tự nếu muốn hiểu backend
-
-1. [../README.md](../README.md)
-2. [project-overview.md](./project-overview.md)
-3. [architecture/backend-architecture.md](./architecture/backend-architecture.md)
-4. [api/overview.md](./api/overview.md)
-
-## Root Docs Responsibilities
-
-`docs/` hiện chỉ giữ các phần:
-
-- tổng quan dự án
-- kiến trúc backend
-- điều hướng API ở mức cross-module
-- conventions dùng chung
-
-Không đặt ở đây:
-
-- detailed API guide của từng module
-- ghi chú indexing/query/storage riêng của module
-- business rules chỉ thuộc một module
-
-## Module Docs
-
-Các module backend hiện có docs riêng tại:
-
-- [account/docs](../apps/backend/src/modules/account/docs/README.md)
-- [auth/docs](../apps/backend/src/modules/auth/docs/README.md)
-- [catalog/docs](../apps/backend/src/modules/catalog/docs/README.md)
-- [cart/docs](../apps/backend/src/modules/cart/docs/README.md)
-- [inventory/docs](../apps/backend/src/modules/inventory/docs/README.md)
-- [ordering/docs](../apps/backend/src/modules/ordering/docs/README.md)
-- [payment/docs](../apps/backend/src/modules/payment/docs/README.md)
+## What Does Not Belong Here
+- Detailed module API guides
+- Module-specific storage/indexing notes
+- Business rules owned by a single module

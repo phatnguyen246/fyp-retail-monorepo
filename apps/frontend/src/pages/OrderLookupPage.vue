@@ -40,7 +40,7 @@ function validateForm() {
 
 function mapLookupError(error) {
   if (error?.status === 404) {
-    return 'Không tìm thấy đơn phù hợp với mã đơn này.'
+    return 'No order found for this code.'
   }
 
   if (Array.isArray(error?.meta?.issues) && error.meta.issues.length > 0) {
@@ -62,7 +62,7 @@ function mapLookupError(error) {
     }
   }
 
-  return error?.message || 'Không thể tra cứu đơn hàng lúc này.'
+  return error?.message || 'Unable to look up order right now.'
 }
 
 async function handleLookup() {
@@ -89,7 +89,7 @@ async function handleLookup() {
 
   result.value = data
   submitTone.value = 'success'
-  submitMessage.value = 'Đã tìm thấy đơn hàng. Bạn có thể mở ngay trang chi tiết hoặc kiểm tra nhanh bên dưới.'
+  submitMessage.value = 'Order found. You can open details now or review quick info below.'
 }
 
 async function openOrderDetail() {
@@ -104,22 +104,22 @@ function getOrderStatusMeta(status) {
   switch (status) {
     case 'completed':
       return {
-        label: 'Đã hoàn tất',
+        label: 'Completed',
         className: 'lookup-chip lookup-chip--success',
       }
     case 'confirmed':
       return {
-        label: 'Đã xác nhận',
+        label: 'Confirmed',
         className: 'lookup-chip lookup-chip--info',
       }
     case 'cancelled':
       return {
-        label: 'Đã hủy',
+        label: 'Cancelled',
         className: 'lookup-chip lookup-chip--danger',
       }
     default:
       return {
-        label: 'Đang chờ xử lý',
+        label: 'Pending',
         className: 'lookup-chip lookup-chip--warning',
       }
   }
@@ -129,22 +129,22 @@ function getPaymentStatusMeta(status) {
   switch (status) {
     case 'paid':
       return {
-        label: 'Đã thanh toán',
+        label: 'Paid',
         className: 'lookup-chip lookup-chip--success-soft',
       }
     case 'failed':
       return {
-        label: 'Thanh toán lỗi',
+        label: 'Payment failed',
         className: 'lookup-chip lookup-chip--danger-soft',
       }
     case 'cancelled':
       return {
-        label: 'Thanh toán đã hủy',
+        label: 'Payment cancelled',
         className: 'lookup-chip lookup-chip--danger-soft',
       }
     default:
       return {
-        label: 'Chờ thanh toán',
+        label: 'Pending payment',
         className: 'lookup-chip lookup-chip--muted',
       }
   }
@@ -163,7 +163,7 @@ function getPaymentStatusMeta(status) {
               class="catalog-reset-button inline-flex items-center justify-center"
               :to="{ name: 'catalog-products' }"
             >
-              Quay lại catalog
+              Back to catalog
             </RouterLink>
           </div>
 
@@ -173,10 +173,10 @@ function getPaymentStatusMeta(status) {
                 Guest order lookup
               </p>
               <h1 class="catalog-display-title mt-2 text-4xl leading-tight">
-                Tra cứu đơn hàng guest
+                Guest order lookup
               </h1>
               <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--catalog-text-muted)]">
-                Nhập mã định danh backend đã cấp sau khi checkout để mở lại chi tiết đơn hàng.
+                Enter the backend order code provided after checkout to reopen order details.
               </p>
             </div>
 
@@ -187,7 +187,7 @@ function getPaymentStatusMeta(status) {
                   v-model="lookupForm.orderCode"
                   type="text"
                   autocomplete="off"
-                  placeholder="Ví dụ: ORD-20260402-123456"
+                  placeholder="Example: ORD-20260402-123456"
                   class="lookup-input"
                   :class="{ 'lookup-input--error': fieldErrors.orderCode }"
                 />
@@ -214,14 +214,14 @@ function getPaymentStatusMeta(status) {
                   class="catalog-primary-button inline-flex items-center justify-center"
                   :disabled="orderingStore.loading"
                 >
-                  {{ orderingStore.loading ? 'Đang tra cứu...' : 'Tra cứu đơn hàng' }}
+                  {{ orderingStore.loading ? 'Looking up...' : 'Look up order' }}
                 </button>
                 <button
                   type="button"
                   class="catalog-reset-button inline-flex items-center justify-center"
                   @click="lookupForm.orderCode = ''; result = null; resetFeedback()"
                 >
-                  Xóa dữ liệu
+                  Clear data
                 </button>
               </div>
             </form>
@@ -243,11 +243,11 @@ function getPaymentStatusMeta(status) {
             <div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-                  Kết quả tra cứu
+                  Lookup result
                 </p>
                 <h2 class="catalog-display-title mt-2 text-3xl">{{ result.orderCode }}</h2>
                 <p class="mt-3 text-sm text-[var(--catalog-text-muted)]">
-                  Đặt lúc {{ formatDate(result.createdAt) }}
+                  Placed at {{ formatDate(result.createdAt) }}
                 </p>
               </div>
 
@@ -256,29 +256,29 @@ function getPaymentStatusMeta(status) {
                 class="catalog-primary-button inline-flex items-center justify-center"
                 @click="openOrderDetail"
               >
-                Mở chi tiết đơn
+                Open order details
               </button>
             </div>
 
             <dl class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <div class="lookup-meta-card">
-                <dt class="lookup-meta-label">Người nhận</dt>
+                <dt class="lookup-meta-label">Recipient</dt>
                 <dd class="lookup-meta-value">{{ result.recipientName }}</dd>
               </div>
               <div class="lookup-meta-card">
-                <dt class="lookup-meta-label">Tổng tiền</dt>
+                <dt class="lookup-meta-label">Total amount</dt>
                 <dd class="lookup-meta-value">{{ formatCurrency(result.grandTotal) }}</dd>
               </div>
               <div class="lookup-meta-card">
-                <dt class="lookup-meta-label">Số sản phẩm</dt>
+                <dt class="lookup-meta-label">Item count</dt>
                 <dd class="lookup-meta-value">{{ formatNumber(result.itemCount) }}</dd>
               </div>
               <div class="lookup-meta-card">
-                <dt class="lookup-meta-label">Thanh toán</dt>
+                <dt class="lookup-meta-label">Payment</dt>
                 <dd class="lookup-meta-value uppercase">{{ result.paymentMethod }}</dd>
               </div>
               <div class="lookup-meta-card">
-                <dt class="lookup-meta-label">Giao tới</dt>
+                <dt class="lookup-meta-label">Shipping to</dt>
                 <dd class="lookup-meta-value lookup-meta-value--address">{{ result.shippingAddressLine }}</dd>
               </div>
             </dl>

@@ -597,7 +597,7 @@ describe("ordering http integration", () => {
                 provinceCode: 79,
                 provinceName: "Ho Chi Minh",
                 districtCode: 760,
-                districtName: "Quan 1",
+                districtName: "District 1",
                 wardCode: 26734,
                 wardName: "Ben Nghe",
             }),
@@ -617,7 +617,7 @@ describe("ordering http integration", () => {
             provinceCode: 79,
             districtCode: 760,
             wardCode: 26734,
-            shippingAddressLine: "1 Customer Street, Ben Nghe, Quan 1, Ho Chi Minh",
+            shippingAddressLine: "1 Customer Street, Ben Nghe, District 1, Ho Chi Minh",
             items: [
                 {
                     variantId: "65f000000000000000000702",
@@ -1020,7 +1020,7 @@ describe("ordering http integration", () => {
                 currency: "VND",
                 status: "pending",
                 providerTxnRef: "PAY-20260316-141414",
-                orderInfo: "Thanh toan don hang ORD 20260316 141414",
+                orderInfo: "Order payment ORD 20260316 141414",
                 createdAt: BASE_TIMESTAMP,
                 updatedAt: BASE_TIMESTAMP,
             }),

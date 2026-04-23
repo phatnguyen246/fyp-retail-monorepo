@@ -1,123 +1,55 @@
-# FYP Retail System Monorepo
+# FYP Retail Monorepo
 
-Monorepo này chứa mã nguồn cho FYP Retail System với trọng tâm hiện tại nằm ở backend retail API. Tài liệu được tổ chức theo hướng docs-as-code:
+This monorepo contains the source code for the FYP Retail System.
+Documentation follows a docs-as-code structure:
 
-- tài liệu hệ thống và cross-cutting nằm ở root `docs/`
-- tài liệu chi tiết của từng module nằm cạnh module sở hữu nó trong `apps/backend/src/modules/*/docs/`
-
-## Project Overview
-
-Hiện tại repo có 2 app:
-
-- `apps/backend`: phần nghiệp vụ chính, dùng `Express + MongoDB`
-- `apps/frontend`: `Vue 3 + Vite`, hiện vẫn ở mức scaffold cơ bản
-
-Nếu bạn mới vào dự án và muốn hiểu sản phẩm thực tế, nên bắt đầu từ backend.
-
-## Repository Structure
-
-```text
-.
-├── README.md
-├── docs/
-├── apps/
-│   ├── backend/
-│   └── frontend/
-├── docker-compose.yml
-├── docker-compose.test.yml
-└── pnpm-workspace.yaml
-```
+- System-level and cross-cutting documents live in `docs/`
+- Module-specific implementation and API docs live beside each module in `apps/backend/src/modules/*/docs/`
 
 ## Applications
 
-### Backend
+The repository currently includes two apps:
 
-Đường dẫn: `apps/backend`
+- `apps/backend`: primary business domain APIs (`Express + MongoDB`)
+- `apps/frontend`: `Vue 3 + Vite` storefront/admin client
 
-Backend được tổ chức theo domain modules:
+## Quick Start
 
-- `account`
-- `auth`
-- `catalog`
-- `cart`
-- `inventory`
-- `ordering`
-- `payment`
+## Prerequisites
+- Docker and Docker Compose
+- Node.js + pnpm (optional if you run only inside containers)
 
-### Frontend
-
-Đường dẫn: `apps/frontend`
-
-Frontend hiện vẫn là scaffold Vite/Vue mặc định. Nó chưa phản ánh đầy đủ storefront hoặc admin app.
-
-## Backend Modules
-
-| Module | Base path | Docs |
-| --- | --- | --- |
-| `account` | internal only | [account/docs](./apps/backend/src/modules/account/docs/README.md) |
-| `auth` | `/auth` | [auth/docs](./apps/backend/src/modules/auth/docs/README.md) |
-| `catalog` | `/catalog`, `/admin/catalog` | [catalog/docs](./apps/backend/src/modules/catalog/docs/README.md) |
-| `cart` | `/cart` | [cart/docs](./apps/backend/src/modules/cart/docs/README.md) |
-| `inventory` | `/inventory`, `/admin/inventory` | [inventory/docs](./apps/backend/src/modules/inventory/docs/README.md) |
-| `ordering` | `/orders`, `/admin/orders` | [ordering/docs](./apps/backend/src/modules/ordering/docs/README.md) |
-| `payment` | `/payments`, `/payment` | [payment/docs](./apps/backend/src/modules/payment/docs/README.md) |
-
-## Documentation Map
-
-### Root / Shared Documentation
-
-- [docs/README.md](./docs/README.md)
-- [docs/project-overview.md](./docs/project-overview.md)
-- [docs/architecture/backend-architecture.md](./docs/architecture/backend-architecture.md)
-- [docs/api/overview.md](./docs/api/overview.md)
-
-### Module Documentation
-
-- [catalog](./apps/backend/src/modules/catalog/docs/README.md)
-- [auth](./apps/backend/src/modules/auth/docs/README.md)
-- [cart](./apps/backend/src/modules/cart/docs/README.md)
-- [inventory](./apps/backend/src/modules/inventory/docs/README.md)
-- [ordering](./apps/backend/src/modules/ordering/docs/README.md)
-- [payment](./apps/backend/src/modules/payment/docs/README.md)
-- [account](./apps/backend/src/modules/account/docs/README.md)
-
-## Local Development
-
-Chạy local bằng Docker Compose:
-
+## Run with Docker Compose
 ```bash
-docker compose up -d mongo backend frontend
+docker compose up -d
 ```
 
-Docker Compose sẽ đọc biến môi trường từ:
+Docker Compose loads environment variables from configured `.env` files in this repository.
 
-- `apps/backend/.env.dev`
-- `apps/frontend/.env.dev`
-
-URL mặc định:
-
-- backend: `http://localhost:3000`
-- frontend: `http://localhost:5173`
+## Default URLs
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:3000`
 
 ## Testing
 
-Chạy test backend:
-
+Run backend tests:
 ```bash
-docker compose exec backend pnpm --filter @apps/backend test
+docker compose exec backend pnpm test
 ```
 
-## Environment Notes
+Run frontend tests:
+```bash
+docker compose exec frontend pnpm test
+```
 
-Một số biến môi trường backend quan trọng:
+Run Playwright e2e tests:
+```bash
+docker compose run --rm frontend pnpm test:e2e
+```
 
-- `MONGODB_URI`
-- `AUTH_JWT_SECRET` hoặc `JWT_SECRET`
-- `FIREBASE_STORAGE_BUCKET`
-- `FIREBASE_SERVICE_ACCOUNT_PATH`
-- bộ biến `VNP_*` cho VNPAY
+## Important Backend Environment Variables
+- `AUTH_JWT_SECRET` (or `JWT_SECRET`)
+- MongoDB connection variables
+- VNPAY variables with `VNP_*` prefix
 
-Chi tiết hơn xem:
-
-- [docs/project-overview.md](./docs/project-overview.md)
-- [payment/docs/api.md](./apps/backend/src/modules/payment/docs/api.md)
+See module docs and `docs/` for detailed architecture and API navigation.

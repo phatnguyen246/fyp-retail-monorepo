@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
       </button>
 
       <button class="catalog-reset-button w-full" type="button" @click="emit('clear-filters')">
-        Reset bộ lọc
+        Reset filters
       </button>
     </div>
   </aside>

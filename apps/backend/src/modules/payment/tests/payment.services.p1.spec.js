@@ -41,7 +41,7 @@ describe("payment services P1", () => {
                         paymentCode: "PAY-1",
                         provider: "vnpay",
                         status: "paid",
-                        orderInfo: "Thanh toan don hang ORD-1",
+                        orderInfo: "Order payment ORD-1",
                         providerTxnRef: "PAY-1",
                         providerTransactionDate: "20260423010101",
                     }),

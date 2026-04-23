@@ -6,15 +6,15 @@ const DEFAULT_DISCOVERY_PRICE_MIN = 0;
 const DEFAULT_DISCOVERY_PRICE_MAX = 60000000;
 const STOREFRONT_SORT_MODES = Object.freeze([
     {
-        label: "Mới nhất",
+        label: "Newest",
         value: "newest",
     },
     {
-        label: "Giá tăng dần",
+        label: "Price: Low to High",
         value: "price_asc",
     },
     {
-        label: "Giá giảm dần",
+        label: "Price: High to Low",
         value: "price_desc",
     },
 ]);

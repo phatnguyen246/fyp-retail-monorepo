@@ -3,10 +3,10 @@ import { generateProductSlug } from "../utils/generate-product-slug.js";
 
 describe("generateProductSlug", () => {
     it("normalizes Vietnamese titles, whitespace, and casing consistently", () => {
-        expect(generateProductSlug("  Điện   thoại   Samsung Galaxy  ")).toBe(
+        expect(generateProductSlug("  Samsung phone Galaxy  ")).toBe(
             "dien-thoai-samsung-galaxy"
         );
-        expect(generateProductSlug("ĐIỆN thoại samsung galaxy")).toBe(
+        expect(generateProductSlug("SAMSUNG phone galaxy")).toBe(
             "dien-thoai-samsung-galaxy"
         );
     });

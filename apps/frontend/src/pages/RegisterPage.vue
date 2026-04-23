@@ -23,7 +23,7 @@ async function handleRegister() {
   })
 
   if (!validationResult.success) {
-    clientError.value = validationResult.error.issues[0]?.message || 'Thong tin dang ky khong hop le.'
+    clientError.value = validationResult.error.issues[0]?.message || 'Registration information is invalid.'
     return
   }
 
@@ -42,8 +42,8 @@ async function handleRegister() {
 <template>
   <div class="auth-layout">
     <div class="auth-card">
-      <h1 class="auth-title">Tạo tài khoản</h1>
-      <p class="auth-subtitle">Bắt đầu hành trình của bạn với chúng tôi.</p>
+      <h1 class="auth-title">Create account</h1>
+      <p class="auth-subtitle">Start your journey with us.</p>
 
       <form @submit.prevent="handleRegister">
         <div class="auth-form-group">
@@ -51,7 +51,7 @@ async function handleRegister() {
           <input id="email" v-model="email" class="auth-input" type="email" placeholder="email@example.com" required />
         </div>
         <div class="auth-form-group">
-          <label class="auth-label" for="password">Mật khẩu</label>
+          <label class="auth-label" for="password">Password</label>
           <div class="auth-input-wrapper">
             <input
               id="password"
@@ -65,7 +65,7 @@ async function handleRegister() {
             <button
               type="button"
               class="auth-password-toggle"
-              :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
               @click="showPassword = !showPassword"
             >
               <span class="material-symbols-outlined">
@@ -75,7 +75,7 @@ async function handleRegister() {
           </div>
         </div>
         <div class="auth-form-group">
-          <label class="auth-label" for="confirmPassword">Xác nhận mật khẩu</label>
+          <label class="auth-label" for="confirmPassword">Confirm password</label>
           <div class="auth-input-wrapper">
             <input
               id="confirmPassword"
@@ -89,7 +89,7 @@ async function handleRegister() {
             <button
               type="button"
               class="auth-password-toggle"
-              :aria-label="showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'"
+              :aria-label="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'"
               @click="showConfirmPassword = !showConfirmPassword"
             >
               <span class="material-symbols-outlined">
@@ -104,14 +104,14 @@ async function handleRegister() {
         </div>
 
         <button :disabled="authStore.loading" class="auth-submit-button" type="submit">
-          <span v-if="authStore.loading">Đang xử lý...</span>
-          <span v-else>Đăng ký</span>
+          <span v-if="authStore.loading">Processing...</span>
+          <span v-else>Sign up</span>
         </button>
       </form>
 
       <div class="auth-footer">
-        Đã có tài khoản?
-        <RouterLink to="/login" class="auth-link">Đăng nhập</RouterLink>
+        Already have an account?
+        <RouterLink to="/login" class="auth-link">Sign in</RouterLink>
       </div>
     </div>
   </div>

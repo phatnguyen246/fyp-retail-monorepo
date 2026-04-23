@@ -45,29 +45,29 @@ function generateSpecsCategories() {
     
     // Group specs for display (Smartphone centric for now)
     const smartphoneSpecs = [
-        { label: 'Màn hình', keys: ['specs.screen.size', 'specs.screen.technology', 'specs.screen.resolution', 'specs.screen.refreshRate'] },
-        { label: 'Vi xử lý & Đồ họa', keys: ['specs.chipset', 'specs.cpu', 'specs.gpu'] },
+        { label: 'Display', keys: ['specs.screen.size', 'specs.screen.technology', 'specs.screen.resolution', 'specs.screen.refreshRate'] },
+        { label: 'CPU & Graphics', keys: ['specs.chipset', 'specs.cpu', 'specs.gpu'] },
         { label: 'Camera sau', keys: ['specs.rearCamera'] },
-        { label: 'Camera trước', keys: ['specs.frontCamera'] },
-        { label: 'Pin & Sạc', keys: ['specs.battery', 'specs.charging'] },
-        { label: 'Hệ điều hành', keys: ['specs.operatingSystem'] },
-        { label: 'Thiết kế & Trọng lượng', keys: ['specs.dimensions', 'specs.weight', 'specs.material'] },
-        { label: 'Khác', keys: ['specs.sim', 'specs.network', 'specs.waterResistance'] }
+        { label: 'Front camera', keys: ['specs.frontCamera'] },
+        { label: 'Pin & Charging', keys: ['specs.battery', 'specs.charging'] },
+        { label: 'Operating system', keys: ['specs.operatingSystem'] },
+        { label: 'Design & Weight', keys: ['specs.dimensions', 'specs.weight', 'specs.material'] },
+        { label: 'Others', keys: ['specs.sim', 'specs.network', 'specs.waterResistance'] }
     ]
 
     specsCategories.value = [
         {
-            title: 'Thông tin chung',
+            title: 'General information',
             attributes: [
-                { key: 'brand.name', label: 'Thương hiệu' },
-                { key: 'defaultVariant.salePrice', label: 'Giá ưu đãi', formatter: formatCurrency },
+                { key: 'brand.name', label: 'Brand' },
+                { key: 'defaultVariant.salePrice', label: 'Sale price', formatter: formatCurrency },
                 { key: 'defaultVariant.variantAttributes.ram', label: 'RAM' },
-                { key: 'defaultVariant.variantAttributes.rom', label: 'Dung lượng (ROM)' },
-                { key: 'defaultVariant.variantAttributes.colorFullName', label: 'Màu sắc' }
+                { key: 'defaultVariant.variantAttributes.rom', label: 'Storage (ROM)' },
+                { key: 'defaultVariant.variantAttributes.colorFullName', label: 'Color' }
             ]
         },
         {
-            title: 'Thông số kỹ thuật chi tiết',
+            title: 'Detailed technical specifications',
             attributes: smartphoneSpecs.map(spec => ({
                 label: spec.label,
                 getValue: (product) => {
@@ -115,41 +115,41 @@ function getProductAttribute(product, key) {
               Catalog
             </RouterLink>
             <span class="material-symbols-outlined text-[12px]">chevron_right</span>
-            <span class="font-medium text-[var(--catalog-text)]">So sánh sản phẩm</span>
+            <span class="font-medium text-[var(--catalog-text)]">Compare products</span>
           </div>
 
           <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
             <div>
-              <h1 class="catalog-display-title text-4xl lg:text-5xl text-gray-900">So sánh sản phẩm</h1>
+              <h1 class="catalog-display-title text-4xl lg:text-5xl text-gray-900">Compare products</h1>
               <p class="mt-3 text-gray-500 max-w-2xl">
-                Đối chiếu thông số kỹ thuật, giá bán và tính năng giữa các sản phẩm để tìm ra lựa chọn phù hợp nhất với nhu cầu của bạn.
+                Compare technical specifications, price, and features across products to find the best option for your needs.
               </p>
             </div>
           </div>
 
           <div v-if="loading" class="py-24 text-center">
             <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--catalog-primary)] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-            <p class="mt-4 text-sm font-medium text-gray-500 tracking-widest uppercase">Đang tải dữ liệu so sánh...</p>
+            <p class="mt-4 text-sm font-medium text-gray-500 tracking-widest uppercase">Loading comparison data...</p>
           </div>
 
           <div v-else-if="products.length === 0" class="mt-8 text-center px-4 py-24 bg-white rounded-[2rem] border border-[var(--catalog-border-soft)] shadow-[0_20px_60px_rgba(26,28,28,0.05)]">
             <span class="material-symbols-outlined text-6xl text-gray-200 mb-6">compare_arrows</span>
-            <p class="text-2xl font-bold text-gray-900">Danh sách so sánh đang trống</p>
-            <p class="mt-3 text-gray-500 max-w-md mx-auto">Hãy quay lại cửa hàng và chọn các sản phẩm bạn đang phân vân để bắt đầu so sánh chi tiết.</p>
+            <p class="text-2xl font-bold text-gray-900">Comparison list is empty</p>
+            <p class="mt-3 text-gray-500 max-w-md mx-auto">Go back to the store and choose products to start detailed comparison.</p>
             <RouterLink
                 :to="{ name: 'catalog-products' }"
                 class="catalog-primary-button mt-10 inline-flex items-center gap-3 rounded-full px-10 py-4 shadow-xl hover:scale-105 active:scale-95 transition-all"
             >
                 <span class="material-symbols-outlined text-xl">add</span>
-                Khám phá sản phẩm
+                Explore products
             </RouterLink>
           </div>
 
           <section v-else aria-labelledby="comparison-heading">
             <div class="mb-8 flex items-center justify-between bg-white p-6 rounded-2xl border border-[var(--catalog-border-soft)] shadow-sm">
                 <div>
-                    <h2 id="comparison-heading" class="text-lg font-bold text-gray-900">Chi tiết bảng thông số</h2>
-                    <p class="text-xs font-bold text-[var(--catalog-primary)] uppercase tracking-widest mt-1">Đang so sánh {{ products.length }} sản phẩm</p>
+                    <h2 id="comparison-heading" class="text-lg font-bold text-gray-900">Specification table details</h2>
+                    <p class="text-xs font-bold text-[var(--catalog-primary)] uppercase tracking-widest mt-1">Comparing {{ products.length }} products</p>
                 </div>
                 <button 
                     v-if="products.length > 0"
@@ -157,7 +157,7 @@ function getProductAttribute(product, key) {
                     class="flex items-center gap-2 px-5 py-2.5 rounded-full border border-red-100 text-xs font-black text-red-500 hover:bg-red-50 transition-all uppercase tracking-widest"
                 >
                     <span class="material-symbols-outlined text-lg">delete_sweep</span>
-                    Xóa tất cả
+                    Clear all
                 </button>
             </div>
 
@@ -178,13 +178,13 @@ function getProductAttribute(product, key) {
                                     <h3 class="text-center text-lg font-bold text-gray-900 line-clamp-2 min-h-[3.5rem] px-2 leading-tight">{{ product.title }}</h3>
                                     <button @click="compareStore.removeProduct(product.id)" class="mt-6 flex items-center gap-2 text-[0.65rem] font-black text-gray-400 hover:text-red-500 transition-all uppercase tracking-widest">
                                         <span class="material-symbols-outlined text-lg">cancel</span>
-                                        Gỡ bỏ
+                                        Remove
                                     </button>
                                 </div>
                                 <div v-else class="flex flex-col items-center justify-center py-12 px-6 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-100 h-full">
                                     <span class="material-symbols-outlined text-4xl text-gray-200 mb-4">add_circle</span>
-                                    <p class="text-xs font-bold text-gray-300 uppercase tracking-widest text-center">Trống</p>
-                                    <RouterLink :to="{ name: 'catalog-products' }" class="mt-4 text-[0.65rem] font-black text-[var(--catalog-primary)] hover:underline uppercase tracking-widest">Thêm sản phẩm</RouterLink>
+                                    <p class="text-xs font-bold text-gray-300 uppercase tracking-widest text-center">Empty</p>
+                                    <RouterLink :to="{ name: 'catalog-products' }" class="mt-4 text-[0.65rem] font-black text-[var(--catalog-primary)] hover:underline uppercase tracking-widest">Add products</RouterLink>
                                 </div>
                             </th>
                         </tr>

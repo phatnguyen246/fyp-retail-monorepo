@@ -13,12 +13,12 @@ test('customer can register and login again with persisted account', async ({ pa
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(password)
   await page.locator('#confirmPassword').fill(password)
-  await page.getByRole('button', { name: 'Đăng ký' }).click()
+  await page.getByRole('button', { name: 'Sign up' }).click()
 
   await expect(page).toHaveURL(/\/catalog\/products/)
   await page.goto('/account')
   await expect(page).toHaveURL(/\/account/)
-  await expect(page.getByRole('heading', { name: 'Tài khoản của tôi' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'My account' })).toBeVisible()
   await expect(page.getByText(email).first()).toBeVisible()
 
   const meAfterRegister = await page.request.get('/api/auth/me', {
@@ -53,13 +53,13 @@ test('customer can register and login again with persisted account', async ({ pa
     await expect(secondPage.locator('#password')).toBeVisible({ timeout: 15_000 })
     await secondPage.locator('#email').fill(email)
     await secondPage.locator('#password').fill(password)
-    await secondPage.getByRole('button', { name: 'Đăng nhập' }).click()
+    await secondPage.getByRole('button', { name: 'Sign in' }).click()
 
     await expect(secondPage).toHaveURL(/\/catalog\/products/)
     await secondPage.goto('/account')
     await expect(secondPage).toHaveURL(/\/account/)
     await expect(secondPage.getByText(email).first()).toBeVisible()
-    await expect(secondPage.getByText('Khách hàng')).toBeVisible()
+    await expect(secondPage.getByText('Customer')).toBeVisible()
 
     const meAfterLogin = await secondPage.request.get('/api/auth/me', {
       headers: {

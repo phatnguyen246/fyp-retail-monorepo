@@ -1,11 +1,5 @@
-# Inventory Module Docs
+# Inventory Module
 
-Tài liệu của `inventory` module.
+English documentation for inventory APIs.
 
-## Purpose
-
-`inventory` sở hữu stock theo `variantId` và sync availability ngược sang `catalog`.
-
-## Docs
-
-- [api.md](./api.md)
+- API reference: `api.md`

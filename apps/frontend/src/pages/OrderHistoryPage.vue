@@ -18,22 +18,22 @@ function getOrderStatusMeta(status) {
   switch (status) {
     case 'completed':
       return {
-        label: 'Đã hoàn tất',
+        label: 'Completed',
         className: 'order-chip order-chip--success',
       }
     case 'confirmed':
       return {
-        label: 'Đã xác nhận',
+        label: 'Confirmed',
         className: 'order-chip order-chip--info',
       }
     case 'cancelled':
       return {
-        label: 'Đã hủy',
+        label: 'Cancelled',
         className: 'order-chip order-chip--danger',
       }
     default:
       return {
-        label: 'Đang chờ xử lý',
+        label: 'Pending',
         className: 'order-chip order-chip--warning',
       }
   }
@@ -43,22 +43,22 @@ function getPaymentStatusMeta(status) {
   switch (status) {
     case 'paid':
       return {
-        label: 'Đã thanh toán',
+        label: 'Paid',
         className: 'order-chip order-chip--success-soft',
       }
     case 'cancelled':
       return {
-        label: 'Thanh toán đã hủy',
+        label: 'Payment cancelled',
         className: 'order-chip order-chip--danger-soft',
       }
     case 'failed':
       return {
-        label: 'Thanh toán lỗi',
+        label: 'Payment failed',
         className: 'order-chip order-chip--danger-soft',
       }
     default:
       return {
-        label: 'Chờ thanh toán',
+        label: 'Pending payment',
         className: 'order-chip order-chip--muted',
       }
   }
@@ -87,31 +87,31 @@ onMounted(async () => {
                   Storefront Orders
                 </p>
                 <h1 class="catalog-display-title mt-3 text-4xl leading-tight lg:text-5xl">
-                  Lịch sử đơn hàng
+                  Order history
                 </h1>
                 <p class="mt-4 max-w-2xl text-sm leading-7 text-[var(--catalog-text-muted)] sm:text-base">
-                  Theo dõi toàn bộ đơn bạn đã đặt, kiểm tra trạng thái xử lý và mở lại từng đơn để xem chi tiết sản
-                  phẩm, thanh toán và lịch sử cập nhật.
+                  Track all orders you placed, review processing status, and reopen each order to view product
+                  details, payment, and update history.
                 </p>
               </div>
 
               <div class="grid gap-4 sm:grid-cols-3">
                 <article class="order-stat-card">
-                  <p class="order-stat-label">Tổng đơn</p>
+                  <p class="order-stat-label">Total orders</p>
                   <p class="order-stat-value">{{ formatNumber(orders.length) }}</p>
-                  <p class="order-stat-note">Đồng bộ từ `GET /orders`</p>
+                  <p class="order-stat-note">Synced from `GET /orders`</p>
                 </article>
                 <article class="order-stat-card order-stat-card--accent">
-                  <p class="order-stat-label">Đang xử lý</p>
+                  <p class="order-stat-label">In progress</p>
                   <p class="order-stat-value">
                     {{ formatNumber(orders.filter((order) => order.orderStatus === 'pending').length) }}
                   </p>
-                  <p class="order-stat-note">Cần theo dõi thêm</p>
+                  <p class="order-stat-note">Needs attention</p>
                 </article>
                 <article class="order-stat-card order-stat-card--warm">
-                  <p class="order-stat-label">Tổng chi tiêu</p>
+                  <p class="order-stat-label">Total spending</p>
                   <p class="order-stat-value order-stat-value--compact">{{ formatCurrency(totalSpent) }}</p>
-                  <p class="order-stat-note">Theo giá trị đơn đã tạo</p>
+                  <p class="order-stat-note">Based on created orders</p>
                 </article>
               </div>
             </div>
@@ -133,13 +133,13 @@ onMounted(async () => {
             class="rounded-[2rem] border border-[rgba(186,26,26,0.18)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)]"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-danger)]">
-              Không thể tải đơn hàng
+              Unable to load orders
             </p>
             <h2 class="mt-3 text-3xl font-semibold text-[var(--catalog-text)]">
-              Không lấy được lịch sử đơn hàng hiện tại.
+              Could not load your current order history.
             </h2>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Frontend đang không nhận được order list từ backend. Hãy kiểm tra đăng nhập hoặc trạng thái API `GET /orders`.
+              The frontend is not receiving the order list from backend. Check authentication and `GET /orders` API status.
             </p>
           </section>
 
@@ -148,15 +148,15 @@ onMounted(async () => {
             class="rounded-[2rem] border border-[var(--catalog-border-soft)] bg-white p-8 shadow-[0_20px_60px_rgba(26,28,28,0.05)] lg:p-10"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--catalog-text-soft)]">
-              Chưa có đơn nào
+              No orders yet
             </p>
-            <h2 class="catalog-display-title mt-3 text-3xl">Bạn chưa phát sinh đơn hàng.</h2>
+            <h2 class="catalog-display-title mt-3 text-3xl">You have not placed any orders yet.</h2>
             <p class="mt-4 max-w-2xl text-[var(--catalog-text-muted)]">
-              Khi hoàn tất checkout, các đơn mới sẽ xuất hiện tại đây để bạn theo dõi trạng thái và mở lại chi tiết.
+              After checkout, new orders will appear here so you can track status and open details.
             </p>
             <div class="mt-8">
               <RouterLink class="catalog-primary-button inline-flex" :to="{ name: 'catalog-products' }">
-                Tiếp tục mua sắm
+                Continue shopping
               </RouterLink>
             </div>
           </section>
@@ -181,13 +181,13 @@ onMounted(async () => {
                   <div class="mt-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--catalog-text-soft)]">
-                        Mã đơn
+                        Order code
                       </p>
                       <h2 class="mt-2 text-3xl font-semibold leading-tight text-[var(--catalog-text)]">
                         {{ order.orderCode }}
                       </h2>
                       <p class="mt-3 text-sm text-[var(--catalog-text-muted)]">
-                        Đặt lúc {{ formatDate(order.createdAt) }}
+                        Placed at {{ formatDate(order.createdAt) }}
                       </p>
                     </div>
 
@@ -195,29 +195,29 @@ onMounted(async () => {
                       :to="{ name: 'order-detail', params: { orderId: order.id } }"
                       class="catalog-primary-button inline-flex items-center justify-center"
                     >
-                      Xem chi tiết
+                      View details
                     </RouterLink>
                   </div>
 
                   <dl class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div class="order-meta-card">
-                      <dt class="order-meta-label">Người nhận</dt>
+                      <dt class="order-meta-label">Recipient</dt>
                       <dd class="order-meta-value">{{ order.recipientName }}</dd>
                     </div>
                     <div class="order-meta-card">
-                      <dt class="order-meta-label">Tổng tiền</dt>
+                      <dt class="order-meta-label">Total amount</dt>
                       <dd class="order-meta-value">{{ formatCurrency(order.grandTotal) }}</dd>
                     </div>
                     <div class="order-meta-card">
-                      <dt class="order-meta-label">Số dòng hàng</dt>
+                      <dt class="order-meta-label">Line items</dt>
                       <dd class="order-meta-value">{{ formatNumber(order.itemCount) }}</dd>
                     </div>
                     <div class="order-meta-card">
-                      <dt class="order-meta-label">Thanh toán</dt>
+                      <dt class="order-meta-label">Payment</dt>
                       <dd class="order-meta-value uppercase">{{ order.paymentMethod }}</dd>
                     </div>
                     <div class="order-meta-card">
-                      <dt class="order-meta-label">Giao tới</dt>
+                      <dt class="order-meta-label">Shipping to</dt>
                       <dd class="order-meta-value order-meta-value--address">{{ order.shippingAddressLine }}</dd>
                     </div>
                   </dl>
@@ -226,17 +226,17 @@ onMounted(async () => {
 
               <div class="mt-8 grid gap-4 lg:grid-cols-3">
                 <div class="order-summary-card">
-                  <p class="order-summary-label">Phone nhận hàng</p>
+                  <p class="order-summary-label">Recipient phone</p>
                   <p class="order-summary-value">{{ order.phoneNumber }}</p>
                 </div>
                 <div class="order-summary-card">
-                  <p class="order-summary-label">Cập nhật gần nhất</p>
+                  <p class="order-summary-label">Last updated</p>
                   <p class="order-summary-value">{{ formatDate(order.updatedAt) }}</p>
                 </div>
                 <div class="order-summary-card">
-                  <p class="order-summary-label">Phạm vi đơn</p>
+                  <p class="order-summary-label">Order scope</p>
                   <p class="order-summary-value">
-                    {{ order.itemCount > 1 ? `${formatNumber(order.itemCount)} sản phẩm` : '1 sản phẩm' }}
+                    {{ order.itemCount > 1 ? `${formatNumber(order.itemCount)} products` : '1 products' }}
                   </p>
                 </div>
               </div>

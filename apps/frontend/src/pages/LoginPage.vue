@@ -13,14 +13,14 @@ const password = ref('')
 const showPassword = ref(false)
 const clientError = ref('')
 const isAdminEntry = computed(() => route.name === 'admin-login')
-const title = computed(() => (isAdminEntry.value ? 'Đăng nhập quản trị' : 'Đăng nhập'))
+const title = computed(() => (isAdminEntry.value ? 'Admin sign in' : 'Sign in'))
 const subtitle = computed(() =>
   isAdminEntry.value
-    ? 'Sử dụng tài khoản quản trị để truy cập khu điều hành.'
-    : 'Chào mừng trở lại. Vui lòng nhập thông tin của bạn.',
+    ? 'Use an admin account to access the control area.'
+    : 'Welcome back. Please enter your credentials.',
 )
 const registerTarget = computed(() => (isAdminEntry.value ? '/login' : '/register'))
-const registerLabel = computed(() => (isAdminEntry.value ? 'Đăng nhập khách hàng' : 'Đăng ký ngay'))
+const registerLabel = computed(() => (isAdminEntry.value ? 'Customer sign in' : 'Sign up now'))
 
 async function handleLogin() {
   clientError.value = ''
@@ -30,7 +30,7 @@ async function handleLogin() {
   })
 
   if (!validationResult.success) {
-    clientError.value = validationResult.error.issues[0]?.message || 'Thong tin dang nhap khong hop le.'
+    clientError.value = validationResult.error.issues[0]?.message || 'Login information is invalid.'
     return
   }
 
@@ -69,7 +69,7 @@ async function handleLogin() {
           <input id="email" v-model="email" class="auth-input" type="email" placeholder="email@example.com" required />
         </div>
         <div class="auth-form-group">
-          <label class="auth-label" for="password">Mật khẩu</label>
+          <label class="auth-label" for="password">Password</label>
           <div class="auth-input-wrapper">
             <input
               id="password"
@@ -82,7 +82,7 @@ async function handleLogin() {
             <button
               type="button"
               class="auth-password-toggle"
-              :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
               @click="showPassword = !showPassword"
             >
               <span class="material-symbols-outlined">
@@ -97,13 +97,13 @@ async function handleLogin() {
         </div>
 
         <button :disabled="authStore.loading" class="auth-submit-button" type="submit">
-          <span v-if="authStore.loading">Đang xử lý...</span>
-          <span v-else>Đăng nhập</span>
+          <span v-if="authStore.loading">Processing...</span>
+          <span v-else>Sign in</span>
         </button>
       </form>
 
       <div class="auth-footer">
-        {{ isAdminEntry ? 'Cần storefront customer flow?' : 'Chưa có tài khoản?' }}
+        {{ isAdminEntry ? 'Need customer storefront flow?' : 'No account yet?' }}
         <RouterLink :to="registerTarget" class="auth-link">{{ registerLabel }}</RouterLink>
       </div>
     </div>

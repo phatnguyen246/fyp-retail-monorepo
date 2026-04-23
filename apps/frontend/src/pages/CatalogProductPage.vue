@@ -14,25 +14,25 @@ const catalogContentRef = ref(null)
 
 const pageTitle = computed(() => {
   return catalogStore.filters.search
-    ? `Kết quả cho "${catalogStore.filters.search}"`
-    : 'Danh mục smartphone'
+    ? `Results for "${catalogStore.filters.search}"`
+    : 'Smartphone catalog'
 })
 
 const pageSubtitle = computed(() => {
   return catalogStore.filters.search
-    ? 'Đây là tập sản phẩm phù hợp nhất với truy vấn và hệ filter storefront hiện tại.'
-    : 'Khám phá tuyển chọn smartphone hiệu năng cao từ catalog storefront của hệ thống.'
+    ? 'These are the products that best match your query and current storefront filters.'
+    : 'Explore a curated set of high-performance smartphones from storefront catalog.'
 })
 
 const resultLabel = computed(() => {
   if (catalogStore.meta.total === 0) {
-    return 'Không có kết quả'
+    return 'No results'
   }
 
   const start = (catalogStore.meta.page - 1) * catalogStore.meta.limit + 1
   const end = Math.min(catalogStore.meta.page * catalogStore.meta.limit, catalogStore.meta.total)
 
-  return `Hiển thị ${start}-${end} trên ${formatNumber(catalogStore.meta.total)}`
+  return `Showing ${start}-${end} of ${formatNumber(catalogStore.meta.total)}`
 })
 
 function scrollCatalogToTop() {

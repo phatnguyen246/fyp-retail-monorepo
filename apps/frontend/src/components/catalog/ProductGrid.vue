@@ -56,13 +56,13 @@ const skeletonItems = Array.from({ length: 6 }, (_, index) => index)
         error
       </span>
       <h4 class="catalog-card-title mb-2 text-2xl text-[var(--catalog-text)]">
-        Không thể tải catalog sản phẩm.
+        Unable to load product catalog.
       </h4>
       <p class="max-w-xl text-[var(--catalog-text-muted)]">
         {{ errorMessage }}
       </p>
       <button class="catalog-primary-button mt-6" type="button" @click="emit('retry')">
-        Thử tải lại
+        Try reloading
       </button>
     </div>
 
@@ -74,13 +74,13 @@ const skeletonItems = Array.from({ length: 6 }, (_, index) => index)
         search_off
       </span>
       <h4 class="catalog-card-title mb-2 text-2xl text-[var(--catalog-text)]">
-        Không tìm thấy smartphone phù hợp.
+        No matching smartphones found.
       </h4>
       <p class="max-w-xl text-[var(--catalog-text-muted)]">
         {{
           hasFilters || searchTerm
-            ? 'Hãy điều chỉnh lại search hoặc filter để mở rộng tập kết quả.'
-            : 'Hiện chưa có sản phẩm nào sẵn sàng hiển thị từ catalog storefront.'
+            ? 'Adjust search or filters to broaden results.'
+            : 'No products are currently available from storefront catalog.'
         }}
       </p>
     </div>

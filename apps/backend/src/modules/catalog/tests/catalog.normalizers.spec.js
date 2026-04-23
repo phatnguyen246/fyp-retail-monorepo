@@ -17,10 +17,10 @@ import {
 
 describe("catalog normalizers and invariants", () => {
     it("normalizes title and searchTitle with Vietnamese accents", () => {
-        expect(normalizeTitle("  Điện   thoại  Samsung  ")).toBe(
-            "Điện thoại Samsung"
+        expect(normalizeTitle("  Samsung phone  ")).toBe(
+            "Samsung phone"
         );
-        expect(normalizeSearchTitle("Điện thoại Samsung Galaxy")).toBe(
+        expect(normalizeSearchTitle("Samsung phone Galaxy")).toBe(
             "dien thoai samsung galaxy"
         );
     });
