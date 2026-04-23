@@ -59,7 +59,11 @@ test('customer can register and login again with persisted account', async ({ pa
     await secondPage.goto('/account')
     await expect(secondPage).toHaveURL(/\/account/)
     await expect(secondPage.getByText(email).first()).toBeVisible()
-    await expect(secondPage.getByText('Customer')).toBeVisible()
+    const roleValue = secondPage
+      .locator('.account-meta-card')
+      .filter({ has: secondPage.getByText('Role', { exact: true }) })
+      .locator('.account-meta-value')
+    await expect(roleValue).toHaveText('Customer')
 
     const meAfterLogin = await secondPage.request.get('/api/auth/me', {
       headers: {
