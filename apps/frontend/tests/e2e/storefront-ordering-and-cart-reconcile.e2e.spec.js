@@ -208,6 +208,12 @@ async function mockCommonGuestApis(page, { cartItems }) {
   await page.route('**/api/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
+
+    // Let dedicated location API mock handle these calls.
+    if (url.hostname === 'provinces.open-api.vn') {
+      return route.fallback()
+    }
+
     const path = url.pathname.replace(/^\/api/, '')
     const method = request.method()
 
@@ -332,14 +338,17 @@ test('guest can add item and complete COD checkout to order detail', async ({ pa
   await page.locator('#checkout-recipient-phone').fill('0900000000')
   await page.locator('#checkout-shipping-street').fill('123 Pho Hue')
 
-  await page.locator('select').nth(0).selectOption('1')
-  await page.locator('select').nth(1).selectOption('2')
-  await page.locator('select').nth(2).selectOption('3')
+  await page.getByLabel('Province/City').selectOption({ label: 'Ha Noi' })
+  await page.getByLabel('District').selectOption({ label: 'Ba Dinh' })
+  await page.getByLabel('Ward').selectOption({ label: 'Phuc Xa' })
 
-  await page.getByRole('button', { name: 'Place COD order' }).click()
+  await expect(page.getByText('Delivery address:')).toContainText('Ha Noi')
+  const placeCodOrderButton = page.getByRole('button', { name: 'Place COD order' })
+  await expect(placeCodOrderButton).toBeEnabled()
+  await placeCodOrderButton.click()
 
   await expect(page).toHaveURL(new RegExp(`/orders/${orderId}`))
-  await expect(page.getByText(orderCode)).toBeVisible()
+  await expect(page.getByRole('heading', { name: orderCode })).toBeVisible()
   await expect(page.getByText('Cash on delivery')).toBeVisible()
 })
 
@@ -419,15 +428,18 @@ test('guest can place VNPAY order and frontend opens payment url before redirect
   await page.locator('#checkout-recipient-email').fill('guest@example.com')
   await page.locator('#checkout-recipient-phone').fill('0900000000')
   await page.locator('#checkout-shipping-street').fill('123 Pho Hue')
-  await page.locator('select').nth(0).selectOption('1')
-  await page.locator('select').nth(1).selectOption('2')
-  await page.locator('select').nth(2).selectOption('3')
+  await page.getByLabel('Province/City').selectOption({ label: 'Ha Noi' })
+  await page.getByLabel('District').selectOption({ label: 'Ba Dinh' })
+  await page.getByLabel('Ward').selectOption({ label: 'Phuc Xa' })
 
-  await page.getByLabel('VNPAY').check()
-  await page.getByRole('button', { name: 'Continue to VNPAY' }).click()
+  await page.locator('label.payment-card', { hasText: 'VNPAY' }).click()
+  await expect(page.getByText('Delivery address:')).toContainText('Ha Noi')
+  const continueToVnpayButton = page.getByRole('button', { name: 'Continue to VNPAY' })
+  await expect(continueToVnpayButton).toBeEnabled()
+  await continueToVnpayButton.click()
 
   await expect(page).toHaveURL(new RegExp(`/orders/${orderId}`))
-  await expect(page.getByText(orderCode)).toBeVisible()
+  await expect(page.getByRole('heading', { name: orderCode })).toBeVisible()
   await expect(page.getByText('Pending payment')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Continue payment' })).toBeVisible()
 
@@ -566,7 +578,7 @@ test('cart reconcile UI supports recovering insufficient and excluded lines', as
 
   await page.goto('/cart', { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Out of stock')).toBeVisible()
+  await expect(page.getByText('Out of stock', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Reduce to 2 to recover' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Re-include in checkout' })).toBeVisible()
 

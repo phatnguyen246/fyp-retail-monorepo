@@ -7,6 +7,11 @@ const nonNegativeNumber = (message: string) =>
     invalid_type_error: message,
   }).finite(message).min(0, message)
 
+const positiveInteger = (message: string) =>
+  z.coerce.number({
+    invalid_type_error: message,
+  }).int(message).positive(message)
+
 export const loginFormSchema = z.object({
   email: requiredString('Please enter your email address.').email('Invalid email address.'),
   password: requiredString('Please enter your password.'),
@@ -31,11 +36,11 @@ export const checkoutShippingSchema = z.object({
   email: requiredString('Please enter your email address.').email('Invalid email address.'),
   phoneNumber: requiredString('Please enter the recipient phone number.'),
   street: requiredString('Please enter street and house number.'),
-  provinceCode: requiredString('Please select a province/city.'),
+  provinceCode: positiveInteger('Please select a province/city.'),
   provinceName: z.string().trim(),
-  districtCode: requiredString('Please select a district.'),
+  districtCode: positiveInteger('Please select a district.'),
   districtName: z.string().trim(),
-  wardCode: requiredString('Please select a ward.'),
+  wardCode: positiveInteger('Please select a ward.'),
   wardName: z.string().trim(),
   paymentMethod: z.enum(['cod', 'vnpay']),
   cartVariantIds: z.array(z.string().trim().min(1)).min(
