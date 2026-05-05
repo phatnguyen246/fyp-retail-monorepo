@@ -108,7 +108,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="playerHostRef" class="youtube-player-shell">
-    <div :id="playerElementId" class="youtube-player-frame" :title="title" />
+    <div class="youtube-player-surface">
+      <div :id="playerElementId" class="youtube-player-frame" :title="title" />
+    </div>
   </div>
 </template>
 
@@ -116,12 +118,31 @@ onBeforeUnmount(() => {
 .youtube-player-shell {
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 1rem;
   overflow: hidden;
 }
 
+.youtube-player-surface {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
 .youtube-player-frame {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.youtube-player-shell :deep(iframe) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
 }
 </style>

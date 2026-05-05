@@ -12,6 +12,7 @@ import OrderHistoryPage from '../pages/OrderHistoryPage.vue'
 import ComparePage from '../pages/ComparePage.vue'
 import OrderDetailPage from '../pages/OrderDetailPage.vue'
 import OrderLookupPage from '../pages/OrderLookupPage.vue'
+import PaymentSuccessPage from '../pages/PaymentSuccessPage.vue'
 import VnpayCheckoutPage from '../pages/VnpayCheckoutPage.vue'
 import VnpayReturnPage from '../pages/VnpayReturnPage.vue'
 
@@ -113,6 +114,11 @@ const router = createRouter({
       path: '/payment/vnpay/return',
       name: 'vnpay-return',
       component: VnpayReturnPage,
+    },
+    {
+      path: '/payment/success',
+      name: 'payment-success',
+      component: PaymentSuccessPage,
     },
     {
       path: '/admin',

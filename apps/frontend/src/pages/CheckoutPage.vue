@@ -429,7 +429,7 @@ async function handlePlaceOrder() {
                   </label>
 
                   <label class="flex flex-col gap-3 md:col-span-1">
-                    <span class="text-sm font-medium text-[var(--catalog-text)]">So dien thoai</span>
+                    <span class="text-sm font-medium text-[var(--catalog-text)]">Phone number</span>
                     <input
                       v-model="shippingInfo.phoneNumber"
                       id="checkout-recipient-phone"
@@ -447,7 +447,7 @@ async function handlePlaceOrder() {
                   </label>
 
                   <label class="flex flex-col gap-3 md:col-span-2">
-                    <span class="text-sm font-medium text-[var(--catalog-text)]">So nha, ten duong</span>
+                    <span class="text-sm font-medium text-[var(--catalog-text)]">Street address</span>
                     <textarea
                       v-model="shippingInfo.shippingAddress.street"
                       id="checkout-shipping-street"
@@ -458,7 +458,7 @@ async function handlePlaceOrder() {
                       data-lpignore="true"
                       data-1p-ignore
                       data-bwignore="true"
-                      placeholder="123 Nguyen Van Linh, toa nha, can ho..."
+                      placeholder="123 Nguyen Van Linh, building, apartment..."
                       class="checkout-input checkout-input--textarea resize-y"
                       :class="{ 'checkout-input--error': fieldErrors.street }"
                     />
