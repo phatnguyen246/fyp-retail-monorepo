@@ -15,8 +15,33 @@ const message = ref('Please wait while we update your payment result.')
 const orderId = ref(null)
 const orderCode = ref(null)
 const paymentResult = ref(null)
+const canCloseWindow = ref(false)
 
 const hasOrderContext = computed(() => Boolean(orderId.value))
+const isResolvedSuccess = computed(() => pageState.value === 'paid')
+const stateLabel = computed(() => {
+  if (pageState.value === 'paid') {
+    return 'Paid'
+  }
+
+  if (pageState.value === 'pending') {
+    return 'Processing'
+  }
+
+  if (pageState.value === 'failed') {
+    return 'Failed'
+  }
+
+  if (pageState.value === 'invalid') {
+    return 'Invalid'
+  }
+
+  if (pageState.value === 'error') {
+    return 'Error'
+  }
+
+  return 'Checking'
+})
 
 function readStoredContext() {
   try {
@@ -61,15 +86,6 @@ function clearStoredContext() {
   localStorage.removeItem(VNPAY_CONTEXT_STORAGE_KEY)
 }
 
-async function redirectToOrderDetail(delay = 1600) {
-  if (!orderId.value) {
-    return
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, delay))
-  await router.replace({ name: 'order-detail', params: { orderId: orderId.value } })
-}
-
 async function refetchOrderStatusWithRetry(targetOrderId) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const result = await orderingStore.fetchOrder(targetOrderId)
@@ -91,6 +107,33 @@ async function refetchOrderStatusWithRetry(targetOrderId) {
   }
 
   return { resolved: false, order: null }
+}
+
+function detectClosableWindow() {
+  if (typeof window === 'undefined') {
+    canCloseWindow.value = false
+    return
+  }
+
+  canCloseWindow.value = window.opener !== null || window.history.length <= 1
+}
+
+function closeThisPage() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.close()
+}
+
+async function redirectToPaymentSuccess() {
+  await router.replace({
+    name: 'payment-success',
+    query: {
+      ...(orderId.value ? { orderId: orderId.value } : {}),
+      ...(orderCode.value ? { orderCode: orderCode.value } : {}),
+    },
+  })
 }
 
 async function handleReturn() {
@@ -125,29 +168,28 @@ async function handleReturn() {
 
       if (orderCheck.resolved && orderCheck.order?.paymentStatus === 'paid') {
         pageState.value = 'paid'
-        heading.value = 'Payment da duoc ghi nhan'
-        message.value = 'Your order was updated successfully. You can open order details to continue tracking.'
+        heading.value = 'Payment successful'
+        message.value = 'VNPAY confirmed your transaction and the order was updated successfully. Close this page or return to your order details.'
         clearStoredContext()
-        await redirectToOrderDetail()
+        await redirectToPaymentSuccess()
         return
       }
     }
 
     pageState.value = 'pending'
     heading.value = 'Payment result received'
-    message.value = 'The system is finalizing your order update. You can check again shortly if needed.'
-    await redirectToOrderDetail()
+    message.value = 'The callback was received and the system is finalizing your order update. You can wait a moment, refresh this page, or open order details.'
     return
   }
 
   pageState.value = 'failed'
-  heading.value = 'Payment chua thanh cong'
+  heading.value = 'Payment was not completed'
   message.value =
-    'Transaction is not completed. You can open order details to check and retry if needed.'
-  await redirectToOrderDetail()
+    'The transaction did not complete successfully. You can close this page and review the order details to retry payment if needed.'
 }
 
 onMounted(() => {
+  detectClosableWindow()
   handleReturn()
 })
 </script>
@@ -166,7 +208,7 @@ onMounted(() => {
           <div class="grid gap-4 sm:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Page state</p>
-              <p class="mt-2 text-lg font-semibold text-slate-950">{{ pageState }}</p>
+              <p class="mt-2 text-lg font-semibold text-slate-950">{{ stateLabel }}</p>
             </article>
             <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Order ID</p>
@@ -190,7 +232,9 @@ onMounted(() => {
                     : 'border-slate-200 bg-slate-50'
             "
           >
-            We recommend opening order details to follow the latest status and next steps.
+            <span v-if="isResolvedSuccess" class="font-semibold text-emerald-800">Close this page.</span>
+            <span v-if="isResolvedSuccess"> You can return to the order detail tab to continue tracking the order.</span>
+            <span v-else>We recommend opening order details to follow the latest status and next steps.</span>
           </div>
 
           <div v-if="paymentResult" class="rounded-[24px] border border-slate-200 bg-white px-5 py-5">
@@ -208,6 +252,15 @@ onMounted(() => {
           </div>
 
           <div class="flex flex-col gap-3 sm:flex-row">
+            <button
+              v-if="isResolvedSuccess && canCloseWindow"
+              type="button"
+              class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              @click="closeThisPage"
+            >
+              Close this page
+            </button>
+
             <RouterLink
               v-if="hasOrderContext"
               :to="{ name: 'order-detail', params: { orderId } }"
