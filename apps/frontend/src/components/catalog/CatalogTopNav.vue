@@ -238,7 +238,7 @@ cartStore.fetchCart()
   >
     <div class="flex min-w-0 items-center gap-4 lg:gap-6">
       <RouterLink class="catalog-logo shrink-0 text-xl lg:text-2xl" :to="{ name: 'catalog-products' }">
-        The Editorial Catalog
+        Smartphone Store
       </RouterLink>
 
       <div class="hidden h-8 w-px bg-[var(--catalog-border-soft)] md:block" aria-hidden="true" />
