@@ -5,10 +5,24 @@ import {
     AUTH_ACCESS_TOKEN_LIFETIME_MS,
 } from "../../constants/index.js";
 
+function resolveCookieTransportOptions() {
+    if (process.env.NODE_ENV === "production") {
+        return {
+            sameSite: "none",
+            secure: true,
+        };
+    }
+
+    return {
+        sameSite: "lax",
+        secure: false,
+    };
+}
+
 export function createAuthCookieService({
     maxAge = AUTH_ACCESS_TOKEN_LIFETIME_MS,
-    sameSite = "none",
-    secure = true,
+    sameSite = resolveCookieTransportOptions().sameSite,
+    secure = resolveCookieTransportOptions().secure,
     path = "/",
 } = {}) {
     function createCookieOptions() {
