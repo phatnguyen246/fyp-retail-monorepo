@@ -50,6 +50,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create env files from secrets
+        run: |
+          printf "%s" "${{ secrets.BACKEND_ENV_FILE }}" > apps/backend/.env.dev
+          printf "%s" "${{ secrets.FRONTEND_ENV_FILE }}" > apps/frontend/.env.dev
+
       - name: Verify provider against PactFlow contracts
         env:
           PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
@@ -79,6 +84,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Create env files from secrets
+        run: |
+          printf "%s" "${{ secrets.BACKEND_ENV_FILE }}" > apps/backend/.env.dev
+          printf "%s" "${{ secrets.FRONTEND_ENV_FILE }}" > apps/frontend/.env.dev
 
       - name: Deployment gate (can-i-deploy)
         env:
