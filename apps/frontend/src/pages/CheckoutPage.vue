@@ -288,19 +288,10 @@ async function handlePlaceOrder() {
 
   if (order.paymentMethod === 'vnpay') {
     persistVnpayContext(order)
-
-    const paymentWindow = window.open('', '_blank', 'noopener,noreferrer')
-
     // Fetch VNPAY URL and open in new tab
     const vnpayResult = await orderingStore.createVnPayUrl(order.id)
     if (vnpayResult.success && vnpayResult.paymentUrl) {
-      if (paymentWindow) {
-        paymentWindow.location.href = vnpayResult.paymentUrl
-      } else {
-        window.location.href = vnpayResult.paymentUrl
-      }
-    } else if (paymentWindow) {
-      paymentWindow.close()
+      window.open(vnpayResult.paymentUrl, '_blank')
     }
 
     // Redirect current tab to order detail
