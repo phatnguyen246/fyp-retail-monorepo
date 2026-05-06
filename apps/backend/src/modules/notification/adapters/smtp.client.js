@@ -12,6 +12,7 @@ export function createSmtpClient({
     return nodemailer.createTransport({
         host,
         port,
+        family: 4,
         auth: {
             user,
             pass,
