@@ -16,6 +16,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create env files from secrets
+        run: |
+          printf "%s" "${{ secrets.BACKEND_ENV_FILE }}" > apps/backend/.env.dev
+          printf "%s" "${{ secrets.FRONTEND_ENV_FILE }}" > apps/frontend/.env.dev
+
       - name: Generate pact from frontend consumer tests
         run: |
           docker compose run --rm --no-deps frontend /bin/bash -lc \
@@ -31,6 +36,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Create env files from secrets
+        run: |
+          printf "%s" "${{ secrets.BACKEND_ENV_FILE }}" > apps/backend/.env.dev
+          printf "%s" "${{ secrets.FRONTEND_ENV_FILE }}" > apps/frontend/.env.dev
 
       - name: Publish pact to PactFlow
         env:
