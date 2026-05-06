@@ -7,8 +7,8 @@ import {
 
 export function createAuthCookieService({
     maxAge = AUTH_ACCESS_TOKEN_LIFETIME_MS,
-    sameSite = "lax",
-    secure = process.env.NODE_ENV === "production",
+    sameSite = "none",
+    secure = true,
     path = "/",
 } = {}) {
     function createCookieOptions() {
