@@ -9,7 +9,7 @@ services:
   backend:
     image: ghcr.io/${GITHUB_REPOSITORY}/backend-test:${TEST_IMAGE_TAG}
     env_file:
-      - ./apps/backend/.env.dev
+      - ./apps/backend/.env.ci
     depends_on:
       - mongo
     ports:
@@ -23,7 +23,7 @@ services:
   frontend:
     image: ghcr.io/${GITHUB_REPOSITORY}/frontend-test:${TEST_IMAGE_TAG}
     env_file:
-      - ./apps/frontend/.env.dev
+      - ./apps/frontend/.env.ci
     depends_on:
       - backend
     ports:
@@ -42,7 +42,7 @@ services:
   frontend-e2e:
     image: ghcr.io/${GITHUB_REPOSITORY}/frontend-e2e-test:${TEST_IMAGE_TAG}
     env_file:
-      - ./apps/frontend/.env.dev
+      - ./apps/frontend/.env.ci
     environment:
       E2E_BASE_URL: http://frontend:5173
     depends_on:

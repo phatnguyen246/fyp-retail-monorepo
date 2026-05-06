@@ -129,6 +129,11 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}/frontend-e2e-test:${{ env.TEST_IMAGE_TAG }}
 
+      - name: Create CI env files from secrets
+        run: |
+          printf "%s" "${{ secrets.BACKEND_ENV_FILE }}" > apps/backend/.env.ci
+          printf "%s" "${{ secrets.FRONTEND_ENV_FILE }}" > apps/frontend/.env.ci
+
       - name: Start stack for E2E
         run: docker compose -f compose.ci.yml up -d mongo backend frontend
 
