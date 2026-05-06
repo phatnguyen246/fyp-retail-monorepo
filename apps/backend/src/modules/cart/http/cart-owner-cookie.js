@@ -11,6 +11,7 @@ export function setCartGuestCookie(
     res.cookie(cookieName, guestCookieValue, {
         path: "/",
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "none",
+        secure: true,
     });
 }
