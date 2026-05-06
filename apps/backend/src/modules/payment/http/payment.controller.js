@@ -1,6 +1,21 @@
 import { getClientIp } from "../utils/client-ip.util.js";
 import { sendPaymentSuccess } from "./payment-response.js";
 
+function resolveStorefrontReturnUrl(req) {
+    const frontendBaseUrl = process.env.FRONTEND_BASE_URL?.trim();
+
+    if (!frontendBaseUrl) {
+        return null;
+    }
+
+    const normalizedBaseUrl = frontendBaseUrl.replace(/\/+$/, "");
+    const callbackQuery = new URLSearchParams(req.query).toString();
+
+    return callbackQuery.length > 0
+        ? `${normalizedBaseUrl}/payment/vnpay/return?${callbackQuery}`
+        : `${normalizedBaseUrl}/payment/vnpay/return`;
+}
+
 function createRequester(req) {
     return {
         isAuthenticated: req.isAuthenticated === true,
@@ -54,6 +69,18 @@ export function createPaymentController({
                 const result = await services.handleVnpayReturn({
                     query: req.query,
                 });
+
+                const acceptsJson =
+                    req.accepts(["json", "html"]) === "json" ||
+                    String(req.headers.accept ?? "").includes("application/json");
+
+                if (!acceptsJson) {
+                    const storefrontReturnUrl = resolveStorefrontReturnUrl(req);
+
+                    if (storefrontReturnUrl) {
+                        return res.redirect(302, storefrontReturnUrl);
+                    }
+                }
 
                 return res.status(200).json(result);
             } catch (error) {
