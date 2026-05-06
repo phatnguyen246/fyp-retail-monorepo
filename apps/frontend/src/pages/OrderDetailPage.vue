@@ -32,14 +32,23 @@ const isVnpayPending = computed(() => {
 async function handlePayNow() {
   if (isOpeningPayment.value) return
   isOpeningPayment.value = true
-  
+
+  const paymentWindow = window.open('', '_blank', 'noopener,noreferrer')
+
   const result = await orderingStore.createVnPayUrl(props.orderId)
   if (result.success && result.paymentUrl) {
-    window.open(result.paymentUrl, '_blank')
+    if (paymentWindow) {
+      paymentWindow.location.href = result.paymentUrl
+    } else {
+      window.location.href = result.paymentUrl
+    }
   } else {
+    if (paymentWindow) {
+      paymentWindow.close()
+    }
     alert(result.error?.message || 'Unable to create the payment link. Please try again later.')
   }
-  
+
   isOpeningPayment.value = false
 }
 
