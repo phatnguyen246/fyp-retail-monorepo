@@ -56,6 +56,16 @@ export async function createApp({
     app.use(compression());
     app.use(express.json());
     app.use(cookieParser());
+    app.get("/debug/time", (_req, res) => {
+        const now = new Date();
+        res.status(200).json({
+            iso: now.toISOString(),
+            local: now.toString(),
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            envTZ: process.env.TZ ?? null,
+            offsetMinutes: now.getTimezoneOffset(),
+        });
+    });
     app.locals.mongoClient = client;
     app.locals.db = db;
     app.locals.storage = resolvedStorage ?? null;
